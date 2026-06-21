@@ -20,6 +20,41 @@ The user provides code that needs to be documented or requests improvements to e
 - Document EDGE CASES, ASSUMPTIONS, and SIDE EFFECTS
 - Use examples only when they clarify non-obvious use cases
 
+## Where Documentation Goes: Declaration vs Inside the Body
+
+This is a **key distinction** to keep documentation useful and not noisy:
+
+- **When creating a new class or function**: document it with a full, formal docstring
+  block (docstring / JSDoc / JavaDoc / Doxygen) exactly as shown in the examples
+  below — description, parameters, return, and exceptions. This is the right place for
+  structured, complete documentation.
+- **When writing code INSIDE a function**: use **single-line comments only**, clear and
+  concise, and only where they add value (a non-obvious step, an edge case, a "why").
+  Avoid large blocks of commented text inside a function body — most of the time that
+  is unnecessary and adds noise. A short one-line note before a logical section is
+  enough; the code itself should carry the rest.
+
+```python
+def transfer_funds(origin: str, target: str, amount: float) -> bool:
+    """
+    Move funds between two accounts atomically.   # ← formal block for the function
+
+    Args:
+        origin: Source account id
+        target: Destination account id
+        amount: Amount in USD, must be > 0
+    Returns:
+        True if the transfer was committed
+    Raises:
+        InsufficientFunds: If origin lacks balance
+    """
+    # Lock both accounts to avoid race conditions  ← single-line, only the "why"
+    with lock(origin, target):
+        debit(origin, amount)
+        credit(target, amount)
+    return True
+```
+
 ## Documentation Levels
 
 ### 1. Public Functions/Methods (ALWAYS document)
@@ -313,6 +348,8 @@ Before delivering documentation, verify:
 - [ ] Non-obvious edge cases are commented
 - [ ] NO redundant or obvious comments
 - [ ] Inline comments explain "why", not "what"
+- [ ] Classes/functions use a formal docstring block; inside the body only single-line comments
+- [ ] No large commented text blocks inside a function body
 - [ ] Documentation is in agreed language (English/Spanish)
 - [ ] Examples are ACTUALLY useful (not trivial)
 
