@@ -447,6 +447,110 @@ The API MUST NEVER return:
 
 Error responses in production must use the generic error format defined in Section 1 — never leak internal information.
 
+### 9. Logging System (Mandatory)
+
+**Every API MUST implement a structured logging system.** Logs are essential for
+observability, debugging, auditing, and incident response in production.
+
+#### Requirements
+
+- Use **structured logging** (JSON) rather than plain text, so logs are machine-parseable.
+- Assign a **correlation/request ID** (e.g., `request_id`, ideally a ULID) to every
+  incoming request and include it in **all** log entries for that request. Return it in a
+  response header (e.g., `X-Request-Id`) so clients and servers can be cross-referenced.
+- Log at minimum, for every request: HTTP method, path, status code, latency (ms),
+  authenticated user id (when present), and the `request_id`.
+- Log the **complete request** (method, path, query params, headers, and body) and the
+  **complete response** (status code, headers, and body) for each request — with
+  sensitive fields masked/redacted (see security note below).
+- Log all **errors and unhandled exceptions** with full stack traces **server-side only**
+  — never expose them in the API response (see Section 8). When something crashes, the
+  log MUST indicate the **exact code location** (file, line, function/method, and the
+  full stack trace) so the failure can be traced back to its source.
+- Use appropriate **log levels**: `debug`, `info`, `warning`, `error`, `critical`.
+
+#### Standard Log Levels
+
+| Level      | When to Use                                                       |
+| ---------- | ----------------------------------------------------------------- |
+| `debug`    | Detailed diagnostic info, disabled in production by default       |
+| `info`     | Normal events: request received, resource created, job completed  |
+| `warning`  | Unexpected but recoverable situations (deprecated usage, retries) |
+| `error`    | A request failed or an operation could not be completed           |
+| `critical` | System-level failures requiring immediate attention               |
+
+#### Structured Log Entry Example
+
+```json
+{
+  "timestamp": "2025-01-15T10:30:00.123Z",
+  "level": "info",
+  "request_id": "01JQ5B3K7MNP9R8V2WX4Y6Z0A1",
+  "method": "POST",
+  "path": "/api/credit-cards",
+  "status_code": 201,
+  "latency_ms": 42,
+  "user_id": "01JQ5B3K7MNP9R8V2WX4Y6Z0A2",
+  "message": "Credit card created successfully."
+}
+```
+
+#### Full Request/Response Log Example
+
+```json
+{
+  "timestamp": "2025-01-15T10:30:00.123Z",
+  "level": "info",
+  "request_id": "01JQ5B3K7MNP9R8V2WX4Y6Z0A1",
+  "request": {
+    "method": "POST",
+    "path": "/api/credit-cards",
+    "query": {},
+    "headers": { "content-type": "application/json", "authorization": "Bearer ***" },
+    "body": { "alias": "New Card", "credit_limit": "5000.00" }
+  },
+  "response": {
+    "status_code": 201,
+    "headers": { "content-type": "application/json" },
+    "body": { "status": "success", "message": "Credit card created successfully.", "data": { "id": "01JQ5B3K7MNP9R8V2WX4Y6Z0A3" }, "meta": null }
+  },
+  "latency_ms": 42
+}
+```
+
+#### Crash / Exception Log Example
+
+When an unhandled error occurs, log where it crashed (file, line, function) plus the
+full stack trace — server-side only:
+
+```json
+{
+  "timestamp": "2025-01-15T10:31:12.880Z",
+  "level": "error",
+  "request_id": "01JQ5B3K7MNP9R8V2WX4Y6Z0A4",
+  "method": "POST",
+  "path": "/api/credit-cards",
+  "status_code": 500,
+  "error": {
+    "type": "NullPointerException",
+    "message": "credit_limit is null",
+    "location": {
+      "file": "src/services/credit_card_service.py",
+      "line": 87,
+      "function": "create_credit_card"
+    },
+    "stack_trace": "Traceback (most recent call last):\n  File \"src/services/credit_card_service.py\", line 87, in create_credit_card\n    ..."
+  }
+}
+```
+
+#### Security: Never Log Sensitive Data
+
+Logs MUST NOT contain passwords, tokens, JWTs, secret keys, full card numbers, or any
+PII beyond what is strictly necessary. Mask or redact sensitive fields before logging
+(e.g., `"authorization": "Bearer ***"`). The same restrictions from Section 8 apply to
+logs.
+
 ## Non-Negotiable Rules
 
 1. **Response format**: Every response MUST use `{ status, message, data, meta }`
@@ -459,6 +563,7 @@ Error responses in production must use the generic error format defined in Secti
 8. **Error format**: Always follow the unified error structure — never expose internals
 9. **Sensitive data**: Never return passwords, secrets, or stack traces
 10. **Documentation**: OpenAPI spec must be accessible and kept in sync with the real API
+11. **Logging**: Every API MUST implement structured logging with a per-request correlation id, logging the full request and response and, on crashes, the exact code location and stack trace — never logging sensitive data
 
 ## Quick Start Checklist
 
@@ -470,3 +575,4 @@ When designing a new API endpoint:
 4. Apply the correct HTTP status code
 5. Document all success and error responses in OpenAPI
 6. Protect the endpoint with JWT when required
+7. Ensure requests and errors are logged with a correlation id (structured logging)
