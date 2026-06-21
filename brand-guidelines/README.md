@@ -12,6 +12,23 @@ This skill applies brand-specific colors and typography to any artifact that may
 
 **Keywords**: branding, corporate identity, visual identity, post-processing, styling, brand colors, typography, visual formatting, visual design, color palette, design system
 
+## Critical Rule: Prefer UI Library Components Over New Ones
+
+**Whenever a new component is needed, first check whether the project is using a UI
+library** (e.g.: shadcn/ui, Material UI, Chakra UI, Radix, Ant Design, PrimeVue,
+Vuetify, etc.). Look for telltale signs such as `components.json`, a `components/ui/`
+folder, or the library listed in `package.json`.
+
+- **If a UI library is in use, use its components exclusively** instead of building new
+  ones from scratch. Compose, extend, and theme the library's components rather than
+  reinventing buttons, inputs, dialogs, tables, etc.
+- Only create a brand-new custom component when the required UI **does not exist** in
+  the library, and even then build it on top of the library's primitives and tokens
+  when possible.
+- Apply the brand palette and typography **through the library's theming mechanism**
+  (CSS variables, theme provider, tokens) so styling stays consistent with the library.
+- Never duplicate a component the library already provides.
+
 ## Critical Rule: Always Ask for the Color Palette First
 
 **Before applying any styling, this skill MUST ask the user for their specific brand palette and typography preferences.**
@@ -472,6 +489,7 @@ I will now apply these to your [slide deck/document/interface].
 6. **Document the choices** - Show CSS variables, classes, or tokens generated
 7. **Support dark mode** - When the palette includes it, provide both variants
 8. **Be consistent** - Apply the same palette rules throughout the artifact
+9. **UI library first** - Before creating any new component, check if a UI library is in use; if so, use its components exclusively and only build custom ones when the library lacks them
 
 ## Quick Start Prompts
 
