@@ -28,14 +28,14 @@ Always use the latest version by omitting the version number or using the approp
 
 ```bash
 # Correct - Always gets latest
-npm install react
-npm install @nestjs/core
+pnpm add react
+pnpm add @nestjs/core
 pip install fastapi
 composer require laravel/framework
 
 # Incorrect - Version may be outdated
-npm install react@18.2.0
-npm install @nestjs/core@10.3.0
+pnpm add react@18.2.0
+pnpm add @nestjs/core@10.3.0
 pip install fastapi==0.109.0
 composer require laravel/framework:10.0.0
 ```
@@ -44,13 +44,40 @@ If the package manager requires a version or the user asks for a specific one, u
 
 ```bash
 # Only if necessary
-npm install react@^18
-npm install @nestjs/core@^10
+pnpm add react@^18
+pnpm add @nestjs/core@^10
 ```
 
 ### Rule 3: Always Ask Which Architecture Skills to Apply
 
 **Before providing setup commands, always ask the user which architecture or standards skills they want to apply.**
+
+### Rule 4: Prefer pnpm Over npm
+
+**For any Node.js / JavaScript / TypeScript project, default to `pnpm` instead of `npm`.**
+
+`pnpm` is faster, uses a content-addressable store to save disk space, and provides
+stricter, more reliable dependency resolution. Always provide `pnpm` commands by default
+and only fall back to `npm` (or `yarn`) if the user explicitly requests it.
+
+```bash
+# Preferred
+pnpm add react
+pnpm add -D vitest
+pnpm create vite@latest my-app --template react-ts
+pnpm dev
+
+# Avoid unless the user explicitly asks for npm
+npm install react
+```
+
+If `pnpm` is not installed, provide the install command first:
+
+```bash
+npm install -g pnpm
+# or
+corepack enable pnpm
+```
 
 ## Required Questions
 
@@ -129,13 +156,15 @@ Example: "frontend-architecture, backend-api-standards"
 ```
 Which package manager do you prefer?
 
+- pnpm (recommended for Node.js / JS / TS projects)
 - npm
 - yarn
-- pnpm
 - pip (Python)
 - composer (PHP)
 - cargo (Rust)
 - Other: [please specify]
+
+For Node.js projects, pnpm is the default unless you choose otherwise.
 ```
 
 ### Question 5: Additional Tools
@@ -230,18 +259,18 @@ cd [project-name]
 
 **User says:** "I want to create a new React frontend project"
 
-**Skill responds with the questions, then based on answers (React, TypeScript, frontend-architecture, npm):**
+**Skill responds with the questions, then based on answers (React, TypeScript, frontend-architecture, pnpm):**
 
 #### Project Setup: React Frontend with Clean Architecture
 
 **Prerequisites:**
 - Node.js 18 or later installed
-- npm, yarn, or pnpm installed
+- pnpm installed (`npm install -g pnpm` or `corepack enable pnpm`)
 
 **Step 1: Create React TypeScript Project**
 
 ```bash
-npm create vite@latest my-app -- --template react-ts
+pnpm create vite@latest my-app --template react-ts
 ```
 
 ### Step 2: Navigate to Project
@@ -254,28 +283,28 @@ cd my-app
 
 ```bash
 # React Router for routing
-npm install react-router-dom
+pnpm add react-router-dom
 
 # State management (choose one)
-npm install zustand
+pnpm add zustand
 # or
-npm install @reduxjs/toolkit react-redux
+pnpm add @reduxjs/toolkit react-redux
 
 # HTTP client
-npm install axios
+pnpm add axios
 ```
 
 ### Step 4: Install Development Dependencies
 
 ```bash
 # TypeScript type definitions
-npm install -D @types/react @types/react-dom
+pnpm add -D @types/react @types/react-dom
 
 # ESLint and Prettier (if selected)
-npm install -D eslint prettier eslint-config-prettier
+pnpm add -D eslint prettier eslint-config-prettier
 
 # Testing (if selected)
-npm install -D vitest @testing-library/react @testing-library/jest-dom
+pnpm add -D vitest @testing-library/react @testing-library/jest-dom
 ```
 
 ### Step 5: Create Clean Architecture Structure
@@ -306,7 +335,7 @@ curl -o skills/frontend-architecture.md [URL_TO_SKILL]
 ### Step 7: Start Development Server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ### Architecture Structure Created
@@ -335,14 +364,14 @@ my-app/
 ### All Commands (Copy-Paste Ready)
 
 ```bash
-npm create vite@latest my-app -- --template react-ts
+pnpm create vite@latest my-app --template react-ts
 cd my-app
-npm install react-router-dom axios zustand
-npm install -D vitest @testing-library/react @testing-library/jest-dom
+pnpm add react-router-dom axios zustand
+pnpm add -D vitest @testing-library/react @testing-library/jest-dom
 mkdir -p src/domain/entities src/domain/repositories src/application/useCases src/infrastructure/repositories src/presentation/shared/components src/presentation/hooks src/presentation/contexts src/config
 git init
 mkdir skills
-npm run dev
+pnpm dev
 ```
 
 ---
@@ -351,25 +380,25 @@ npm run dev
 
 **User says:** "I want to create a new backend API with NestJS"
 
-**Skill asks questions, then based on answers (NestJS, TypeScript, backend-api-standards, npm):**
+**Skill asks questions, then based on answers (NestJS, TypeScript, backend-api-standards, pnpm):**
 
 #### Project Setup: NestJS Backend with API Standards
 
 **Prerequisites:**
 - Node.js 18 or later installed
-- npm installed
+- pnpm installed (`npm install -g pnpm` or `corepack enable pnpm`)
 - PostgreSQL installed (for ULID support)
 
 **Step 1: Install NestJS CLI (if not installed)**
 
 ```bash
-npm install -g @nestjs/cli
+pnpm add -g @nestjs/cli
 ```
 
 ### Step 2: Create NestJS Project
 
 ```bash
-nest new my-api
+nest new my-api --package-manager pnpm
 ```
 
 ### Step 3: Navigate to Project
@@ -382,29 +411,29 @@ cd my-api
 
 ```bash
 # ULID generation
-npm install ulid
+pnpm add ulid
 
 # Password hashing (Argon2)
-npm install argon2
+pnpm add argon2
 
 # JWT authentication
-npm install @nestjs/jwt @nestjs/passport passport passport-jwt
+pnpm add @nestjs/jwt @nestjs/passport passport passport-jwt
 
 # Validation
-npm install class-validator class-transformer
+pnpm add class-validator class-transformer
 
 # OpenAPI documentation
-npm install @nestjs/swagger swagger-ui-express
+pnpm add @nestjs/swagger swagger-ui-express
 ```
 
 ### Step 5: Install Development Dependencies
 
 ```bash
 # TypeScript type definitions
-npm install -D @types/passport-jwt @types/ulid
+pnpm add -D @types/passport-jwt @types/ulid
 
 # Testing
-npm install -D @nestjs/testing
+pnpm add -D @nestjs/testing
 ```
 
 ### Step 6: Create Architecture Structure
@@ -454,7 +483,7 @@ curl -o skills/backend-api-standards.md [URL_TO_SKILL]
 ### Step 9: Start Development Server
 
 ```bash
-npm run start:dev
+pnpm start:dev
 ```
 
 ### Architecture Structure Created
@@ -492,11 +521,11 @@ my-api/
 ### All Commands (Copy-Paste Ready)
 
 ```bash
-npm install -g @nestjs/cli
-nest new my-api
+pnpm add -g @nestjs/cli
+nest new my-api --package-manager pnpm
 cd my-api
-npm install ulid argon2 @nestjs/jwt @nestjs/passport passport passport-jwt class-validator class-transformer @nestjs/swagger swagger-ui-express
-npm install -D @types/passport-jwt @types/ulid
+pnpm add ulid argon2 @nestjs/jwt @nestjs/passport passport passport-jwt class-validator class-transformer @nestjs/swagger swagger-ui-express
+pnpm add -D @types/passport-jwt @types/ulid
 mkdir -p src/domain/entities src/domain/repositories src/application/use-cases src/infrastructure/database/migrations src/infrastructure/repositories src/infrastructure/auth src/presentation/controllers src/presentation/middlewares src/presentation/dtos src/shared/interfaces src/shared/helpers src/config docs/openapi/paths docs/openapi/schemas
 nest g module auth
 nest g controller auth --no-spec
@@ -506,7 +535,7 @@ nest g controller users --no-spec
 nest g service users --no-spec
 git init
 mkdir skills
-npm run start:dev
+pnpm start:dev
 ```
 
 ---
@@ -522,23 +551,23 @@ npm run start:dev
 **Prerequisites:**
 - Node.js 18 or later installed
 - Python 3.11 or later installed
-- npm and pip installed
+- pnpm and pip installed (`npm install -g pnpm` or `corepack enable pnpm`)
 
 #### Frontend Setup
 
 **Step 1: Create React Project**
 
 ```bash
-npm create vite@latest client -- --template react-ts
+pnpm create vite@latest client --template react-ts
 cd client
-npm install
+pnpm install
 ```
 
 ### Step 2: Install Frontend Dependencies
 
 ```bash
-npm install react-router-dom axios zustand
-npm install -D vitest @testing-library/react @testing-library/jest-dom
+pnpm add react-router-dom axios zustand
+pnpm add -D vitest @testing-library/react @testing-library/jest-dom
 ```
 
 ### Step 3: Create Frontend Structure
@@ -586,8 +615,8 @@ curl -o skills/backend-api-standards.md [URL]
 echo '{
   "name": "fullstack-app",
   "scripts": {
-    "dev": "concurrently "cd client && npm run dev" "cd server && uvicorn src.main:app --reload"",
-    "install:all": "cd client && npm install && cd ../server && pip install -r requirements.txt"
+    "dev": "concurrently "cd client && pnpm dev" "cd server && uvicorn src.main:app --reload"",
+    "install:all": "cd client && pnpm install && cd ../server && pip install -r requirements.txt"
   },
   "devDependencies": {
     "concurrently": "latest"
@@ -599,7 +628,7 @@ echo '{
 
 ```bash
 # Terminal 1: Frontend
-cd client && npm run dev
+cd client && pnpm dev
 
 # Terminal 2: Backend
 cd server && source venv/bin/activate && uvicorn src.main:app --reload
@@ -635,6 +664,13 @@ fullstack-app/
 
 ## Handling Different Package Managers
 
+### pnpm (default for Node.js projects)
+
+```bash
+pnpm add package-name
+pnpm add -D dev-package-name
+```
+
 ### npm
 
 ```bash
@@ -647,13 +683,6 @@ npm install -D dev-package-name
 ```bash
 yarn add package-name
 yarn add -D dev-package-name
-```
-
-### pnpm
-
-```bash
-pnpm add package-name
-pnpm add -D dev-package-name
 ```
 
 ### pip
@@ -699,7 +728,7 @@ See the [Project Skills Configuration README](README.md) for detailed instructio
 6. **Include Git initialization** - Always set up version control
 7. **Provide copy-paste ready commands** - A single block with all commands at the end
 8. **Never assume tools** - Ask about linting, testing, formatting preferences
-9. **Use the correct package manager syntax** - Match the user's preference
+9. **Use the correct package manager syntax** - Match the user's preference; default to `pnpm` for Node.js projects unless the user chooses otherwise
 10. **Remind about skill configuration** - Show how to set up skills for AI assistants
 
 ## Quick Start Prompts
