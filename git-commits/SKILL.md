@@ -8,6 +8,16 @@ This skill guides the creation of clear, semantic git commit messages and pull r
 
 The user may provide code changes, context about what they did, or ask for help writing commits or PR descriptions. They may specify the scope, type, or level of detail needed.
 
+## Delivering the Result
+
+Once the commit message (or PR description) is drafted, deliver it according to these rules, in order:
+
+1. **Prefer writing it to a Markdown file.** Default to saving the result in a `.md` file rather than only printing it in the chat.
+2. **If the user didn't say where to save it, ask.** Prompt for the destination folder/path before writing anything.
+3. **If the user has no preference or skips the question, print it in the terminal instead.** Don't guess a path or silently create files/folders the user never confirmed — fall back to plain terminal output.
+
+Do not apply a text-width wrap when writing the message (see below) — this applies whether the final output lands in a file or the terminal.
+
 ## Conventional Commits Format
 
 ### Basic Structure
@@ -94,7 +104,7 @@ Add a body when:
 **Format**:
 
 - Blank line after description
-- Wrap at 72 characters per line
+- Do not hard-wrap lines to a fixed width (e.g. 72 chars) — let each line run the full width of the file/terminal
 - Use bullet points for multiple items
 - Explain WHY, not WHAT (code shows what)
 
@@ -119,6 +129,8 @@ Use footer for:
 - **Breaking changes**: `BREAKING CHANGE: description`
 - **Issue references**: `Closes #123`, `Fixes #456`, `Refs #789`
 - **Reviewed by**: `Reviewed-by: @username`
+
+**Never add an AI co-author trailer.** Do not include `Co-Authored-By: <AI name>` (or any similar attribution to the AI/assistant that helped draft the change) in the commit message, footer, or PR description — the human author is the sole author of record, regardless of which tool was used to write the message.
 
 ```bash
 feat(api): change user endpoint response format
