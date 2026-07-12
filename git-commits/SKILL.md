@@ -108,6 +108,8 @@ Add a body when:
 - Use bullet points for multiple items
 - Explain WHY, not WHAT (code shows what)
 
+**No external references**: Describe the code change itself — never link to or cite external documentation, blog posts, Stack Overflow answers, RFCs, library docs, or other outside sources as justification. If a decision needs grounding, explain it in terms of the codebase (what it fixes, what behavior it changes, what constraint it satisfies), not by pointing outside the repo. Links to internal issue/PR trackers in the footer (`Closes #123`) are the only exception.
+
 ```bash
 feat(auth): add JWT authentication with refresh tokens
 
@@ -355,6 +357,15 @@ feat(auth): add login and fix unrelated bug in dashboard
 ```bash
 docs(readme): update README.md file with new info
 # Better: docs(readme): add Docker installation steps
+```
+
+**External references instead of describing the code**:
+
+```bash
+fix(api): apply fix as described in https://stackoverflow.com/...
+feat(auth): implement per official OAuth2 RFC spec (see link)
+# Better: fix(api): correctly encode special characters in query params
+# Better: feat(auth): add OAuth2 authorization code flow with PKCE
 ```
 
 ## Quality Checklist

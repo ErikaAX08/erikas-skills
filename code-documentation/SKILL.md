@@ -19,6 +19,7 @@ The user provides code that needs to be documented or requests improvements to e
 - Focus on the "why", not the "what" when it's evident
 - Document EDGE CASES, ASSUMPTIONS, and SIDE EFFECTS
 - Use examples only when they clarify non-obvious use cases
+- Focus 100% on describing the code itself — never reference or link to external documentation, blog posts, Stack Overflow answers, RFCs, or other outside sources. Explain behavior, constraints, and reasoning in terms of the code, not by pointing readers elsewhere
 
 ## Where Documentation Goes: Declaration vs Inside the Body
 
@@ -338,6 +339,17 @@ class User:
     """System user with email validation."""
 ```
 
+**External references instead of describing the code**:
+
+```python
+def parse_date(value):
+    """Parses a date. See https://example.com/date-formats for details."""  # Don't link out
+
+# Better:
+def parse_date(value):
+    """Parses ISO 8601 date strings; returns None if the format doesn't match."""
+```
+
 ## Quality Checklist
 
 Before delivering documentation, verify:
@@ -352,6 +364,7 @@ Before delivering documentation, verify:
 - [ ] No large commented text blocks inside a function body
 - [ ] Documentation is in agreed language (English/Spanish)
 - [ ] Examples are ACTUALLY useful (not trivial)
+- [ ] No links or references to external documentation/sources — describes the code itself
 
 ## Final Principle
 
