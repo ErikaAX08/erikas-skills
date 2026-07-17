@@ -59,6 +59,9 @@ license: MIT
 - **Never claim a `BREAKING CHANGE` footer or `!` marker on a change that isn't actually breaking**,
   and never omit one on a change that is — this directly feeds automated semantic-version bumps
   (§9), so getting it wrong corrupts the next release number, not just the changelog.
+- **Never hard-wrap the message to a fixed text width** (e.g. 72 chars) in the body or footer — let
+  each line run its natural length. This applies regardless of where the message is delivered (file
+  or terminal, §11). See §3.2.
 
 ---
 
@@ -396,8 +399,7 @@ fix(auth): prevent duplicate user registration
 ```bash
 feat(dashboard): add user activity metrics chart
 
-Implement interactive chart showing user activity over time
-with daily, weekly, and monthly views.
+Implement interactive chart showing user activity over time with daily, weekly, and monthly views.
 
 - Use Chart.js for visualization
 - Add date range selector
@@ -409,8 +411,7 @@ with daily, weekly, and monthly views.
 ```bash
 refactor(api)!: restructure error handling
 
-Standardize error responses across all endpoints with consistent
-format and HTTP status codes.
+Standardize error responses across all endpoints with consistent format and HTTP status codes.
 
 - Create centralized error middleware
 - Define error response schema
@@ -488,8 +489,7 @@ revert: feat(search): add fuzzy matching to search
 
 This reverts commit a1b2c3d4e5f6.
 
-Reason: caused a 3x latency regression on the search endpoint under
-production load; reverting while the indexing strategy is redesigned.
+Reason: caused a 3x latency regression on the search endpoint under production load; reverting while the indexing strategy is redesigned.
 ```
 
 ### 8.9 Performance fix
@@ -497,8 +497,7 @@ production load; reverting while the indexing strategy is redesigned.
 ```bash
 perf(images): lazy-load offscreen thumbnails
 
-Defer decoding of thumbnails outside the viewport instead of loading
-all of them on initial render.
+Defer decoding of thumbnails outside the viewport instead of loading all of them on initial render.
 
 - Use IntersectionObserver to trigger load
 - Add low-res placeholder to avoid layout shift
