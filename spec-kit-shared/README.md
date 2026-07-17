@@ -5,6 +5,13 @@ request, through a governed specification, a technical plan, and an executable t
 code — with drift detection, cross-artifact consistency checking, and cross-platform (Kiro
 CLI + Claude Code) agent generation built in at every step.
 
+**Folder layout**: each skill is its own top-level folder at the repository root
+(`generate-spec/SKILL.md`, `generate-plan/SKILL.md`, etc.) — the same one-level convention every
+other skill in this repo uses, so each is independently discoverable and copyable. This folder,
+`spec-kit-shared/`, holds only the documents those skills reference in common (§ Shared Contracts
+below) — it is not a skill itself and has no `SKILL.md`. Copy it alongside any spec-kit skill you
+use; the skills reference it as `spec-kit-shared/<file>`, a path relative to the repository root.
+
 ## Order and When to Use Each Skill
 
 ```
@@ -58,12 +65,12 @@ source document, spec.md, or plan.md by hand.
   explicit or mined with evidence) and enforced per feature (`generate-plan`'s Convention
   Enforcement) — never re-guessed from scratch each time.
 - **Cross-platform by construction.** Any support agent a skill materializes gets a validated Kiro
-  CLI **and** Claude Code definition — see `shared/agent-portability.md`.
+  CLI **and** Claude Code definition — see `spec-kit-shared/agent-portability.md`.
 - **No duplicated rules.** Anything more than one skill needs — the agent portability contract, the
-  `.specify/` file layout, the hashing/fingerprint convention — lives once in `shared/` and is
-  referenced, not copy-pasted.
+  `.specify/` file layout, the hashing/fingerprint convention — lives once in `spec-kit-shared/`
+  and is referenced, not copy-pasted.
 
-## Shared Contracts (`shared/`)
+## Shared Contracts (`spec-kit-shared/`)
 
 Not invocable skills — documents every skill above reads and follows:
 
@@ -79,7 +86,7 @@ Not invocable skills — documents every skill above reads and follows:
   Complexity Tracking, Safe Deferral for plans; Setup/Foundational/per-story/Polish with mandatory
   closure for tasks).
 
-## Reuse Map (skills this kit delegates to, outside `spec-kit/`)
+## Reuse Map (skills this kit delegates to, outside this chain)
 
 | `spec-kit` skill | Delegates to | For |
 | --- | --- | --- |

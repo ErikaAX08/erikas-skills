@@ -14,7 +14,7 @@ be regenerated?** This is the mechanism behind "if the file a spec was generated
 importantly, the plan and tasks should be able to update accordingly."
 
 This skill is deliberately narrow: it **detects and reports**, using the Content Fingerprint
-Convention (`spec-kit/shared/artifact-conventions.md`). It does **not** regenerate anything itself
+Convention (`spec-kit-shared/artifact-conventions.md`). It does **not** regenerate anything itself
 — that stays `generate-spec`'s, `generate-plan`'s, or `generate-tasks`'s own "Updating an Existing
 X" procedure, each already written to propagate a change through only the sections it actually
 touches. `sync-artifacts` is the shared, canonical definition of the mechanical comparison those
@@ -54,7 +54,7 @@ Propagation is one hop at a time, and never silent.**
    possible write is refreshing `state.json`'s own bookkeeping, and only for entries a generating
    skill hasn't already updated itself (§ Writing state.json).
 3. **Use the Content Fingerprint Convention exactly as defined** in
-   `spec-kit/shared/artifact-conventions.md` — never invent a different hashing rule or apply it
+   `spec-kit-shared/artifact-conventions.md` — never invent a different hashing rule or apply it
    inconsistently between a first check and a later one.
 4. **One hop at a time by default.** Recommend re-invoking the *nearest* downstream skill first.
    Only recommend a full multi-hop cascade upfront if the user explicitly asked for it (e.g. "sync
@@ -81,7 +81,7 @@ Propagation is one hop at a time, and never silent.**
 
 ## Cross-Platform Agent Compatibility
 
-The complete portability contract lives in `spec-kit/shared/agent-portability.md`. Before
+The complete portability contract lives in `spec-kit-shared/agent-portability.md`. Before
 generating, validating, or reporting on the `drift-watcher` role — or any other agent this skill
 materializes — read that file completely and follow it exactly. If the active host cannot resolve
 the reference, follow its fallback section.
@@ -93,7 +93,7 @@ Do not invent a different name or redefine it for another purpose.
 ## Artifact Conventions
 
 The `.specify/`/`specs/<feature-dir>/` layout, `state.json` schema, and Content Fingerprint
-Convention live in `spec-kit/shared/artifact-conventions.md`. Read it before Phase 1 below — this
+Convention live in `spec-kit-shared/artifact-conventions.md`. Read it before Phase 1 below — this
 skill's entire mechanism is built directly on that document's schema.
 
 ## Input Contract

@@ -76,7 +76,7 @@ reference to a feature directory; this skill checks whatever subset of `spec.md`
 
 ## Cross-Platform Agent Compatibility
 
-The complete portability contract lives in `spec-kit/shared/agent-portability.md`. Before
+The complete portability contract lives in `spec-kit-shared/agent-portability.md`. Before
 generating, validating, or reporting on the `spec-analyzer` role — or any other agent this skill
 materializes — read that file completely and follow it exactly. If the active host cannot resolve
 the reference, follow its fallback section.
@@ -87,7 +87,7 @@ read-only. Do not invent a different name or redefine it for another purpose.
 ## Artifact Conventions
 
 The `.specify/`/`specs/<feature-dir>/` layout and `state.json` schema live in
-`spec-kit/shared/artifact-conventions.md`. Read it before Phase 1 below. This skill reads
+`spec-kit-shared/artifact-conventions.md`. Read it before Phase 1 below. This skill reads
 `state.json` for context (e.g. whether `tasks.md` is stale relative to `plan.md`) but never writes
 to it — that remains `sync-artifacts`'/the generating skill's responsibility.
 
@@ -276,7 +276,7 @@ Before finalizing:
 
 This skill is read-only and has no natural "before/after" side effect to gate — `extensions.yml`
 support is intentionally not defined for it. If a future need arises, add
-`hooks.before_analyze`/`hooks.after_analyze` to `spec-kit/shared/artifact-conventions.md` first, so
+`hooks.before_analyze`/`hooks.after_analyze` to `spec-kit-shared/artifact-conventions.md` first, so
 the schema stays centrally defined rather than invented ad hoc here.
 
 ## Completion Report

@@ -17,15 +17,17 @@ skills/
 ├── code-documentation/SKILL.md            # Document code professionally
 ├── git-commits/SKILL.md                   # Conventional commits & PR descriptions
 ├── latex-academic-reports/SKILL.md        # Academic reports & papers in LaTeX
-└── spec-kit/                              # Spec-driven development chain (see spec-kit/README.md)
-    ├── establish-constitution/SKILL.md    # Make project conventions explicit (optional)
-    ├── generate-spec/SKILL.md             # Requirement/PRD → governed spec.md
-    ├── generate-plan/SKILL.md             # spec.md → verified technical plan.md
-    ├── generate-tasks/SKILL.md            # plan.md → per-user-story tasks.md
-    ├── analyze-consistency/SKILL.md       # Read-only spec/plan/tasks consistency check
-    ├── sync-artifacts/SKILL.md            # Drift detection between artifacts and sources
-    ├── execute-tasks/SKILL.md             # tasks.md → real code, sequential or parallel
-    └── shared/                            # Agent portability & artifact contracts
+│
+│   Spec Kit — spec-driven development chain (see spec-kit-shared/README.md), one flat
+│   top-level folder per skill like everything else above:
+├── establish-constitution/SKILL.md        # Make project conventions explicit (optional)
+├── generate-spec/SKILL.md                 # Requirement/PRD → governed spec.md
+├── generate-plan/SKILL.md                 # spec.md → verified technical plan.md
+├── generate-tasks/SKILL.md                # plan.md → per-user-story tasks.md
+├── analyze-consistency/SKILL.md           # Read-only spec/plan/tasks consistency check
+├── sync-artifacts/SKILL.md                # Drift detection between artifacts and sources
+├── execute-tasks/SKILL.md                 # tasks.md → real code, sequential or parallel
+└── spec-kit-shared/                       # Agent portability & artifact contracts (not a skill)
 ```
 
 ### Frontend
@@ -104,7 +106,7 @@ Generates academic reports, papers, theses, and technical documentation using La
 
 ### Spec Kit
 
-A sequential chain of skills for specification-driven development — from a requirement or document, through a governed spec, a verified technical plan, and an executable task list, to real code. Every skill verifies real project context before writing anything, enforces that no phase or story closes in a broken state, detects drift when a source document or upstream artifact changes, and generates matching Kiro CLI + Claude Code agent definitions whenever a support agent is needed. See `spec-kit/README.md` for the full flow diagram and reuse map.
+A sequential chain of skills for specification-driven development — from a requirement or document, through a governed spec, a verified technical plan, and an executable task list, to real code. Every skill verifies real project context before writing anything, enforces that no phase or story closes in a broken state, detects drift when a source document or upstream artifact changes, and generates matching Kiro CLI + Claude Code agent definitions whenever a support agent is needed. Each skill below is its own top-level folder, exactly like every other skill in this repo — copy `spec-kit-shared/` alongside whichever of them you use; see `spec-kit-shared/README.md` for the full flow diagram and reuse map.
 
 **Order of execution** — run these in sequence, not independently:
 

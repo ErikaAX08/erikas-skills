@@ -84,7 +84,7 @@ holds — closure is structural, not an afterthought.**
 
 ## Cross-Platform Agent Compatibility
 
-The complete portability contract lives in `spec-kit/shared/agent-portability.md` (same document
+The complete portability contract lives in `spec-kit-shared/agent-portability.md` (same document
 `generate-spec` and `generate-plan` use). Before generating, validating, or reporting on the
 `task-decomposer` role — or any other agent this skill materializes — read that file completely
 and follow it exactly. If the active host cannot resolve the reference, follow its fallback
@@ -97,7 +97,7 @@ different name or redefine it for another purpose.
 ## Artifact Conventions
 
 The `.specify/`/`specs/<feature-dir>/` layout, `feature.json`, `state.json`, and the Content
-Fingerprint Convention all live in `spec-kit/shared/artifact-conventions.md`. Read it before Fase 0
+Fingerprint Convention all live in `spec-kit-shared/artifact-conventions.md`. Read it before Fase 0
 below and follow it exactly.
 
 ## Input Contract
@@ -134,7 +134,7 @@ below and follow it exactly.
 1. If `specs/<feature-dir>/state.json` does not exist, or has no `artifacts.tasks` entry yet, this
    is the first task list for this plan — skip straight to Phase 1, and create/update
    `state.json` at the end.
-2. Otherwise, read `spec-kit/sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
+2. Otherwise, read `sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
    detection procedure against `artifacts.tasks.based_on_plan_hash` vs. `plan.md`'s current
    content hash — do not re-derive the hashing/comparison mechanism independently.
 3. If `sync-artifacts` reports a match, `plan.md` hasn't changed since the last task generation —
@@ -308,7 +308,7 @@ Create `checklists/tasks-quality.md`:
 
 ## Agent Portability
 
-- [ ] If a task-decomposer (or other agent) was generated, both Kiro and Claude definitions exist and validated per spec-kit/shared/agent-portability.md, or AGENTS: none is reported
+- [ ] If a task-decomposer (or other agent) was generated, both Kiro and Claude definitions exist and validated per spec-kit-shared/agent-portability.md, or AGENTS: none is reported
 
 ## Notes
 
@@ -341,7 +341,7 @@ When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected dri
 ## Pre-Execution Extension Hooks
 
 Before task decomposition, check `.specify/extensions.yml` per
-`spec-kit/shared/artifact-conventions.md`'s schema, reading `hooks.before_tasks`. Follow the same
+`spec-kit-shared/artifact-conventions.md`'s schema, reading `hooks.before_tasks`. Follow the same
 enablement/condition/mandatory-vs-optional rules `generate-spec` and `generate-plan` use for their
 own hooks.
 

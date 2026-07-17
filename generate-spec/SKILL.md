@@ -62,7 +62,7 @@ Treat the specification as a first-class delivery artifact:
 The complete portability contract — Kiro CLI + Claude Code file requirements, naming rules, the
 capability-to-tool mapping table, both agent templates, required prompt content, the generation
 procedure, and the completion report format — lives in the shared, canonical document
-`spec-kit/shared/agent-portability.md`.
+`spec-kit-shared/agent-portability.md`.
 
 **Before generating, validating, or reporting on any support agent** (`spec-clarifier`,
 `spec-planner`, or any other role this skill materializes), read that file completely and follow
@@ -197,7 +197,7 @@ Do not paste complete source documents into the final spec. Preserve them throug
 
 Record a fingerprint for every `[S#]`/`[P#]` row so a later re-run of this skill (update mode) or a companion drift-detection skill (`sync-artifacts`) can tell, without re-reading and re-comparing full documents by hand, whether the underlying source changed since this specification was generated.
 
-**Read `spec-kit/shared/artifact-conventions.md`'s "Content Fingerprint Convention" section and follow it exactly** — it defines the per-source-type hashing rules (versioned file, non-versioned file, pasted text, URL, attachment) and the "never leave blank" rule. Do not paraphrase it from memory or apply a partial recollection. If the active host cannot resolve that file reference, state plainly that the fingerprint convention could not be loaded rather than inventing one, following the same fallback discipline as the Cross-Platform Agent Compatibility section above.
+**Read `spec-kit-shared/artifact-conventions.md`'s "Content Fingerprint Convention" section and follow it exactly** — it defines the per-source-type hashing rules (versioned file, non-versioned file, pasted text, URL, attachment) and the "never leave blank" rule. Do not paraphrase it from memory or apply a partial recollection. If the active host cannot resolve that file reference, state plainly that the fingerprint convention could not be loaded rather than inventing one, following the same fallback discipline as the Cross-Platform Agent Compatibility section above.
 
 ### Phase 2 — Bound the Work
 
@@ -644,7 +644,7 @@ Also perform these consistency checks:
 
 ### Initialize or Refresh `state.json`
 
-Per `spec-kit/shared/artifact-conventions.md`'s schema, write or update
+Per `spec-kit-shared/artifact-conventions.md`'s schema, write or update
 `specs/<feature-dir>/state.json`'s `artifacts.spec` entry (content hash of the final `spec.md`)
 and its `source_documents` map (mirroring the Evidence Catalog's fingerprints exactly) — in both
 new mode and update mode, whether or not a `plan.md` exists yet. This is what lets
@@ -661,7 +661,7 @@ When the user supplies an existing REASONS specification:
 3. Treat the requested change as a delta, not permission to regenerate unrelated sections.
 4. Identify affected requirement IDs and propagate the change through Entities, Approach, Structure, Operations, Norms, Safeguards, and traceability.
 5. Preserve stable IDs where semantics remain the same; add new IDs for new semantics; never silently reuse an ID for a different requirement.
-6. Update the persisted Evidence Catalog for new, removed, or superseded evidence, recomputing the source fingerprint for every row whose underlying source was re-read as part of this update — a stale fingerprint left over from a prior version defeats the purpose of recording one. If `specs/<feature-dir>/state.json` exists (see `spec-kit/shared/artifact-conventions.md`), refresh its `source_documents.<ID>.fingerprint`/`read_at` entries to match at the same time — the Evidence Catalog table inside `spec.md` and `state.json`'s copy must never be left pointing at two different fingerprints for the same source, or the next `sync-artifacts` check will report a already-resolved drift as if it were still open.
+6. Update the persisted Evidence Catalog for new, removed, or superseded evidence, recomputing the source fingerprint for every row whose underlying source was re-read as part of this update — a stale fingerprint left over from a prior version defeats the purpose of recording one. If `specs/<feature-dir>/state.json` exists (see `spec-kit-shared/artifact-conventions.md`), refresh its `source_documents.<ID>.fingerprint`/`read_at` entries to match at the same time — the Evidence Catalog table inside `spec.md` and `state.json`'s copy must never be left pointing at two different fingerprints for the same source, or the next `sync-artifacts` check will report a already-resolved drift as if it were still open.
 7. Record superseded decisions and migration/compatibility consequences where relevant.
 8. Re-run the complete checklist.
 9. Summarize exactly which REASONS sections changed and why.

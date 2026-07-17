@@ -90,7 +90,7 @@ Treat the plan as the bridge between approved intent and executable work:
 ## Cross-Platform Agent Compatibility
 
 The complete portability contract lives in the shared, canonical document
-`spec-kit/shared/agent-portability.md` (same document `generate-spec` uses). Before generating,
+`spec-kit-shared/agent-portability.md` (same document `generate-spec` uses). Before generating,
 validating, or reporting on the `plan-reviewer` role — or any other agent this skill materializes
 — read that file completely and follow it exactly. Do not paraphrase it from memory. If the active
 host cannot resolve that file reference, follow its "Fallback for hosts that cannot follow a file
@@ -103,7 +103,7 @@ plan is approved. Do not invent a different name for this role or redefine it fo
 
 The `.specify/` and `specs/<feature-dir>/` layout, `feature.json`, `state.json`, and the Content
 Fingerprint Convention used for staleness detection all live in the shared, canonical document
-`spec-kit/shared/artifact-conventions.md`. Read it before Phase 0 below and follow it exactly —
+`spec-kit-shared/artifact-conventions.md`. Read it before Phase 0 below and follow it exactly —
 this skill does not redefine its own file layout or hashing scheme.
 
 ## Input Contract
@@ -143,7 +143,7 @@ this skill does not redefine its own file layout or hashing scheme.
    genuinely does not — an older `spec.md` predating that step, or it was manually removed — skip
    straight to Phase 1 and create it (with a fresh `artifacts.spec` entry too) at the end of
    Phase 5, alongside this skill's own `artifacts.plan` entry.
-2. Otherwise, read `spec-kit/sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
+2. Otherwise, read `sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
    detection procedure against `artifacts.plan.based_on_spec_hash` vs. `spec.md`'s current content
    hash — do not re-derive the hashing/comparison mechanism independently; that definition lives
    there so it stays identical across every skill that needs it.
@@ -169,7 +169,7 @@ manifest/lockfile, existing architecture, and any active architecture skills in 
 (`frontend-architecture`, `backend-api-standards`, or equivalent) before writing anything.
 
 Produce the `Technical Context` block of `plan.md` (see
-`spec-kit/shared/templates/plan-template.md`): Language/Version, Primary Dependencies, Storage,
+`spec-kit-shared/templates/plan-template.md`): Language/Version, Primary Dependencies, Storage,
 Testing, Target Platform, Project Type, Performance Goals, Constraints, Scale/Scope. Every field is
 either a verified fact or `NEEDS CLARIFICATION` — never a plausible guess.
 
@@ -240,7 +240,7 @@ Document per `plan-template.md`'s Project Structure section:
 
 ### Phase 5 — `plan.md`: Strategy, Decisions, and Gates
 
-Assemble `plan.md` from `spec-kit/shared/templates/plan-template.md`, filling every section with
+Assemble `plan.md` from `spec-kit-shared/templates/plan-template.md`, filling every section with
 the verified output of Phases 1–4.5, then complete the following in order:
 
 #### Constitution Check — Gate 2 (re-check)
@@ -380,7 +380,7 @@ Create `checklists/plan-quality.md`:
 
 ## Agent Portability
 
-- [ ] If a `plan-reviewer` (or other agent) was generated, both Kiro and Claude definitions exist and validated per `spec-kit/shared/agent-portability.md`, or `AGENTS: none` is reported
+- [ ] If a `plan-reviewer` (or other agent) was generated, both Kiro and Claude definitions exist and validated per `spec-kit-shared/agent-portability.md`, or `AGENTS: none` is reported
 
 ## Notes
 
@@ -417,7 +417,7 @@ triggered separately.
 ## Pre-Execution Extension Hooks
 
 Before planning work, check for `.specify/extensions.yml` per
-`spec-kit/shared/artifact-conventions.md`'s schema, reading the `hooks.before_plan` key. Follow
+`spec-kit-shared/artifact-conventions.md`'s schema, reading the `hooks.before_plan` key. Follow
 the same enablement/condition/mandatory-vs-optional rules `generate-spec` uses for its own hooks —
 do not reinterpret them differently for this skill.
 

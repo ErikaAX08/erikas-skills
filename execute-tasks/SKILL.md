@@ -86,7 +86,7 @@ passed — not when the code looks right. A story is done when its checkpoint ho
 
 ## Cross-Platform Agent Compatibility
 
-The complete portability contract lives in `spec-kit/shared/agent-portability.md`. Before
+The complete portability contract lives in `spec-kit-shared/agent-portability.md`. Before
 generating, validating, or reporting on the `task-executor` role — or any other agent this skill
 materializes — read that file completely and follow it exactly. If the active host cannot resolve
 the reference, follow its fallback section.
@@ -97,7 +97,7 @@ in parallel with others. Do not invent a different name or redefine it for anoth
 ## Artifact Conventions
 
 The `.specify/`/`specs/<feature-dir>/` layout and `state.json` schema live in
-`spec-kit/shared/artifact-conventions.md`. Read it before Fase 0 below.
+`spec-kit-shared/artifact-conventions.md`. Read it before Fase 0 below.
 
 ## Skill Delegation Map
 
@@ -139,7 +139,7 @@ pattern `generate-spec` uses for its Extension Hooks):
 
 ## Fase 0 — Staleness Check (every invocation)
 
-Read `spec-kit/sync-artifacts/SKILL.md` and follow its full Phase 1/2 procedure across the whole
+Read `sync-artifacts/SKILL.md` and follow its full Phase 1/2 procedure across the whole
 chain: source documents → `spec.md` → `plan.md` → `tasks.md`. If it reports any drift:
 
 1. If the drift is upstream of `tasks.md` (a source, `spec.md`, or `plan.md` changed since
@@ -245,7 +245,7 @@ Re-running this skill on a `tasks.md` with some tasks already `[x]`:
 ## Pre-Execution Extension Hooks
 
 Before execution, check `.specify/extensions.yml` per
-`spec-kit/shared/artifact-conventions.md`'s schema, reading `hooks.before_execute`. Follow the
+`spec-kit-shared/artifact-conventions.md`'s schema, reading `hooks.before_execute`. Follow the
 same enablement/condition/mandatory-vs-optional rules the other `spec-kit` skills use.
 
 ## Mandatory Post-Execution Hooks

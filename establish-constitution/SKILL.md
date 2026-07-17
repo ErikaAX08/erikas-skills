@@ -85,7 +85,7 @@ never binding until the user confirms them.**
 
 ## Cross-Platform Agent Compatibility
 
-The complete portability contract lives in `spec-kit/shared/agent-portability.md`. Before
+The complete portability contract lives in `spec-kit-shared/agent-portability.md`. Before
 generating, validating, or reporting on the `pattern-miner` role — or any other agent this skill
 materializes — read that file completely and follow it exactly. If the active host cannot resolve
 the reference, follow its fallback section.
@@ -97,7 +97,7 @@ invent a different name or redefine it for another purpose.
 ## Artifact Conventions
 
 `.specify/memory/constitution.md`'s location and the `extensions.yml` hook keys
-(`before_constitution`/`after_constitution`) live in `spec-kit/shared/artifact-conventions.md`.
+(`before_constitution`/`after_constitution`) live in `spec-kit-shared/artifact-conventions.md`.
 Read it before Phase 1 below.
 
 ## Input Contract
@@ -225,7 +225,7 @@ When explicitly invoked to check code against an existing constitution, without 
 ## Pre-Execution Extension Hooks
 
 Before inspecting the project, check `.specify/extensions.yml` per
-`spec-kit/shared/artifact-conventions.md`'s schema, reading `hooks.before_constitution`. Follow
+`spec-kit-shared/artifact-conventions.md`'s schema, reading `hooks.before_constitution`. Follow
 the same enablement/condition/mandatory-vs-optional rules the other `spec-kit` skills use.
 
 ## Mandatory Post-Execution Hooks
