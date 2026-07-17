@@ -16,7 +16,16 @@ skills/
 ├── code-architecture-explainer/SKILL.md   # Explain code & architecture
 ├── code-documentation/SKILL.md            # Document code professionally
 ├── git-commits/SKILL.md                   # Conventional commits & PR descriptions
-└── latex-academic-reports/SKILL.md        # Academic reports & papers in LaTeX
+├── latex-academic-reports/SKILL.md        # Academic reports & papers in LaTeX
+└── spec-kit/                              # Spec-driven development chain (see spec-kit/README.md)
+    ├── establish-constitution/SKILL.md    # Make project conventions explicit (optional)
+    ├── generate-spec/SKILL.md             # Requirement/PRD → governed spec.md
+    ├── generate-plan/SKILL.md             # spec.md → verified technical plan.md
+    ├── generate-tasks/SKILL.md            # plan.md → per-user-story tasks.md
+    ├── analyze-consistency/SKILL.md       # Read-only spec/plan/tasks consistency check
+    ├── sync-artifacts/SKILL.md            # Drift detection between artifacts and sources
+    ├── execute-tasks/SKILL.md             # tasks.md → real code, sequential or parallel
+    └── shared/                            # Agent portability & artifact contracts
 ```
 
 ### Frontend
@@ -92,6 +101,52 @@ Writes clear, semantic git commit messages and PR descriptions following Convent
 Generates academic reports, papers, theses, and technical documentation using LaTeX, producing publication-quality PDFs with proper formatting, citations, figures, tables, and mathematical notation. Ideal for Computer Science, Engineering, and scientific documents.
 
 **Use when:** creating research papers, lab reports, theses, IEEE-style papers, or any academic document requiring professional typesetting.
+
+### Spec Kit
+
+A sequential chain of skills for specification-driven development — from a requirement or document, through a governed spec, a verified technical plan, and an executable task list, to real code. Every skill verifies real project context before writing anything, enforces that no phase or story closes in a broken state, detects drift when a source document or upstream artifact changes, and generates matching Kiro CLI + Claude Code agent definitions whenever a support agent is needed. See `spec-kit/README.md` for the full flow diagram and reuse map.
+
+#### 12. Establish Constitution
+
+Creates or updates a project's `constitution.md` — non-negotiable architecture/security/quality principles — from explicit documentation and/or by mining consistent patterns across existing code, with evidence, coverage, and confidence for every mined principle. Nothing mined becomes binding without explicit confirmation. Optional; re-invocable to check for drift.
+
+**Use when:** starting spec-driven work on a project that already has established conventions, or checking whether code has drifted from a previously established constitution.
+
+#### 13. Generate Spec
+
+Generates or updates a governed specification (a REASONS Canvas) from a PRD, free-form text, or referenced documents — with a source Evidence Catalog, conflict resolution, and a quality checklist. Does not implement code.
+
+**Use when:** starting a new feature from a requirement or document, or updating an existing specification after a material change.
+
+#### 14. Generate Plan
+
+Converts a `READY` specification into a verified technical plan — real Technical Context, a two-gate Constitution Check, verified Project Structure, and an explicit Safe Deferral table for any phased rollout. Does not implement code.
+
+**Use when:** a specification is approved and you need a technically grounded implementation plan before task breakdown.
+
+#### 15. Generate Tasks
+
+Decomposes a `READY` plan into an ordered task list organized by user story (priority order), with a mandatory closure checkpoint per story — never a flat task list, never an unsafe "later" deferral.
+
+**Use when:** a plan is approved and you need executable, independently verifiable tasks.
+
+#### 16. Analyze Consistency
+
+Read-only cross-check of `spec.md`/`plan.md`/`tasks.md` for coverage gaps, orphan tasks, unsafe deferrals, and incomplete story checkpoints, with a `READY_FOR_EXECUTION` verdict.
+
+**Use when:** before executing tasks, to catch a gap upstream skills' own checklists might have missed.
+
+#### 17. Sync Artifacts
+
+Detects drift between a source document and the spec/plan/tasks chain via content-hash comparison, and recommends the nearest upstream skill to re-invoke — one hop at a time, never a silent cascade.
+
+**Use when:** a source document, spec, or plan changed and you need to know exactly what's now stale downstream.
+
+#### 18. Execute Tasks
+
+Executes a `READY` task list into real code, delegating implementation discipline, commit messages, documentation, and final review to the skills that already own those concerns — sequentially by default, or in parallel across genuinely independent user stories.
+
+**Use when:** tasks are approved and ready to implement.
 
 ---
 
@@ -216,6 +271,15 @@ Use the git-commits skill for this commit/PR
 
 # Academic report
 Use the latex-academic-reports skill for [document]
+
+# Spec Kit — sequential chain
+Use the establish-constitution skill for this project        # optional, once
+Use the generate-spec skill for [requirement/document]
+Use the generate-plan skill for specs/[feature]/spec.md
+Use the generate-tasks skill for specs/[feature]/plan.md
+Use the analyze-consistency skill on specs/[feature]          # optional gate
+Use the sync-artifacts skill on specs/[feature]                # after editing a source
+Use the execute-tasks skill on specs/[feature]/tasks.md
 
 # Fullstack
 Use all project skills for [task]
