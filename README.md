@@ -106,6 +106,24 @@ Generates academic reports, papers, theses, and technical documentation using La
 
 A sequential chain of skills for specification-driven development — from a requirement or document, through a governed spec, a verified technical plan, and an executable task list, to real code. Every skill verifies real project context before writing anything, enforces that no phase or story closes in a broken state, detects drift when a source document or upstream artifact changes, and generates matching Kiro CLI + Claude Code agent definitions whenever a support agent is needed. See `spec-kit/README.md` for the full flow diagram and reuse map.
 
+**Order of execution** — run these in sequence, not independently:
+
+```
+1. establish-constitution   (optional, once per project)
+2. generate-spec            → spec.md
+3. generate-plan            → plan.md          (needs a READY spec.md)
+4. generate-tasks           → tasks.md         (needs a READY plan.md)
+5. analyze-consistency      (optional gate)     (needs a READY tasks.md)
+6. execute-tasks            → real code        (needs a READY tasks.md)
+
+sync-artifacts — not a numbered step; run it any time after editing a
+source document, spec.md, or plan.md by hand, to see what's now stale.
+```
+
+Skip step 1 if the project has no established conventions yet, and skip step 5 if you're
+confident `tasks.md` is already consistent — every other step depends on the `READY` output of
+the one before it.
+
 #### 12. Establish Constitution
 
 Creates or updates a project's `constitution.md` — non-negotiable architecture/security/quality principles — from explicit documentation and/or by mining consistent patterns across existing code, with evidence, coverage, and confidence for every mined principle. Nothing mined becomes binding without explicit confirmation. Optional; re-invocable to check for drift.
