@@ -92,7 +92,7 @@ Do not invent a different name or redefine it for another purpose.
 
 ## Artifact Conventions
 
-The `.specify/`/`specs/<feature-dir>/` layout, `state.json` schema, and Content Fingerprint
+The `.specify/` layout (including `.specify/specs/<feature-dir>/`), `state.json` schema, and Content Fingerprint
 Convention live in `spec-kit-shared/artifact-conventions.md`. Read it before Phase 1 below — this
 skill's entire mechanism is built directly on that document's schema.
 
@@ -109,7 +109,7 @@ skill's entire mechanism is built directly on that document's schema.
 
 ### Missing State
 
-If `specs/<feature-dir>/state.json` does not exist, stop and report:
+If `.specify/specs/<feature-dir>/state.json` does not exist, stop and report:
 
 > No recorded state for this feature — nothing to compare against yet. This is expected before a
 > first `plan.md`/`tasks.md` exists; it is not the same as confirming there's no drift.

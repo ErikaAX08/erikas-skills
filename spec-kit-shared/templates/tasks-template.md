@@ -1,6 +1,6 @@
 # Tasks: [FEATURE NAME]
 
-**Input**: Design documents from `specs/[###-feature-name]/` — `plan.md` (required), `spec.md`
+**Input**: Design documents from `.specify/specs/[###-feature-name]/` — `plan.md` (required), `spec.md`
 (required for user stories and priorities), `research.md`, `data-model.md`, `contracts/` as
 available.
 

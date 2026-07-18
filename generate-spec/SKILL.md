@@ -287,15 +287,15 @@ First determine the mode:
 - **Update mode**: the user explicitly supplied an existing REASONS `spec.md`, or explicitly requested an update to the active feature identified by `.specify/feature.json`. Validate that the target is the intended specification, set `SPEC_FILE` to that existing file, set `SPECIFY_FEATURE_DIRECTORY` to its parent feature directory, and reuse its checklist. Do not create a new directory or copy a fresh template.
 - **New mode**: no existing specification is explicitly targeted. Resolve a new feature directory as described below.
 
-For **new mode**, specifications live under `specs/` unless the user explicitly supplies `SPECIFY_FEATURE_DIRECTORY`:
+For **new mode**, specifications live under `.specify/specs/` unless the user explicitly supplies `SPECIFY_FEATURE_DIRECTORY`:
 
 1. If `SPECIFY_FEATURE_DIRECTORY` is explicit, use it unchanged.
 2. Otherwise:
    1. Read `.specify/init-options.json`.
    2. If `feature_numbering` is `timestamp`, use `YYYYMMDD-HHMMSS`.
-   3. If `feature_numbering` is `sequential` or absent, scan `specs/` and use the next three-digit number.
+   3. If `feature_numbering` is `sequential` or absent, scan `.specify/specs/` and use the next three-digit number.
    4. If only deprecated `branch_numbering` exists, honor it and warn: `⚠️ branch_numbering is deprecated; rename it to feature_numbering.`
-   5. Build `SPECIFY_FEATURE_DIRECTORY` as `specs/<prefix>-<short-name>`.
+   5. Build `SPECIFY_FEATURE_DIRECTORY` as `.specify/specs/<prefix>-<short-name>`.
 3. Create the resolved directory.
 4. Resolve the active `spec-template` through the Spec Kit preset/template stack when available.
 5. Set `SPEC_FILE` to `<feature-directory>/spec.md`.
@@ -304,7 +304,7 @@ For both modes, persist the actual resolved feature directory in `.specify/featu
 
 ```json
 {
-  "feature_directory": "specs/003-example-feature"
+  "feature_directory": ".specify/specs/003-example-feature"
 }
 ```
 
@@ -645,7 +645,7 @@ Also perform these consistency checks:
 ### Initialize or Refresh `state.json`
 
 Per `spec-kit-shared/artifact-conventions.md`'s schema, write or update
-`specs/<feature-dir>/state.json`'s `artifacts.spec` entry (content hash of the final `spec.md`)
+`.specify/specs/<feature-dir>/state.json`'s `artifacts.spec` entry (content hash of the final `spec.md`)
 and its `source_documents` map (mirroring the Evidence Catalog's fingerprints exactly) — in both
 new mode and update mode, whether or not a `plan.md` exists yet. This is what lets
 `sync-artifacts` check a fresh specification against its sources standalone, before anyone has run
@@ -661,7 +661,7 @@ When the user supplies an existing REASONS specification:
 3. Treat the requested change as a delta, not permission to regenerate unrelated sections.
 4. Identify affected requirement IDs and propagate the change through Entities, Approach, Structure, Operations, Norms, Safeguards, and traceability.
 5. Preserve stable IDs where semantics remain the same; add new IDs for new semantics; never silently reuse an ID for a different requirement.
-6. Update the persisted Evidence Catalog for new, removed, or superseded evidence, recomputing the source fingerprint for every row whose underlying source was re-read as part of this update — a stale fingerprint left over from a prior version defeats the purpose of recording one. If `specs/<feature-dir>/state.json` exists (see `spec-kit-shared/artifact-conventions.md`), refresh its `source_documents.<ID>.fingerprint`/`read_at` entries to match at the same time — the Evidence Catalog table inside `spec.md` and `state.json`'s copy must never be left pointing at two different fingerprints for the same source, or the next `sync-artifacts` check will report a already-resolved drift as if it were still open.
+6. Update the persisted Evidence Catalog for new, removed, or superseded evidence, recomputing the source fingerprint for every row whose underlying source was re-read as part of this update — a stale fingerprint left over from a prior version defeats the purpose of recording one. If `.specify/specs/<feature-dir>/state.json` exists (see `spec-kit-shared/artifact-conventions.md`), refresh its `source_documents.<ID>.fingerprint`/`read_at` entries to match at the same time — the Evidence Catalog table inside `spec.md` and `state.json`'s copy must never be left pointing at two different fingerprints for the same source, or the next `sync-artifacts` check will report a already-resolved drift as if it were still open.
 7. Record superseded decisions and migration/compatibility consequences where relevant.
 8. Re-run the complete checklist.
 9. Summarize exactly which REASONS sections changed and why.
@@ -706,8 +706,8 @@ Report:
 Use a concise summary such as:
 
 ```text
-Specification generated at: specs/003-invoice-export/spec.md
-Checklist: specs/003-invoice-export/checklists/requirements.md
+Specification generated at: .specify/specs/003-invoice-export/spec.md
+Checklist: .specify/specs/003-invoice-export/checklists/requirements.md
 Status: READY
 Sources: 2/2 read successfully
 Validation: 32/32 checks passed

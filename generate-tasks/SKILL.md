@@ -96,7 +96,7 @@ different name or redefine it for another purpose.
 
 ## Artifact Conventions
 
-The `.specify/`/`specs/<feature-dir>/` layout, `feature.json`, `state.json`, and the Content
+The `.specify/` layout (including `.specify/specs/<feature-dir>/`), `feature.json`, `state.json`, and the Content
 Fingerprint Convention all live in `spec-kit-shared/artifact-conventions.md`. Read it before Fase 0
 below and follow it exactly.
 
@@ -131,7 +131,7 @@ below and follow it exactly.
 
 ## Fase 0 — Staleness Check (every invocation, new or update)
 
-1. If `specs/<feature-dir>/state.json` does not exist, or has no `artifacts.tasks` entry yet, this
+1. If `.specify/specs/<feature-dir>/state.json` does not exist, or has no `artifacts.tasks` entry yet, this
    is the first task list for this plan — skip straight to Phase 1, and create/update
    `state.json` at the end.
 2. Otherwise, read `sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical

@@ -96,7 +96,7 @@ in parallel with others. Do not invent a different name or redefine it for anoth
 
 ## Artifact Conventions
 
-The `.specify/`/`specs/<feature-dir>/` layout and `state.json` schema live in
+The `.specify/` layout (including `.specify/specs/<feature-dir>/`) and `state.json` schema live in
 `spec-kit-shared/artifact-conventions.md`. Read it before Fase 0 below.
 
 ## Skill Delegation Map

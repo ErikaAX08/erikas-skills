@@ -1,24 +1,33 @@
 # Artifact Conventions
 
 > Canonical, shared reference for the file layout and data formats every `spec-kit` skill reads
-> from or writes to. Any skill that creates, reads, or updates something under `.specify/` or
-> `specs/` follows this document instead of inventing its own layout or hashing scheme.
+> from or writes to. Every artifact this kit generates — project-wide state and per-feature
+> artifacts alike — lives under `.specify/`, never scattered elsewhere in the project. Any skill
+> that creates, reads, or updates something under `.specify/` follows this document instead of
+> inventing its own layout or hashing scheme.
 >
 > **Used by**: `generate-spec`, `establish-constitution`, `generate-plan`, `generate-tasks`,
 > `analyze-consistency`, `sync-artifacts`, `execute-tasks`.
 
-## `.specify/` — project-wide state
+## `.specify/` — everything this kit generates
+
+Every file this kit writes — project-wide state and per-feature artifacts alike — lives under
+`.specify/`. Nothing this kit generates is placed anywhere else in the project, so a project using
+this kit never has spec-kit files scattered outside that one folder.
 
 ```text
 .specify/
 ├── memory/
-│   └── constitution.md     # written by establish-constitution; read (optionally) by every other skill
-├── extensions.yml          # optional hook definitions (see below); absence is not an error
-├── init-options.json       # { "feature_numbering": "timestamp" | "sequential" }
-└── feature.json            # pointer to the currently active feature directory
+│   └── constitution.md      # written by establish-constitution; read (optionally) by every other skill
+├── extensions.yml           # optional hook definitions (see below); absence is not an error
+├── init-options.json        # { "feature_numbering": "timestamp" | "sequential" }
+├── feature.json             # pointer to the currently active feature directory
+└── specs/
+    └── <feature-dir>/       # per-feature artifacts — see below
 ```
 
-Everything here is project-wide — one copy per project, not per feature.
+The `memory/`, `extensions.yml`, `init-options.json`, and `feature.json` entries are project-wide —
+one copy per project, not per feature.
 
 ### `feature.json`
 
@@ -28,7 +37,7 @@ invocation:
 
 ```json
 {
-  "feature_directory": "specs/003-invoice-export"
+  "feature_directory": ".specify/specs/003-invoice-export"
 }
 ```
 
@@ -45,7 +54,7 @@ explicit path, that explicit path wins.
 ```
 
 `timestamp` → `YYYYMMDD-HHMMSS` feature directory names. `sequential` (default when absent) → next
-three-digit number under `specs/`. A deprecated `branch_numbering` key is honored with a warning if
+three-digit number under `.specify/specs/`. A deprecated `branch_numbering` key is honored with a warning if
 `feature_numbering` is absent — see `generate-spec` Phase 5.
 
 ### `extensions.yml`
@@ -85,10 +94,10 @@ errors — this keeps `extensions.yml` forward-compatible as new spec-kit skills
 A hook may create or switch branches, but a hook never creates the feature directory itself — that
 stays the responsibility of the skill that owns this invocation.
 
-## `specs/<feature-dir>/` — per-feature artifacts
+## `.specify/specs/<feature-dir>/` — per-feature artifacts
 
 ```text
-specs/003-invoice-export/
+.specify/specs/003-invoice-export/
 ├── spec.md                 # generate-spec
 ├── plan.md                 # generate-plan
 ├── research.md              # generate-plan, Phase 0
@@ -103,9 +112,10 @@ specs/003-invoice-export/
     └── consistency-report.md # analyze-consistency
 ```
 
-`state.json` lives inside the feature's own directory, not in `.specify/` — it describes that one
-feature's artifacts, and a project can have multiple feature directories with independent state at
-once. `feature.json` only tracks which one is "active"; it is not where per-feature state lives.
+`state.json` lives inside the feature's own directory under `.specify/specs/`, not alongside the
+project-wide files at `.specify/`'s top level (`memory/`, `feature.json`, etc.) — it describes that
+one feature's artifacts, and a project can have multiple feature directories with independent state
+at once. `feature.json` only tracks which one is "active"; it is not where per-feature state lives.
 
 ### `state.json`
 

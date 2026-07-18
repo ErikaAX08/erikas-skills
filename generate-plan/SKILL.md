@@ -101,7 +101,7 @@ plan is approved. Do not invent a different name for this role or redefine it fo
 
 ## Artifact Conventions
 
-The `.specify/` and `specs/<feature-dir>/` layout, `feature.json`, `state.json`, and the Content
+The `.specify/` layout (including `.specify/specs/<feature-dir>/`), `feature.json`, `state.json`, and the Content
 Fingerprint Convention used for staleness detection all live in the shared, canonical document
 `spec-kit-shared/artifact-conventions.md`. Read it before Phase 0 below and follow it exactly —
 this skill does not redefine its own file layout or hashing scheme.
@@ -227,7 +227,7 @@ for each endpoint/schema (existing contract file, or "new — proposed").
 
 Document per `plan-template.md`'s Project Structure section:
 
-- **Documentation (this feature)**: the fixed `specs/<feature-dir>/` tree (see
+- **Documentation (this feature)**: the fixed `.specify/specs/<feature-dir>/` tree (see
   `artifact-conventions.md`).
 - **Source Code (repository root)**: in a project that already has structure, this is a
   **verified snapshot of the real layout** (via `verify-before-implement`), not a free choice

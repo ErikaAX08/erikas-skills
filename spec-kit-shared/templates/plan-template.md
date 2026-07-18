@@ -1,8 +1,8 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: `specs/[###-feature-name]/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: `.specify/specs/[###-feature-name]/spec.md`
 
-**Input**: Feature specification from `specs/[###-feature-name]/spec.md` (must be `READY`, or
+**Input**: Feature specification from `.specify/specs/[###-feature-name]/spec.md` (must be `READY`, or
 `DRAFT` with the user's explicit confirmation to plan against a draft — see `generate-plan/SKILL.md`).
 
 **Note**: This template is filled in by the `generate-plan` skill; its `SKILL.md` describes the
@@ -80,7 +80,7 @@ endpoint/schema.]
 #### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+.specify/specs/[###-feature]/
 ├── plan.md              # this file
 ├── research.md          # Phase 0 output
 ├── data-model.md        # Phase 1 output

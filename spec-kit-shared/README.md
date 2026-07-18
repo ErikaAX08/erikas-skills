@@ -78,7 +78,7 @@ Not invocable skills — documents every skill above reads and follows:
   templates, validation procedure. Defines every standard role used across this kit
   (`spec-clarifier`, `spec-planner`, `plan-reviewer`, `task-decomposer`, `spec-analyzer`,
   `drift-watcher`, `task-executor`, `pattern-miner`).
-- **`artifact-conventions.md`** — the `.specify/`/`specs/<feature-dir>/` file layout,
+- **`artifact-conventions.md`** — the `.specify/` file layout (including `.specify/specs/<feature-dir>/`),
   `feature.json`/`state.json`/`extensions.yml` schemas, and the Content Fingerprint Convention
   every hash/drift check in this kit uses.
 - **`templates/plan-template.md`** / **`templates/tasks-template.md`** — the fill-in-the-blank
@@ -107,17 +107,19 @@ No skill in `spec-kit` reimplements what one of these already does.
 ├── memory/constitution.md   # establish-constitution
 ├── extensions.yml           # optional hooks, per skill
 ├── init-options.json
-└── feature.json             # pointer to the active feature
-
-specs/<feature-dir>/
-├── spec.md                  # generate-spec
-├── plan.md                  # generate-plan
-├── research.md / data-model.md / quickstart.md / contracts/
-├── tasks.md                 # generate-tasks
-├── state.json               # drift-detection state (sync-artifacts, artifact-conventions.md)
-└── checklists/
-    ├── requirements.md          # generate-spec
-    ├── plan-quality.md          # generate-plan
-    ├── tasks-quality.md         # generate-tasks
-    └── consistency-report.md    # analyze-consistency
+├── feature.json             # pointer to the active feature
+└── specs/<feature-dir>/
+    ├── spec.md                  # generate-spec
+    ├── plan.md                  # generate-plan
+    ├── research.md / data-model.md / quickstart.md / contracts/
+    ├── tasks.md                 # generate-tasks
+    ├── state.json               # drift-detection state (sync-artifacts, artifact-conventions.md)
+    └── checklists/
+        ├── requirements.md          # generate-spec
+        ├── plan-quality.md          # generate-plan
+        ├── tasks-quality.md         # generate-tasks
+        └── consistency-report.md    # analyze-consistency
 ```
+
+Everything this kit generates lives under `.specify/` — no spec-kit file is ever written outside
+this folder, so a project's own source tree stays free of scattered spec-kit artifacts.

@@ -295,11 +295,11 @@ Use the latex-academic-reports skill for [document]
 # Spec Kit — sequential chain
 Use the establish-constitution skill for this project        # optional, once
 Use the generate-spec skill for [requirement/document]
-Use the generate-plan skill for specs/[feature]/spec.md
-Use the generate-tasks skill for specs/[feature]/plan.md
-Use the analyze-consistency skill on specs/[feature]          # optional gate
-Use the sync-artifacts skill on specs/[feature]                # after editing a source
-Use the execute-tasks skill on specs/[feature]/tasks.md
+Use the generate-plan skill for .specify/specs/[feature]/spec.md
+Use the generate-tasks skill for .specify/specs/[feature]/plan.md
+Use the analyze-consistency skill on .specify/specs/[feature]          # optional gate
+Use the sync-artifacts skill on .specify/specs/[feature]                # after editing a source
+Use the execute-tasks skill on .specify/specs/[feature]/tasks.md
 
 # Fullstack
 Use all project skills for [task]

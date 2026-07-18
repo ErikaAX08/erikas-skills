@@ -86,7 +86,7 @@ read-only. Do not invent a different name or redefine it for another purpose.
 
 ## Artifact Conventions
 
-The `.specify/`/`specs/<feature-dir>/` layout and `state.json` schema live in
+The `.specify/` layout (including `.specify/specs/<feature-dir>/`) and `state.json` schema live in
 `spec-kit-shared/artifact-conventions.md`. Read it before Phase 1 below. This skill reads
 `state.json` for context (e.g. whether `tasks.md` is stale relative to `plan.md`) but never writes
 to it — that remains `sync-artifacts`'/the generating skill's responsibility.
