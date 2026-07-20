@@ -1,5 +1,5 @@
 ---
-name: generate-plan
+name: spec-kit-generate-plan
 description: Generate or update a technical implementation plan (plan.md) from an approved REASONS specification, enforcing verified project context, two-gate Constitution Check, convention enforcement, and the Safe Deferral rule for phased work; when a plan-reviewer agent is requested, generate compatible definitions for both Kiro CLI and Claude Code.
 license: MIT
 ---
@@ -9,14 +9,14 @@ license: MIT
 ## Purpose
 
 Turn an approved REASONS specification (`spec.md`) into one concrete, technically verified plan
-that `generate-tasks` can decompose into executable work — without writing product code. This
-skill sits between `generate-spec` and `generate-tasks` in the `spec-kit` chain: it does not
+that `spec-kit-generate-tasks` can decompose into executable work — without writing product code. This
+skill sits between `spec-kit-generate-spec` and `spec-kit-generate-tasks` in the `spec-kit` chain: it does not
 reinterpret business intent, it translates already-approved intent into a design that fits the
 real project.
 
 The output is `plan.md` plus its Phase 0/1 companions (`research.md`, `data-model.md`,
 `contracts/`, `quickstart.md`) and `checklists/plan-quality.md`. It does **not** implement product
-code, and it does **not** generate `tasks.md` — that is `generate-tasks`'s job.
+code, and it does **not** generate `tasks.md` — that is `spec-kit-generate-tasks`'s job.
 
 ## User Input
 
@@ -90,7 +90,7 @@ Treat the plan as the bridge between approved intent and executable work:
 ## Cross-Platform Agent Compatibility
 
 The complete portability contract lives in the shared, canonical document
-`spec-kit-shared/agent-portability.md` (same document `generate-spec` uses). Before generating,
+`spec-kit-shared/agent-portability.md` (same document `spec-kit-generate-spec` uses). Before generating,
 validating, or reporting on the `plan-reviewer` role — or any other agent this skill materializes
 — read that file completely and follow it exactly. Do not paraphrase it from memory. If the active
 host cannot resolve that file reference, follow its "Fallback for hosts that cannot follow a file
@@ -101,7 +101,7 @@ plan is approved. Do not invent a different name for this role or redefine it fo
 
 ## Artifact Conventions
 
-The `.specify/` layout (including `.specify/specs/<feature-dir>/`), `feature.json`, `state.json`, and the Content
+The `.speckit/` layout (including `.speckit/specs/<feature-dir>/`), `feature.json`, `state.json`, and the Content
 Fingerprint Convention used for staleness detection all live in the shared, canonical document
 `spec-kit-shared/artifact-conventions.md`. Read it before Phase 0 below and follow it exactly —
 this skill does not redefine its own file layout or hashing scheme.
@@ -111,11 +111,11 @@ this skill does not redefine its own file layout or hashing scheme.
 ### Resolving the Target Specification
 
 1. If the user gave an explicit `spec.md` path or feature directory, use it.
-2. Otherwise, read `.specify/feature.json` for the active feature directory.
+2. Otherwise, read `.speckit/feature.json` for the active feature directory.
 3. If neither resolves to a readable `spec.md`, stop and ask:
 
    > Provide the feature directory or `spec.md` path to plan against. If you haven't generated a
-   > specification yet, run `generate-spec` first.
+   > specification yet, run `spec-kit-generate-spec` first.
 
 4. Read `spec.md` completely, along with `checklists/requirements.md` for its `STATUS`.
 
@@ -123,7 +123,7 @@ this skill does not redefine its own file layout or hashing scheme.
 
 - If `STATUS` is `READY`, proceed.
 - If `STATUS` is `DRAFT — NEEDS CLARIFICATION`, stop and ask the user to either resolve the
-  blocking clarifications in `generate-spec` first, or explicitly confirm planning against a
+  blocking clarifications in `spec-kit-generate-spec` first, or explicitly confirm planning against a
   draft. If the user confirms, proceed but record `PLANNED_AGAINST_DRAFT: true` in `plan.md`'s
   header and repeat the warning in the Completion Report — never silently treat a draft as ready.
 
@@ -138,26 +138,26 @@ this skill does not redefine its own file layout or hashing scheme.
 
 ## Fase 0 — Staleness Check (every invocation, new or update)
 
-1. `generate-spec` initializes `state.json`'s `artifacts.spec`/`source_documents` entries itself
+1. `spec-kit-generate-spec` initializes `state.json`'s `artifacts.spec`/`source_documents` entries itself
    (see its own "Initialize or Refresh `state.json`" step), so it should already exist. If it
    genuinely does not — an older `spec.md` predating that step, or it was manually removed — skip
    straight to Phase 1 and create it (with a fresh `artifacts.spec` entry too) at the end of
    Phase 5, alongside this skill's own `artifacts.plan` entry.
-2. Otherwise, read `sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
+2. Otherwise, read `spec-kit-sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
    detection procedure against `artifacts.plan.based_on_spec_hash` vs. `spec.md`'s current content
    hash — do not re-derive the hashing/comparison mechanism independently; that definition lives
    there so it stays identical across every skill that needs it.
-3. If `sync-artifacts` reports a match, `spec.md` has not changed since the last plan — proceed
+3. If `spec-kit-sync-artifacts` reports a match, `spec.md` has not changed since the last plan — proceed
    normally.
-4. If it reports drift, this skill (not `sync-artifacts`) does the classification `sync-artifacts`
+4. If it reports drift, this skill (not `spec-kit-sync-artifacts`) does the classification `spec-kit-sync-artifacts`
    deliberately leaves to the consuming skill: identify which `R-FR##`/`R-AC##`/`E-##`/`R-QR##`
-   IDs actually changed (using `sync-artifacts`'s best-effort localization, or a direct diff if
+   IDs actually changed (using `spec-kit-sync-artifacts`'s best-effort localization, or a direct diff if
    its localization couldn't resolve one), and classify each as functionally material (scope,
    acceptance criteria, entities, safeguards) or non-material (wording, formatting). Only material
    changes make the plan stale with impact.
    - Report the affected IDs and which `plan.md` sections they touch before proceeding — do not
      silently regenerate the whole plan, and do not silently ignore the drift either.
-5. This Fase 0 does not depend on `sync-artifacts` being invoked as a separate conversational
+5. This Fase 0 does not depend on `spec-kit-sync-artifacts` being invoked as a separate conversational
    step — apply its documented procedure directly, inline, as part of this phase.
 
 ## Workflow
@@ -181,7 +181,7 @@ Safeguards when present; do not invent a numeric target `spec.md` never stated.
 Ask only questions whose answers materially change the technical approach, storage model,
 platform, or a measurable constraint.
 
-- Ask at most **3 blocking questions per round**, same format as `generate-spec`'s Clarification
+- Ask at most **3 blocking questions per round**, same format as `spec-kit-generate-spec`'s Clarification
   Policy (context, why it matters, 2–3 options with implications, a custom option).
 - Do not ask about something derivable from the manifest/lockfile or from `spec.md` directly.
 - If the user explicitly requests a draft plan without answering, produce
@@ -189,14 +189,14 @@ platform, or a measurable constraint.
 
 ### Gate — Constitution Check 1 (before Phase 2)
 
-1. Read `.specify/memory/constitution.md` if it exists.
+1. Read `.speckit/memory/constitution.md` if it exists.
 2. For each applicable principle, evaluate the proposed technical direction (informed by Technical
    Context, not yet by detailed research) as `PASS` or `FAIL`.
 3. Report as a table, per `plan-template.md`'s "Constitution Check — Gate 1" section — never as a
    prose summary like "reviewed, looks fine."
 4. If `constitution.md` does not exist, report `N/A — sin constitución` for this gate rather than
    omitting it, and note whether the scope of this plan is broad enough that
-   `establish-constitution` should run first.
+   `spec-kit-establish-constitution` should run first.
 5. A `FAIL` here is not fatal by itself — it must be tracked into Complexity Tracking (Phase 5) or
    resolved by changing the proposed direction before Phase 2 starts.
 
@@ -214,7 +214,7 @@ addition") rather than treating a proposed library the same as a verified one.
 
 Only entities already present in `spec.md` §E — Entities. Do not invent new domain concepts here;
 if the design seems to need one `spec.md` doesn't have, that is a gap to report back — via a
-clarification round, or by flagging it for a `generate-spec` update — not something to add
+clarification round, or by flagging it for a `spec-kit-generate-spec` update — not something to add
 silently at the planning layer.
 
 ### Phase 4 — Contracts (`contracts/`)
@@ -227,7 +227,7 @@ for each endpoint/schema (existing contract file, or "new — proposed").
 
 Document per `plan-template.md`'s Project Structure section:
 
-- **Documentation (this feature)**: the fixed `.specify/specs/<feature-dir>/` tree (see
+- **Documentation (this feature)**: the fixed `.speckit/specs/<feature-dir>/` tree (see
   `artifact-conventions.md`).
 - **Source Code (repository root)**: in a project that already has structure, this is a
   **verified snapshot of the real layout** (via `verify-before-implement`), not a free choice
@@ -275,10 +275,10 @@ deviation from the dominant pattern or the constitution is recorded as an explic
 Decisions and Trade-offs (or, if it's a constitution `FAIL`, in Complexity Tracking above) — never
 as a silent omission.
 
-If `.specify/memory/constitution.md` does not exist and the project has relevant prior code,
+If `.speckit/memory/constitution.md` does not exist and the project has relevant prior code,
 perform an equivalent targeted inspection (via `verify-before-implement`) scoped only to the
 components this plan touches or extends — and state plainly that this was a targeted inspection,
-not a full constitution, suggesting `establish-constitution` if the detected pattern should apply
+not a full constitution, suggesting `spec-kit-establish-constitution` if the detected pattern should apply
 project-wide.
 
 #### Key Decisions and Trade-offs
@@ -303,7 +303,7 @@ incrementally. For every operation (`O-0#`) pushed to a later phase or story:
 An operation with none of these three conditions is **not** deferred: it is completed in the
 current phase, or the phases are reordered until it genuinely is safe. This is not a preference —
 a plan that defers unsafe work is not `READY` regardless of what its checklist otherwise shows.
-When `generate-tasks` later organizes work by user story (see its `SKILL.md`), each story's closing
+When `spec-kit-generate-tasks` later organizes work by user story (see its `SKILL.md`), each story's closing
 checkpoint verifies this classification held in practice.
 
 #### Compatibility and Evolution
@@ -411,20 +411,20 @@ When `spec.md` changed since the last `plan.md` (Fase 0 detected material drift)
 
 If `spec.md` drifted in a way that invalidates a decision already consumed by an existing
 `tasks.md` (i.e. `tasks.md` exists and cites the changed `O-0#`), state this plainly in the
-Completion Report — this plan does not update `tasks.md` itself; that is `generate-tasks`'s job,
+Completion Report — this plan does not update `tasks.md` itself; that is `spec-kit-generate-tasks`'s job,
 triggered separately.
 
 ## Pre-Execution Extension Hooks
 
-Before planning work, check for `.specify/extensions.yml` per
+Before planning work, check for `.speckit/extensions.yml` per
 `spec-kit-shared/artifact-conventions.md`'s schema, reading the `hooks.before_plan` key. Follow
-the same enablement/condition/mandatory-vs-optional rules `generate-spec` uses for its own hooks —
+the same enablement/condition/mandatory-vs-optional rules `spec-kit-generate-spec` uses for its own hooks —
 do not reinterpret them differently for this skill.
 
 ## Mandatory Post-Execution Hooks
 
 After planning work, process `hooks.after_plan` the same way, using the same emit-then-execute
-format `generate-spec` uses for its own post-hooks.
+format `spec-kit-generate-spec` uses for its own post-hooks.
 
 ## Completion Report
 
@@ -443,7 +443,7 @@ Report:
 - `TRACEABILITY`: requirement/entity/operation counts covered.
 - `CHANGES`: for updates, the `plan.md` sections changed.
 - `AGENTS`: `none`, or every generated Kiro/Claude path with validation and parity status.
-- `NEXT`: clarification if blocked; otherwise `generate-tasks` to decompose this plan by user
+- `NEXT`: clarification if blocked; otherwise `spec-kit-generate-tasks` to decompose this plan by user
   story.
 
 ## Done When

@@ -1,5 +1,5 @@
 ---
-name: generate-spec
+name: spec-kit-generate-spec
 description: Generate or update a governed, implementation-ready specification from a PRD, document, file reference, or free-form text using SPDD and the REASONS Canvas; when support agents are requested, generate compatible definitions for both Kiro CLI and Claude Code.
 license: MIT
 ---
@@ -141,7 +141,7 @@ When sources conflict:
 
 ## Pre-Execution Extension Hooks
 
-Before specification work, check for `.specify/extensions.yml` in the project root.
+Before specification work, check for `.speckit/extensions.yml` in the project root.
 
 - If it is missing, continue silently.
 - If it is invalid, continue silently without extension hooks.
@@ -195,7 +195,7 @@ Do not paste complete source documents into the final spec. Preserve them throug
 
 #### Source Fingerprint Policy
 
-Record a fingerprint for every `[S#]`/`[P#]` row so a later re-run of this skill (update mode) or a companion drift-detection skill (`sync-artifacts`) can tell, without re-reading and re-comparing full documents by hand, whether the underlying source changed since this specification was generated.
+Record a fingerprint for every `[S#]`/`[P#]` row so a later re-run of this skill (update mode) or a companion drift-detection skill (`spec-kit-sync-artifacts`) can tell, without re-reading and re-comparing full documents by hand, whether the underlying source changed since this specification was generated.
 
 **Read `spec-kit-shared/artifact-conventions.md`'s "Content Fingerprint Convention" section and follow it exactly** — it defines the per-source-type hashing rules (versioned file, non-versioned file, pasted text, URL, attachment) and the "never leave blank" rule. Do not paraphrase it from memory or apply a partial recollection. If the active host cannot resolve that file reference, state plainly that the fingerprint convention could not be loaded rather than inventing one, following the same fallback discipline as the Cross-Platform Agent Compatibility section above.
 
@@ -223,7 +223,7 @@ Generate a 2–4 word kebab-case short name, preferably action–noun, while pre
 
 When operating inside a project, inspect only the context relevant to the bounded scope:
 
-1. Read `/memory/constitution.md` or `.specify/memory/constitution.md` if either exists.
+1. Read `/memory/constitution.md` or `.speckit/memory/constitution.md` if either exists.
 2. Read project instructions, architecture standards, ADRs, contracts, schemas, and active spec templates that govern the change.
 3. Search for related entities, components, services, interfaces, tests, and prior specifications.
 4. Verify exact names, paths, signatures, data shapes, and dependencies before using them as facts.
@@ -284,27 +284,27 @@ Use this format:
 
 First determine the mode:
 
-- **Update mode**: the user explicitly supplied an existing REASONS `spec.md`, or explicitly requested an update to the active feature identified by `.specify/feature.json`. Validate that the target is the intended specification, set `SPEC_FILE` to that existing file, set `SPECIFY_FEATURE_DIRECTORY` to its parent feature directory, and reuse its checklist. Do not create a new directory or copy a fresh template.
+- **Update mode**: the user explicitly supplied an existing REASONS `spec.md`, or explicitly requested an update to the active feature identified by `.speckit/feature.json`. Validate that the target is the intended specification, set `SPEC_FILE` to that existing file, set `SPECIFY_FEATURE_DIRECTORY` to its parent feature directory, and reuse its checklist. Do not create a new directory or copy a fresh template.
 - **New mode**: no existing specification is explicitly targeted. Resolve a new feature directory as described below.
 
-For **new mode**, specifications live under `.specify/specs/` unless the user explicitly supplies `SPECIFY_FEATURE_DIRECTORY`:
+For **new mode**, specifications live under `.speckit/specs/` unless the user explicitly supplies `SPECIFY_FEATURE_DIRECTORY`:
 
 1. If `SPECIFY_FEATURE_DIRECTORY` is explicit, use it unchanged.
 2. Otherwise:
-   1. Read `.specify/init-options.json`.
+   1. Read `.speckit/init-options.json`.
    2. If `feature_numbering` is `timestamp`, use `YYYYMMDD-HHMMSS`.
-   3. If `feature_numbering` is `sequential` or absent, scan `.specify/specs/` and use the next three-digit number.
+   3. If `feature_numbering` is `sequential` or absent, scan `.speckit/specs/` and use the next three-digit number.
    4. If only deprecated `branch_numbering` exists, honor it and warn: `⚠️ branch_numbering is deprecated; rename it to feature_numbering.`
-   5. Build `SPECIFY_FEATURE_DIRECTORY` as `.specify/specs/<prefix>-<short-name>`.
+   5. Build `SPECIFY_FEATURE_DIRECTORY` as `.speckit/specs/<prefix>-<short-name>`.
 3. Create the resolved directory.
 4. Resolve the active `spec-template` through the Spec Kit preset/template stack when available.
 5. Set `SPEC_FILE` to `<feature-directory>/spec.md`.
 
-For both modes, persist the actual resolved feature directory in `.specify/feature.json`:
+For both modes, persist the actual resolved feature directory in `.speckit/feature.json`:
 
 ```json
 {
-  "feature_directory": ".specify/specs/003-example-feature"
+  "feature_directory": ".speckit/specs/003-example-feature"
 }
 ```
 
@@ -497,7 +497,7 @@ State non-negotiable boundaries as testable `MUST`, `MUST NOT`, or quantified li
 
 - Capture the problem, value, actors, behavior, boundaries, quality outcomes, acceptance criteria, assumptions, dependencies, and risks.
 - Use stable IDs and cite source IDs for source-derived claims.
-- Every `R-US##` declares a `Priority` of `P1`, `P2`, or `P3` — `P1` is the minimum viable increment, `P2`/`P3` are later increments. Assign it from what the source explicitly distinguishes (e.g. "first I need X, then Y"); if the source does not distinguish priority, default every story to `P1` and record that default as an assumption (`R-AS##`) rather than presenting it as a stated fact. `generate-tasks` depends on this field to order work — do not leave it blank.
+- Every `R-US##` declares a `Priority` of `P1`, `P2`, or `P3` — `P1` is the minimum viable increment, `P2`/`P3` are later increments. Assign it from what the source explicitly distinguishes (e.g. "first I need X, then Y"); if the source does not distinguish priority, default every story to `P1` and record that default as an assumption (`R-AS##`) rather than presenting it as a stated fact. `spec-kit-generate-tasks` depends on this field to order work — do not leave it blank.
 - Acceptance criteria must test observable behavior, preferably in Given/When/Then form.
 - Do not disguise implementation choices as business requirements.
 - Quantify metrics only when provided, governed by project standards, or explicitly accepted as proposed targets.
@@ -645,11 +645,11 @@ Also perform these consistency checks:
 ### Initialize or Refresh `state.json`
 
 Per `spec-kit-shared/artifact-conventions.md`'s schema, write or update
-`.specify/specs/<feature-dir>/state.json`'s `artifacts.spec` entry (content hash of the final `spec.md`)
+`.speckit/specs/<feature-dir>/state.json`'s `artifacts.spec` entry (content hash of the final `spec.md`)
 and its `source_documents` map (mirroring the Evidence Catalog's fingerprints exactly) — in both
 new mode and update mode, whether or not a `plan.md` exists yet. This is what lets
-`sync-artifacts` check a fresh specification against its sources standalone, before anyone has run
-`generate-plan` — the mechanism this whole kit exists to support must work from the very first
+`spec-kit-sync-artifacts` check a fresh specification against its sources standalone, before anyone has run
+`spec-kit-generate-plan` — the mechanism this whole kit exists to support must work from the very first
 spec, not only once a plan exists to have created `state.json` first.
 
 ## Updating an Existing Specification
@@ -657,11 +657,11 @@ spec, not only once a plan exists to have created `state.json` first.
 When the user supplies an existing REASONS specification:
 
 1. Read the entire current artifact and its checklist.
-2. Reuse its parent feature directory as `SPECIFY_FEATURE_DIRECTORY`, keep that file as `SPEC_FILE`, and keep `.specify/feature.json` pointed to the same directory; do not create a replacement feature directory.
+2. Reuse its parent feature directory as `SPECIFY_FEATURE_DIRECTORY`, keep that file as `SPEC_FILE`, and keep `.speckit/feature.json` pointed to the same directory; do not create a replacement feature directory.
 3. Treat the requested change as a delta, not permission to regenerate unrelated sections.
 4. Identify affected requirement IDs and propagate the change through Entities, Approach, Structure, Operations, Norms, Safeguards, and traceability.
 5. Preserve stable IDs where semantics remain the same; add new IDs for new semantics; never silently reuse an ID for a different requirement.
-6. Update the persisted Evidence Catalog for new, removed, or superseded evidence, recomputing the source fingerprint for every row whose underlying source was re-read as part of this update — a stale fingerprint left over from a prior version defeats the purpose of recording one. If `.specify/specs/<feature-dir>/state.json` exists (see `spec-kit-shared/artifact-conventions.md`), refresh its `source_documents.<ID>.fingerprint`/`read_at` entries to match at the same time — the Evidence Catalog table inside `spec.md` and `state.json`'s copy must never be left pointing at two different fingerprints for the same source, or the next `sync-artifacts` check will report a already-resolved drift as if it were still open.
+6. Update the persisted Evidence Catalog for new, removed, or superseded evidence, recomputing the source fingerprint for every row whose underlying source was re-read as part of this update — a stale fingerprint left over from a prior version defeats the purpose of recording one. If `.speckit/specs/<feature-dir>/state.json` exists (see `spec-kit-shared/artifact-conventions.md`), refresh its `source_documents.<ID>.fingerprint`/`read_at` entries to match at the same time — the Evidence Catalog table inside `spec.md` and `state.json`'s copy must never be left pointing at two different fingerprints for the same source, or the next `spec-kit-sync-artifacts` check will report a already-resolved drift as if it were still open.
 7. Record superseded decisions and migration/compatibility consequences where relevant.
 8. Re-run the complete checklist.
 9. Summarize exactly which REASONS sections changed and why.
@@ -673,7 +673,7 @@ Follow the SPDD direction rule:
 
 ## Mandatory Post-Execution Hooks
 
-Before reporting completion, inspect `.specify/extensions.yml` again and process `hooks.after_specify` using the same enablement and condition rules as pre-hooks.
+Before reporting completion, inspect `.speckit/extensions.yml` again and process `hooks.after_specify` using the same enablement and condition rules as pre-hooks.
 
 For each enabled, unconditional mandatory hook, emit and then execute:
 
@@ -706,8 +706,8 @@ Report:
 Use a concise summary such as:
 
 ```text
-Specification generated at: .specify/specs/003-invoice-export/spec.md
-Checklist: .specify/specs/003-invoice-export/checklists/requirements.md
+Specification generated at: .speckit/specs/003-invoice-export/spec.md
+Checklist: .speckit/specs/003-invoice-export/checklists/requirements.md
 Status: READY
 Sources: 2/2 read successfully
 Validation: 32/32 checks passed

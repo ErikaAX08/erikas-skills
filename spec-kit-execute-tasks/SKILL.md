@@ -1,5 +1,5 @@
 ---
-name: execute-tasks
+name: spec-kit-execute-tasks
 description: Execute tasks.md in dependency order, producing real code — delegating implementation discipline to verify-before-implement, commit messages to git-commits, and a final safety-net review to pre-pr-review, instead of reimplementing any of their rules. Runs stories sequentially by default, or in parallel across independent stories/tasks via task-executor subagents when the story boundaries genuinely allow it. Never invents scope beyond tasks.md/plan.md/spec.md, never silently re-touches a task already marked done, and never skips a story's closure checkpoint. When a task-executor agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
 license: MIT
 ---
@@ -9,8 +9,8 @@ license: MIT
 ## Purpose
 
 Turn an approved `tasks.md` into real, working code — the only skill in `spec-kit` that writes
-product code. It is the last link in the chain (`generate-spec` → `generate-plan` →
-`generate-tasks` → [`analyze-consistency`] → `execute-tasks`), and it earns that position by
+product code. It is the last link in the chain (`spec-kit-generate-spec` → `spec-kit-generate-plan` →
+`spec-kit-generate-tasks` → [`spec-kit-analyze-consistency`] → `spec-kit-execute-tasks`), and it earns that position by
 delegating, not reimplementing: implementation discipline comes from `verify-before-implement`,
 commit messages from `git-commits`, architectural constraints from whatever architecture skills
 the project already has active, and a final safety-net review from `pre-pr-review`. This skill's
@@ -54,7 +54,7 @@ passed — not when the code looks right. A story is done when its checkpoint ho
    "should work." Running a test means executing it and reading the output.
 4. **Never silently re-touch a task already marked `[x]` from a prior run.** Re-invoking this
    skill skips already-closed tasks unless the user explicitly asks to redo/rework a specific one
-   — this mirrors `sync-artifacts`'/`generate-tasks`'s "closed work" rule, applied at execution
+   — this mirrors `spec-kit-sync-artifacts`'/`spec-kit-generate-tasks`'s "closed work" rule, applied at execution
    time.
 5. **Fase 0's staleness check is mandatory before touching any code.** If it reports drift with
    material impact anywhere in the chain, stop and require resolution before implementing — do not
@@ -96,14 +96,14 @@ in parallel with others. Do not invent a different name or redefine it for anoth
 
 ## Artifact Conventions
 
-The `.specify/` layout (including `.specify/specs/<feature-dir>/`) and `state.json` schema live in
+The `.speckit/` layout (including `.speckit/specs/<feature-dir>/`) and `state.json` schema live in
 `spec-kit-shared/artifact-conventions.md`. Read it before Fase 0 below.
 
 ## Skill Delegation Map
 
 This skill does not reimplement any of the following — it invokes them (or, on a host without
 nested skill invocation, follows their documented procedure directly, citing them, per the same
-pattern `generate-spec` uses for its Extension Hooks):
+pattern `spec-kit-generate-spec` uses for its Extension Hooks):
 
 | Concern | Delegate to | When |
 | --- | --- | --- |
@@ -118,11 +118,11 @@ pattern `generate-spec` uses for its Extension Hooks):
 ### Resolving the Target Tasks
 
 1. If the user gave an explicit feature directory, `tasks.md` path, story, or task ID, use it.
-2. Otherwise, read `.specify/feature.json` for the active feature directory.
+2. Otherwise, read `.speckit/feature.json` for the active feature directory.
 3. If neither resolves, stop and ask:
 
    > Provide the feature directory, or a specific story/task, to execute. If you haven't generated
-   > tasks yet, run `generate-tasks` first.
+   > tasks yet, run `spec-kit-generate-tasks` first.
 
 4. Read `tasks.md`, `plan.md`, `spec.md`, and `checklists/tasks-quality.md` completely.
 
@@ -139,14 +139,14 @@ pattern `generate-spec` uses for its Extension Hooks):
 
 ## Fase 0 — Staleness Check (every invocation)
 
-Read `sync-artifacts/SKILL.md` and follow its full Phase 1/2 procedure across the whole
+Read `spec-kit-sync-artifacts/SKILL.md` and follow its full Phase 1/2 procedure across the whole
 chain: source documents → `spec.md` → `plan.md` → `tasks.md`. If it reports any drift:
 
 1. If the drift is upstream of `tasks.md` (a source, `spec.md`, or `plan.md` changed since
    `tasks.md` was generated), stop — do not execute against a `tasks.md` that might not reflect
-   current intent. Recommend the nearest upstream skill per `sync-artifacts`'s one-hop
+   current intent. Recommend the nearest upstream skill per `spec-kit-sync-artifacts`'s one-hop
    recommendation.
-2. If `sync-artifacts` flagged any task as "closed work potentially affected," treat that exactly
+2. If `spec-kit-sync-artifacts` flagged any task as "closed work potentially affected," treat that exactly
    as Rule 4 requires — it does not get silently re-executed just because this run touches nearby
    work.
 3. Only proceed once the chain is confirmed consistent (or the user explicitly accepts executing
@@ -214,9 +214,9 @@ format or convention.
 2. **`pre-pr-review`** over the accumulated diff — the last safety net, run unconditionally (Rule
    10). If it surfaces a 🔴 Blocker or 🟠 Major categorized as "incomplete feature" or similar that
    the closure check in step 1 did not catch, that is not just a bug to patch — it is a signal
-   that `generate-plan`'s Safe Deferral classification for the relevant operation was applied
+   that `spec-kit-generate-plan`'s Safe Deferral classification for the relevant operation was applied
    incorrectly (an operation that looked `Dormant`/`Flagged`/`Additive` turned out not to be, in
-   practice). Report this explicitly as feedback toward `generate-plan`, in addition to fixing the
+   practice). Report this explicitly as feedback toward `spec-kit-generate-plan`, in addition to fixing the
    immediate issue.
 
 ## Handling Unplanned Scope Discovered Mid-Execution
@@ -226,8 +226,8 @@ If implementing a task reveals a real requirement `tasks.md` doesn't cover (Rule
 1. Stop implementing that specific thread — do not improvise a fix for scope that was never
    planned.
 2. Report exactly what was found and why it wasn't anticipated.
-3. Recommend the correct upstream response: `generate-tasks` (if `plan.md` already covers it and
-   only the task decomposition missed it) or `analyze-consistency` (if it's unclear whether
+3. Recommend the correct upstream response: `spec-kit-generate-tasks` (if `plan.md` already covers it and
+   only the task decomposition missed it) or `spec-kit-analyze-consistency` (if it's unclear whether
    `plan.md`/`spec.md` cover it at all).
 4. Continue with other, unaffected tasks in the meantime if they don't depend on resolving this.
 
@@ -244,7 +244,7 @@ Re-running this skill on a `tasks.md` with some tasks already `[x]`:
 
 ## Pre-Execution Extension Hooks
 
-Before execution, check `.specify/extensions.yml` per
+Before execution, check `.speckit/extensions.yml` per
 `spec-kit-shared/artifact-conventions.md`'s schema, reading `hooks.before_execute`. Follow the
 same enablement/condition/mandatory-vs-optional rules the other `spec-kit` skills use.
 
@@ -285,6 +285,6 @@ Report:
 - [ ] Commit messages came from `git-commits`, not an invented format.
 - [ ] `pre-pr-review` ran once over the full accumulated diff, unconditionally.
 - [ ] Any `pre-pr-review` finding suggesting a Safe Deferral misclassification was reported as
-      feedback toward `generate-plan`, not just silently fixed.
+      feedback toward `spec-kit-generate-plan`, not just silently fixed.
 - [ ] Every generated support agent has a validated Kiro/Claude pair, or `AGENTS: none` is
       reported.

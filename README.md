@@ -20,13 +20,13 @@ skills/
 │
 │   Spec Kit — spec-driven development chain (see spec-kit-shared/README.md), one flat
 │   top-level folder per skill like everything else above:
-├── establish-constitution/SKILL.md        # Make project conventions explicit (optional)
-├── generate-spec/SKILL.md                 # Requirement/PRD → governed spec.md
-├── generate-plan/SKILL.md                 # spec.md → verified technical plan.md
-├── generate-tasks/SKILL.md                # plan.md → per-user-story tasks.md
-├── analyze-consistency/SKILL.md           # Read-only spec/plan/tasks consistency check
-├── sync-artifacts/SKILL.md                # Drift detection between artifacts and sources
-├── execute-tasks/SKILL.md                 # tasks.md → real code, sequential or parallel
+├── spec-kit-establish-constitution/SKILL.md        # Make project conventions explicit (optional)
+├── spec-kit-generate-spec/SKILL.md                 # Requirement/PRD → governed spec.md
+├── spec-kit-generate-plan/SKILL.md                 # spec.md → verified technical plan.md
+├── spec-kit-generate-tasks/SKILL.md                # plan.md → per-user-story tasks.md
+├── spec-kit-analyze-consistency/SKILL.md           # Read-only spec/plan/tasks consistency check
+├── spec-kit-sync-artifacts/SKILL.md                # Drift detection between artifacts and sources
+├── spec-kit-execute-tasks/SKILL.md                 # tasks.md → real code, sequential or parallel
 └── spec-kit-shared/                       # Agent portability & artifact contracts (not a skill)
 ```
 
@@ -111,14 +111,14 @@ A sequential chain of skills for specification-driven development — from a req
 **Order of execution** — run these in sequence, not independently:
 
 ```
-1. establish-constitution   (optional, once per project)
-2. generate-spec            → spec.md
-3. generate-plan            → plan.md          (needs a READY spec.md)
-4. generate-tasks           → tasks.md         (needs a READY plan.md)
-5. analyze-consistency      (optional gate)     (needs a READY tasks.md)
-6. execute-tasks            → real code        (needs a READY tasks.md)
+1. spec-kit-establish-constitution   (optional, once per project)
+2. spec-kit-generate-spec            → spec.md
+3. spec-kit-generate-plan            → plan.md          (needs a READY spec.md)
+4. spec-kit-generate-tasks           → tasks.md         (needs a READY plan.md)
+5. spec-kit-analyze-consistency      (optional gate)     (needs a READY tasks.md)
+6. spec-kit-execute-tasks            → real code        (needs a READY tasks.md)
 
-sync-artifacts — not a numbered step; run it any time after editing a
+spec-kit-sync-artifacts — not a numbered step; run it any time after editing a
 source document, spec.md, or plan.md by hand, to see what's now stale.
 ```
 
@@ -293,13 +293,13 @@ Use the git-commits skill for this commit/PR
 Use the latex-academic-reports skill for [document]
 
 # Spec Kit — sequential chain
-Use the establish-constitution skill for this project        # optional, once
-Use the generate-spec skill for [requirement/document]
-Use the generate-plan skill for .specify/specs/[feature]/spec.md
-Use the generate-tasks skill for .specify/specs/[feature]/plan.md
-Use the analyze-consistency skill on .specify/specs/[feature]          # optional gate
-Use the sync-artifacts skill on .specify/specs/[feature]                # after editing a source
-Use the execute-tasks skill on .specify/specs/[feature]/tasks.md
+Use the spec-kit-establish-constitution skill for this project        # optional, once
+Use the spec-kit-generate-spec skill for [requirement/document]
+Use the spec-kit-generate-plan skill for .speckit/specs/[feature]/spec.md
+Use the spec-kit-generate-tasks skill for .speckit/specs/[feature]/plan.md
+Use the spec-kit-analyze-consistency skill on .speckit/specs/[feature]          # optional gate
+Use the spec-kit-sync-artifacts skill on .speckit/specs/[feature]                # after editing a source
+Use the spec-kit-execute-tasks skill on .speckit/specs/[feature]/tasks.md
 
 # Fullstack
 Use all project skills for [task]

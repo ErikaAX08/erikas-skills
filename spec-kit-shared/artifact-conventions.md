@@ -2,23 +2,23 @@
 
 > Canonical, shared reference for the file layout and data formats every `spec-kit` skill reads
 > from or writes to. Every artifact this kit generates — project-wide state and per-feature
-> artifacts alike — lives under `.specify/`, never scattered elsewhere in the project. Any skill
-> that creates, reads, or updates something under `.specify/` follows this document instead of
+> artifacts alike — lives under `.speckit/`, never scattered elsewhere in the project. Any skill
+> that creates, reads, or updates something under `.speckit/` follows this document instead of
 > inventing its own layout or hashing scheme.
 >
-> **Used by**: `generate-spec`, `establish-constitution`, `generate-plan`, `generate-tasks`,
-> `analyze-consistency`, `sync-artifacts`, `execute-tasks`.
+> **Used by**: `spec-kit-generate-spec`, `spec-kit-establish-constitution`, `spec-kit-generate-plan`, `spec-kit-generate-tasks`,
+> `spec-kit-analyze-consistency`, `spec-kit-sync-artifacts`, `spec-kit-execute-tasks`.
 
-## `.specify/` — everything this kit generates
+## `.speckit/` — everything this kit generates
 
 Every file this kit writes — project-wide state and per-feature artifacts alike — lives under
-`.specify/`. Nothing this kit generates is placed anywhere else in the project, so a project using
+`.speckit/`. Nothing this kit generates is placed anywhere else in the project, so a project using
 this kit never has spec-kit files scattered outside that one folder.
 
 ```text
-.specify/
+.speckit/
 ├── memory/
-│   └── constitution.md      # written by establish-constitution; read (optionally) by every other skill
+│   └── constitution.md      # written by spec-kit-establish-constitution; read (optionally) by every other skill
 ├── extensions.yml           # optional hook definitions (see below); absence is not an error
 ├── init-options.json        # { "feature_numbering": "timestamp" | "sequential" }
 ├── feature.json             # pointer to the currently active feature directory
@@ -31,17 +31,17 @@ one copy per project, not per feature.
 
 ### `feature.json`
 
-Already used by `generate-spec`. A single pointer to whichever feature directory the active
+Already used by `spec-kit-generate-spec`. A single pointer to whichever feature directory the active
 conversation is working on, so a skill doesn't require the user to restate the path on every
 invocation:
 
 ```json
 {
-  "feature_directory": ".specify/specs/003-invoice-export"
+  "feature_directory": ".speckit/specs/003-invoice-export"
 }
 ```
 
-Written by `generate-spec` when it creates or resumes a feature. Any skill that needs "the current
+Written by `spec-kit-generate-spec` when it creates or resumes a feature. Any skill that needs "the current
 feature" and receives no explicit path reads this file first; if it's missing or the user gave an
 explicit path, that explicit path wins.
 
@@ -54,8 +54,8 @@ explicit path, that explicit path wins.
 ```
 
 `timestamp` → `YYYYMMDD-HHMMSS` feature directory names. `sequential` (default when absent) → next
-three-digit number under `.specify/specs/`. A deprecated `branch_numbering` key is honored with a warning if
-`feature_numbering` is absent — see `generate-spec` Phase 5.
+three-digit number under `.speckit/specs/`. A deprecated `branch_numbering` key is honored with a warning if
+`feature_numbering` is absent — see `spec-kit-generate-spec` Phase 5.
 
 ### `extensions.yml`
 
@@ -63,16 +63,16 @@ Optional. Missing or invalid → every skill continues silently, without hooks. 
 
 ```yaml
 hooks:
-  before_specify: [] # generate-spec, before Phase 1
-  after_specify: [] # generate-spec, after Phase 7
-  before_plan: [] # generate-plan, before Technical Context / Constitution Gate 1
-  after_plan: [] # generate-plan, after Constitution Gate 2
-  before_tasks: [] # generate-tasks, before Phase 0 staleness check
-  after_tasks: [] # generate-tasks, after the last user-story phase is written
-  before_execute: [] # execute-tasks, before its own staleness check
-  after_execute: [] # execute-tasks, after the closure check + pre-pr-review
-  before_constitution: [] # establish-constitution, before inspecting the project
-  after_constitution: [] # establish-constitution, after constitution.md is written/updated
+  before_specify: [] # spec-kit-generate-spec, before Phase 1
+  after_specify: [] # spec-kit-generate-spec, after Phase 7
+  before_plan: [] # spec-kit-generate-plan, before Technical Context / Constitution Gate 1
+  after_plan: [] # spec-kit-generate-plan, after Constitution Gate 2
+  before_tasks: [] # spec-kit-generate-tasks, before Phase 0 staleness check
+  after_tasks: [] # spec-kit-generate-tasks, after the last user-story phase is written
+  before_execute: [] # spec-kit-execute-tasks, before its own staleness check
+  after_execute: [] # spec-kit-execute-tasks, after the closure check + pre-pr-review
+  before_constitution: [] # spec-kit-establish-constitution, before inspecting the project
+  after_constitution: [] # spec-kit-establish-constitution, after constitution.md is written/updated
 ```
 
 Each entry in a hook list:
@@ -87,40 +87,40 @@ Each entry in a hook list:
   prompt: "<shown for optional hooks>"
 ```
 
-A skill only ever reads the hook list for its own key (a `generate-plan` invocation reads
+A skill only ever reads the hook list for its own key (a `spec-kit-generate-plan` invocation reads
 `before_plan`/`after_plan`, never `before_specify`). Unknown keys are ignored, not treated as
 errors — this keeps `extensions.yml` forward-compatible as new spec-kit skills are added.
 
 A hook may create or switch branches, but a hook never creates the feature directory itself — that
 stays the responsibility of the skill that owns this invocation.
 
-## `.specify/specs/<feature-dir>/` — per-feature artifacts
+## `.speckit/specs/<feature-dir>/` — per-feature artifacts
 
 ```text
-.specify/specs/003-invoice-export/
-├── spec.md                 # generate-spec
-├── plan.md                 # generate-plan
-├── research.md              # generate-plan, Phase 0
-├── data-model.md            # generate-plan, Phase 1
-├── quickstart.md            # generate-plan, Phase 1
-├── contracts/                # generate-plan, Phase 1
-├── tasks.md                 # generate-tasks
-├── state.json                # sync-artifacts — see below
+.speckit/specs/003-invoice-export/
+├── spec.md                 # spec-kit-generate-spec
+├── plan.md                 # spec-kit-generate-plan
+├── research.md              # spec-kit-generate-plan, Phase 0
+├── data-model.md            # spec-kit-generate-plan, Phase 1
+├── quickstart.md            # spec-kit-generate-plan, Phase 1
+├── contracts/                # spec-kit-generate-plan, Phase 1
+├── tasks.md                 # spec-kit-generate-tasks
+├── state.json                # spec-kit-sync-artifacts — see below
 └── checklists/
-    ├── requirements.md      # generate-spec
-    ├── plan-quality.md      # generate-plan
-    └── consistency-report.md # analyze-consistency
+    ├── requirements.md      # spec-kit-generate-spec
+    ├── plan-quality.md      # spec-kit-generate-plan
+    └── consistency-report.md # spec-kit-analyze-consistency
 ```
 
-`state.json` lives inside the feature's own directory under `.specify/specs/`, not alongside the
-project-wide files at `.specify/`'s top level (`memory/`, `feature.json`, etc.) — it describes that
+`state.json` lives inside the feature's own directory under `.speckit/specs/`, not alongside the
+project-wide files at `.speckit/`'s top level (`memory/`, `feature.json`, etc.) — it describes that
 one feature's artifacts, and a project can have multiple feature directories with independent state
 at once. `feature.json` only tracks which one is "active"; it is not where per-feature state lives.
 
 ### `state.json`
 
-Written and updated by `sync-artifacts` (read by `generate-plan`, `generate-tasks`,
-`execute-tasks` as their Fase 0 staleness check):
+Written and updated by `spec-kit-sync-artifacts` (read by `spec-kit-generate-plan`, `spec-kit-generate-tasks`,
+`spec-kit-execute-tasks` as their Fase 0 staleness check):
 
 ```json
 {
@@ -142,7 +142,7 @@ Written and updated by `sync-artifacts` (read by `generate-plan`, `generate-task
   generated from it. `artifacts.tasks.based_on_plan_hash` is the equivalent for `tasks.md`
   against `plan.md`.
 - `source_documents.<ID>` — mirrors the Evidence Catalog rows in `spec.md` (`[S#]`/`[P#]`), so
-  `sync-artifacts` can detect an external source changing without re-reading and re-diffing the
+  `spec-kit-sync-artifacts` can detect an external source changing without re-reading and re-diffing the
   full spec every time. `fingerprint` follows the Content Fingerprint Convention's "external
   source" rule.
 

@@ -1,5 +1,5 @@
 ---
-name: analyze-consistency
+name: spec-kit-analyze-consistency
 description: Read-only cross-artifact consistency check across spec.md, plan.md, and tasks.md — coverage gaps, orphan tasks, unsafe deferrals, incomplete story checkpoints, and unverified safeguards. Produces checklists/consistency-report.md and a READY_FOR_EXECUTION verdict; never modifies spec.md, plan.md, tasks.md, or state.json. When a spec-analyzer agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
 license: MIT
 ---
@@ -9,11 +9,11 @@ license: MIT
 ## Purpose
 
 Answer one question honestly, with evidence: **is it safe to move from `tasks.md` to
-`execute-tasks`?** This skill cross-checks `spec.md`, `plan.md`, and `tasks.md` against each other
+`spec-kit-execute-tasks`?** This skill cross-checks `spec.md`, `plan.md`, and `tasks.md` against each other
 — coverage, traceability, Safe Deferral consistency, and story-closure completeness — and reports
 findings. It is the fourth link in the `spec-kit` chain, and the only one that is purely
 read-only: it never edits `spec.md`, `plan.md`, `tasks.md`, or `state.json`. If something is
-wrong, the fix happens back in `generate-spec`, `generate-plan`, or `generate-tasks` — this skill
+wrong, the fix happens back in `spec-kit-generate-spec`, `spec-kit-generate-plan`, or `spec-kit-generate-tasks` — this skill
 only surfaces what needs fixing and how urgently.
 
 ## User Input
@@ -34,7 +34,7 @@ reference to a feature directory; this skill checks whatever subset of `spec.md`
 
 - A finding without a concrete ID (an `R-FR##`, `O-0#`, `T0##`, file/line) is not a finding, it's a
   hunch — do not report one.
-- `BLOCKING` findings are the ones that mean `execute-tasks` would build on a gap that can break
+- `BLOCKING` findings are the ones that mean `spec-kit-execute-tasks` would build on a gap that can break
   something (an unverified safeguard, an unsafe deferral, an incomplete story closure, a task with
   no traceable scope). `ADVISORY` findings are real but not urgent enough to halt on their own
   (an uncovered nice-to-have requirement, terminology drift, an operation without a task in a
@@ -86,17 +86,17 @@ read-only. Do not invent a different name or redefine it for another purpose.
 
 ## Artifact Conventions
 
-The `.specify/` layout (including `.specify/specs/<feature-dir>/`) and `state.json` schema live in
+The `.speckit/` layout (including `.speckit/specs/<feature-dir>/`) and `state.json` schema live in
 `spec-kit-shared/artifact-conventions.md`. Read it before Phase 1 below. This skill reads
 `state.json` for context (e.g. whether `tasks.md` is stale relative to `plan.md`) but never writes
-to it — that remains `sync-artifacts`'/the generating skill's responsibility.
+to it — that remains `spec-kit-sync-artifacts`'/the generating skill's responsibility.
 
 ## Input Contract
 
 ### Resolving the Target Feature
 
 1. If the user gave an explicit feature directory, use it.
-2. Otherwise, read `.specify/feature.json` for the active feature directory.
+2. Otherwise, read `.speckit/feature.json` for the active feature directory.
 3. If neither resolves, stop and ask:
 
    > Provide the feature directory to analyze. It should contain at least `spec.md`.
@@ -291,7 +291,7 @@ Report:
 - `READY_FOR_EXECUTION`: `YES` / `NO`.
 - `AGENTS`: `none`, or every generated Kiro/Claude path with validation and parity status.
 - `NEXT`: if `NO`, name each `BLOCKING` finding's recommended upstream skill; if `YES`, recommend
-  `execute-tasks`.
+  `spec-kit-execute-tasks`.
 
 ## Done When
 

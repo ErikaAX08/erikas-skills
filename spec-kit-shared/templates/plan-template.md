@@ -1,11 +1,11 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: `.specify/specs/[###-feature-name]/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: `.speckit/specs/[###-feature-name]/spec.md`
 
-**Input**: Feature specification from `.specify/specs/[###-feature-name]/spec.md` (must be `READY`, or
-`DRAFT` with the user's explicit confirmation to plan against a draft — see `generate-plan/SKILL.md`).
+**Input**: Feature specification from `.speckit/specs/[###-feature-name]/spec.md` (must be `READY`, or
+`DRAFT` with the user's explicit confirmation to plan against a draft — see `spec-kit-generate-plan/SKILL.md`).
 
-**Note**: This template is filled in by the `generate-plan` skill; its `SKILL.md` describes the
+**Note**: This template is filled in by the `spec-kit-generate-plan` skill; its `SKILL.md` describes the
 execution workflow. Adapted from a general-purpose spec-kit plan template to this repo's REASONS
 vocabulary (`R-FR##`, `R-AC##`, `E-##`, `O-##`) and its Constitution Check / Complexity Tracking /
 Safe Deferral mechanics.
@@ -35,19 +35,19 @@ resolved.]
 **Constraints**: [from spec.md `R-QR##` / Safeguards]
 **Scale/Scope**: [from spec.md or direct project inspection]
 
-Any `NEEDS CLARIFICATION` above is resolved through `generate-spec`'s Clarification Policy (max 3
+Any `NEEDS CLARIFICATION` above is resolved through `spec-kit-generate-spec`'s Clarification Policy (max 3
 blocking questions per round) before continuing to Phase 0.
 
 ## Constitution Check — Gate 1 (before Phase 0)
 
-*Evaluated against `.specify/memory/constitution.md`, if it exists, before investing in research.*
+*Evaluated against `.speckit/memory/constitution.md`, if it exists, before investing in research.*
 
 | Principle | PASS / FAIL | Notes |
 | --------- | ----------- | ----- |
 | [principle ID from constitution.md] | [...] | [...] |
 
-If `.specify/memory/constitution.md` does not exist yet: report `N/A — sin constitución` here
-rather than omitting the gate silently, and note whether `establish-constitution` should run first
+If `.speckit/memory/constitution.md` does not exist yet: report `N/A — sin constitución` here
+rather than omitting the gate silently, and note whether `spec-kit-establish-constitution` should run first
 given the scope of this plan.
 
 ## Phase 0: Research
@@ -80,13 +80,13 @@ endpoint/schema.]
 #### Documentation (this feature)
 
 ```text
-.specify/specs/[###-feature]/
+.speckit/specs/[###-feature]/
 ├── plan.md              # this file
 ├── research.md          # Phase 0 output
 ├── data-model.md        # Phase 1 output
 ├── quickstart.md        # Phase 1 output
 ├── contracts/           # Phase 1 output
-└── tasks.md             # generate-tasks output — NOT created by generate-plan
+└── tasks.md             # spec-kit-generate-tasks output — NOT created by spec-kit-generate-plan
 ```
 
 #### Source Code (repository root)
@@ -171,5 +171,5 @@ this plan spans multiple phases.]
 
 ---
 
-`NEXT`: generate `tasks.md` with `generate-tasks`, organized by user story per `spec.md`'s
+`NEXT`: generate `tasks.md` with `spec-kit-generate-tasks`, organized by user story per `spec.md`'s
 `R-US##` priorities.

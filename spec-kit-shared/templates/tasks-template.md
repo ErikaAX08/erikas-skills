@@ -1,6 +1,6 @@
 # Tasks: [FEATURE NAME]
 
-**Input**: Design documents from `.specify/specs/[###-feature-name]/` — `plan.md` (required), `spec.md`
+**Input**: Design documents from `.speckit/specs/[###-feature-name]/` — `plan.md` (required), `spec.md`
 (required for user stories and priorities), `research.md`, `data-model.md`, `contracts/` as
 available.
 
@@ -29,7 +29,7 @@ vocabulary and mandatory per-story closure checkpoints.
   or "ninguna"), `Validación:` (an observable, executable criterion — not "looks correct").
 
 <!--
-  IMPORTANT: everything below Phase 1 is illustrative shape only. generate-tasks MUST replace it
+  IMPORTANT: everything below Phase 1 is illustrative shape only. spec-kit-generate-tasks MUST replace it
   with real tasks derived from:
   - User stories from spec.md (with their Priority P1/P2/P3)
   - Operations from plan.md
@@ -154,11 +154,11 @@ Task: "T00X [P] [US1] [description]"
 - **MVP first**: Setup + Foundational + US1 only. Stop at US1's checkpoint, validate, deploy/demo.
 - **Incremental delivery**: one story at a time; each one is a working, deployable increment.
 - **Parallel execution strategy**: once Foundational is done, independent user stories may be
-  delegated to separate `task-executor` agents in `execute-tasks` (see `plan-spec-kit.md` §7.7) —
+  delegated to separate `task-executor` agents in `spec-kit-execute-tasks` (see `plan-spec-kit.md` §7.7) —
   the story boundary is the primary parallelism unit; task-level `[P]` parallelism within a story
   is a secondary, smaller-grained option.
 
 ---
 
-`NEXT`: review `tasks.md`, optionally run `analyze-consistency`, then `execute-tasks` — recommended
+`NEXT`: review `tasks.md`, optionally run `spec-kit-analyze-consistency`, then `spec-kit-execute-tasks` — recommended
 to start with US1 as the MVP and validate its checkpoint before continuing to US2.

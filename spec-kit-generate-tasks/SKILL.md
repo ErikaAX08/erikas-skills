@@ -1,6 +1,6 @@
 ---
-name: generate-tasks
-description: Decompose an approved technical plan (plan.md) into an executable, user-story-organized task list (tasks.md) — Setup, Foundational, one phase per user story in priority order with a mandatory closure checkpoint, then Polish. Enforces the Safe Deferral rule from generate-plan and traceability to spec.md/plan.md; when a task-decomposer agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
+name: spec-kit-generate-tasks
+description: Decompose an approved technical plan (plan.md) into an executable, user-story-organized task list (tasks.md) — Setup, Foundational, one phase per user story in priority order with a mandatory closure checkpoint, then Polish. Enforces the Safe Deferral rule from spec-kit-generate-plan and traceability to spec.md/plan.md; when a task-decomposer agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
 license: MIT
 ---
 
@@ -9,14 +9,14 @@ license: MIT
 ## Purpose
 
 Turn an approved technical plan (`plan.md`) into `tasks.md`: an ordered, dependency-aware,
-user-story-organized task list that `execute-tasks` can run — without writing product code here.
-This skill is the third link in the `spec-kit` chain (`generate-spec` → `generate-plan` →
-`generate-tasks`): it does not redesign the plan, it decomposes an already-approved plan into
+user-story-organized task list that `spec-kit-execute-tasks` can run — without writing product code here.
+This skill is the third link in the `spec-kit` chain (`spec-kit-generate-spec` → `spec-kit-generate-plan` →
+`spec-kit-generate-tasks`): it does not redesign the plan, it decomposes an already-approved plan into
 atomic, independently verifiable work.
 
 The output is `tasks.md` plus `checklists/tasks-quality.md`. It does **not** implement product
 code, and it does **not** validate cross-artifact consistency in depth — that deeper check is
-`analyze-consistency`'s job, when that skill is invoked.
+`spec-kit-analyze-consistency`'s job, when that skill is invoked.
 
 ## User Input
 
@@ -85,7 +85,7 @@ holds — closure is structural, not an afterthought.**
 ## Cross-Platform Agent Compatibility
 
 The complete portability contract lives in `spec-kit-shared/agent-portability.md` (same document
-`generate-spec` and `generate-plan` use). Before generating, validating, or reporting on the
+`spec-kit-generate-spec` and `spec-kit-generate-plan` use). Before generating, validating, or reporting on the
 `task-decomposer` role — or any other agent this skill materializes — read that file completely
 and follow it exactly. If the active host cannot resolve the reference, follow its fallback
 section.
@@ -96,7 +96,7 @@ different name or redefine it for another purpose.
 
 ## Artifact Conventions
 
-The `.specify/` layout (including `.specify/specs/<feature-dir>/`), `feature.json`, `state.json`, and the Content
+The `.speckit/` layout (including `.speckit/specs/<feature-dir>/`), `feature.json`, `state.json`, and the Content
 Fingerprint Convention all live in `spec-kit-shared/artifact-conventions.md`. Read it before Fase 0
 below and follow it exactly.
 
@@ -105,11 +105,11 @@ below and follow it exactly.
 ### Resolving the Target Plan
 
 1. If the user gave an explicit `plan.md` path or feature directory, use it.
-2. Otherwise, read `.specify/feature.json` for the active feature directory.
+2. Otherwise, read `.speckit/feature.json` for the active feature directory.
 3. If neither resolves to a readable `plan.md`, stop and ask:
 
    > Provide the feature directory or `plan.md` path to decompose into tasks. If you haven't
-   > generated a plan yet, run `generate-plan` first.
+   > generated a plan yet, run `spec-kit-generate-plan` first.
 
 4. Read `plan.md`, `spec.md`, and `checklists/plan-quality.md` completely.
 
@@ -117,7 +117,7 @@ below and follow it exactly.
 
 - If `plan-quality.md`'s `STATUS` is `READY`, proceed.
 - If it is `DRAFT — NEEDS CLARIFICATION`, stop and ask the user to either resolve the blocking
-  items in `generate-plan` first, or explicitly confirm decomposing a draft plan into tasks. If
+  items in `spec-kit-generate-plan` first, or explicitly confirm decomposing a draft plan into tasks. If
   confirmed, proceed but record `DECOMPOSED_FROM_DRAFT_PLAN: true` in `tasks.md`'s header and
   repeat the warning in the Completion Report.
 - If `spec.md`'s own `STATUS` is not `READY` either, surface both — a plan built on a draft spec
@@ -131,24 +131,24 @@ below and follow it exactly.
 
 ## Fase 0 — Staleness Check (every invocation, new or update)
 
-1. If `.specify/specs/<feature-dir>/state.json` does not exist, or has no `artifacts.tasks` entry yet, this
+1. If `.speckit/specs/<feature-dir>/state.json` does not exist, or has no `artifacts.tasks` entry yet, this
    is the first task list for this plan — skip straight to Phase 1, and create/update
    `state.json` at the end.
-2. Otherwise, read `sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
+2. Otherwise, read `spec-kit-sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
    detection procedure against `artifacts.tasks.based_on_plan_hash` vs. `plan.md`'s current
    content hash — do not re-derive the hashing/comparison mechanism independently.
-3. If `sync-artifacts` reports a match, `plan.md` hasn't changed since the last task generation —
+3. If `spec-kit-sync-artifacts` reports a match, `plan.md` hasn't changed since the last task generation —
    proceed normally.
-4. If it reports drift, this skill does the classification `sync-artifacts` leaves to the
+4. If it reports drift, this skill does the classification `spec-kit-sync-artifacts` leaves to the
    consuming skill: identify which `O-0#`/`A-D0#`/Safe-Deferral entries actually changed (using
-   `sync-artifacts`'s best-effort localization, or a direct diff if it couldn't resolve one), and
+   `spec-kit-sync-artifacts`'s best-effort localization, or a direct diff if it couldn't resolve one), and
    classify each as functionally material (a new/changed/removed operation, a changed Safe
    Deferral condition) or non-material (wording). Only material changes make `tasks.md` stale with
    impact.
    - Report the affected IDs and which task phases they touch before proceeding. If
-     `sync-artifacts` flagged any already-`[x]` task as potentially affected, treat that with the
+     `spec-kit-sync-artifacts` flagged any already-`[x]` task as potentially affected, treat that with the
      same non-negotiable caution as § Updating an Existing Task List step 3 below.
-5. This Fase 0 does not depend on `sync-artifacts` being invoked as a separate conversational step
+5. This Fase 0 does not depend on `spec-kit-sync-artifacts` being invoked as a separate conversational step
    — apply its documented procedure directly, inline, as part of this phase.
 
 ## Workflow
@@ -247,7 +247,7 @@ being complete.
 - **Implementation Strategy**: MVP-first (Setup + Foundational + the `P1` story only, stop and
   validate its checkpoint), incremental delivery (one story at a time, each deployable), and
   parallel execution strategy (once Foundational is done, independent stories may go to separate
-  `task-executor` agents in `execute-tasks` — the story boundary is the primary parallelism unit).
+  `task-executor` agents in `spec-kit-execute-tasks` — the story boundary is the primary parallelism unit).
 
 ## Traceability and Safe Deferral Consistency Checks
 
@@ -327,7 +327,7 @@ When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected dri
    affected story phase(s); do not regenerate unrelated stories.
 3. **Never silently modify a task already marked `[x]`.** If a completed task is affected by the
    change, flag it explicitly as "closed task affected by plan change — needs review" rather than
-   editing or unmarking it automatically. This is the same non-negotiable `sync-artifacts` carries
+   editing or unmarking it automatically. This is the same non-negotiable `spec-kit-sync-artifacts` carries
    in the design doc: work already done on an assumption that just changed is a risk to surface,
    not silently paper over.
 4. Preserve task IDs where semantics are unchanged; append new IDs (continuing the sequence) for
@@ -340,9 +340,9 @@ When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected dri
 
 ## Pre-Execution Extension Hooks
 
-Before task decomposition, check `.specify/extensions.yml` per
+Before task decomposition, check `.speckit/extensions.yml` per
 `spec-kit-shared/artifact-conventions.md`'s schema, reading `hooks.before_tasks`. Follow the same
-enablement/condition/mandatory-vs-optional rules `generate-spec` and `generate-plan` use for their
+enablement/condition/mandatory-vs-optional rules `spec-kit-generate-spec` and `spec-kit-generate-plan` use for their
 own hooks.
 
 ## Mandatory Post-Execution Hooks
@@ -366,8 +366,8 @@ Report:
 - `TRACEABILITY`: operation/requirement coverage counts.
 - `CHANGES`: for updates, the story phases changed, and any closed tasks flagged for review.
 - `AGENTS`: `none`, or every generated Kiro/Claude path with validation and parity status.
-- `NEXT`: clarification if blocked; otherwise recommend `analyze-consistency` (optional deeper
-  cross-artifact check) and then `execute-tasks`, starting with the `P1` story as the MVP.
+- `NEXT`: clarification if blocked; otherwise recommend `spec-kit-analyze-consistency` (optional deeper
+  cross-artifact check) and then `spec-kit-execute-tasks`, starting with the `P1` story as the MVP.
 
 ## Done When
 

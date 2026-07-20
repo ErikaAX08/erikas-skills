@@ -1,6 +1,6 @@
 ---
-name: establish-constitution
-description: Create or update .specify/memory/constitution.md — a project's non-negotiable architecture, security, and quality principles — from explicit documentation and/or by mining consistent patterns across existing code. Every mined principle carries evidence, coverage, and confidence, and none becomes binding without explicit user confirmation. Optional, and re-invocable to check whether current code has drifted from an existing constitution. When a pattern-miner agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
+name: spec-kit-establish-constitution
+description: Create or update .speckit/memory/constitution.md — a project's non-negotiable architecture, security, and quality principles — from explicit documentation and/or by mining consistent patterns across existing code. Every mined principle carries evidence, coverage, and confidence, and none becomes binding without explicit user confirmation. Optional, and re-invocable to check whether current code has drifted from an existing constitution. When a pattern-miner agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
 license: MIT
 ---
 
@@ -16,8 +16,8 @@ missing `constitution.md` as `N/A`, not an error. This skill is what a project r
 that `N/A` to become real, cited principles instead.
 
 This skill produces a **governance document**. It does not implement or refactor code to match
-the constitution — that enforcement happens downstream, in `generate-plan`'s Convention
-Enforcement and `execute-tasks`'s adherence to active architecture skills.
+the constitution — that enforcement happens downstream, in `spec-kit-generate-plan`'s Convention
+Enforcement and `spec-kit-execute-tasks`'s adherence to active architecture skills.
 
 ## User Input
 
@@ -64,8 +64,8 @@ never binding until the user confirms them.**
 6. **If neither explicit documentation nor a consistent pattern exists for an area, that section
    stays empty.** Never fill it with generic "best practice" from memory to make the document look
    complete.
-7. **This skill does not implement or refactor code.** It documents; `generate-plan` and
-   `execute-tasks` are what actually enforce a constitution during real feature work.
+7. **This skill does not implement or refactor code.** It documents; `spec-kit-generate-plan` and
+   `spec-kit-execute-tasks` are what actually enforce a constitution during real feature work.
 8. **Reuse `verify-before-implement`** to inspect the project before citing anything — explicit or
    inferred — as "existing."
 9. **`constitution.md` is versioned with a changelog.** Every update states what changed and why;
@@ -96,7 +96,7 @@ invent a different name or redefine it for another purpose.
 
 ## Artifact Conventions
 
-`.specify/memory/constitution.md`'s location and the `extensions.yml` hook keys
+`.speckit/memory/constitution.md`'s location and the `extensions.yml` hook keys
 (`before_constitution`/`after_constitution`) live in `spec-kit-shared/artifact-conventions.md`.
 Read it before Phase 1 below.
 
@@ -104,7 +104,7 @@ Read it before Phase 1 below.
 
 ### New vs. Update vs. Drift-Check Mode
 
-1. **New mode**: `.specify/memory/constitution.md` does not exist. Proceed through Phases 1–6.
+1. **New mode**: `.speckit/memory/constitution.md` does not exist. Proceed through Phases 1–6.
 2. **Update mode**: it exists and the user wants to add/revise principles (e.g. a new area of the
    codebase, or a principle that's changed). Read the existing file and its changelog first;
    treat the request as a delta, per § Updating an Existing Constitution.
@@ -215,7 +215,7 @@ When explicitly invoked to check code against an existing constitution, without 
 3. Report each principle as holding, drifted, or now-mixed (some instances still comply, others
    don't).
 4. **Do not auto-fix either direction.** A drifted principle is a decision point: either the code
-   needs to be brought back in line (a job for `execute-tasks`/`generate-plan` on a future
+   needs to be brought back in line (a job for `spec-kit-execute-tasks`/`spec-kit-generate-plan` on a future
    feature, not this skill), or the constitution itself needs updating because the project's
    real direction changed. Present both options; let the user decide.
 5. This is a read-only mode with one exception: if the user explicitly asks to update the
@@ -224,7 +224,7 @@ When explicitly invoked to check code against an existing constitution, without 
 
 ## Pre-Execution Extension Hooks
 
-Before inspecting the project, check `.specify/extensions.yml` per
+Before inspecting the project, check `.speckit/extensions.yml` per
 `spec-kit-shared/artifact-conventions.md`'s schema, reading `hooks.before_constitution`. Follow
 the same enablement/condition/mandatory-vs-optional rules the other `spec-kit` skills use.
 
@@ -237,7 +237,7 @@ After writing/updating `constitution.md`, process `hooks.after_constitution` the
 Report:
 
 - `MODE`: New / Update / Drift-Check.
-- `CONSTITUTION_FILE`: `.specify/memory/constitution.md` path.
+- `CONSTITUTION_FILE`: `.speckit/memory/constitution.md` path.
 - `VERSION`: current version after this run.
 - `EXPLICIT_PRINCIPLES` / `INFERRED_PRINCIPLES`: counts, each with a one-line list.
 - `MIXED_PATTERNS_REPORTED`: count and areas, or "none".
@@ -245,7 +245,7 @@ Report:
 - `DRIFT_FOUND` (Drift-Check mode only): principles that no longer hold, or "none".
 - `AGENTS`: `none`, or every generated Kiro/Claude path with validation and parity status.
 - `NEXT`: if mixed patterns remain unresolved, name them; otherwise recommend the constitution is
-  now available to `generate-spec`/`generate-plan` as governing context.
+  now available to `spec-kit-generate-spec`/`spec-kit-generate-plan` as governing context.
 
 ## Done When
 

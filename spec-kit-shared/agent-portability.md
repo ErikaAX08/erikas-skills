@@ -2,13 +2,13 @@
 
 > Canonical, shared contract for any `spec-kit` skill that materializes a reusable support agent
 > (clarification, planning, decomposition, analysis, execution, or review). Extracted verbatim
-> from `generate-spec/SKILL.md`'s original "Cross-Platform Agent Compatibility" section so every
+> from `spec-kit-generate-spec/SKILL.md`'s original "Cross-Platform Agent Compatibility" section so every
 > skill in this kit follows one definition instead of five slightly-diverging copies.
 >
-> **Used by**: `generate-spec` (`spec-clarifier`, `spec-planner`), `generate-plan`
-> (`plan-reviewer`), `generate-tasks` (`task-decomposer`), `analyze-consistency`
-> (`spec-analyzer`), `sync-artifacts` (`drift-watcher`), `execute-tasks` (`task-executor`),
-> `establish-constitution` (`pattern-miner`).
+> **Used by**: `spec-kit-generate-spec` (`spec-clarifier`, `spec-planner`), `spec-kit-generate-plan`
+> (`plan-reviewer`), `spec-kit-generate-tasks` (`task-decomposer`), `spec-kit-analyze-consistency`
+> (`spec-analyzer`), `spec-kit-sync-artifacts` (`drift-watcher`), `spec-kit-execute-tasks` (`task-executor`),
+> `spec-kit-establish-constitution` (`pattern-miner`).
 >
 > **How to use this file**: before generating, validating, or reporting on any support agent, read
 > this file completely and follow it as if it were inline in the calling skill. Do not paraphrase
@@ -39,14 +39,14 @@ Do not use custom `handoffs` metadata in a calling skill's YAML frontmatter. It 
 
 Standard roles already assigned across `spec-kit` (do not redefine these names for a different purpose):
 
-- `spec-clarifier` — resolving blocking requirements and returning decisions to the parent conversation (`generate-spec`).
-- `spec-planner` — bridging an approved REASONS specification into technical planning, without implementing code (`generate-spec` → `generate-plan`).
-- `plan-reviewer` — validating architectural trade-offs before a plan is approved (`generate-plan`).
-- `task-decomposer` — decomposing a disproportionately large plan operation or user story into atomic tasks (`generate-tasks`).
-- `spec-analyzer` — running the spec/plan/tasks consistency check in isolation, read-only (`analyze-consistency`).
-- `drift-watcher` — running a standalone drift/staleness check in isolation, read-only (`sync-artifacts`).
-- `task-executor` — executing one independent task or user story in parallel with others (`execute-tasks`).
-- `pattern-miner` — sampling every instance of one component category (e.g. all repositories, all controllers) to determine its dominant pattern, in parallel with mining of other categories (`establish-constitution`).
+- `spec-clarifier` — resolving blocking requirements and returning decisions to the parent conversation (`spec-kit-generate-spec`).
+- `spec-planner` — bridging an approved REASONS specification into technical planning, without implementing code (`spec-kit-generate-spec` → `spec-kit-generate-plan`).
+- `plan-reviewer` — validating architectural trade-offs before a plan is approved (`spec-kit-generate-plan`).
+- `task-decomposer` — decomposing a disproportionately large plan operation or user story into atomic tasks (`spec-kit-generate-tasks`).
+- `spec-analyzer` — running the spec/plan/tasks consistency check in isolation, read-only (`spec-kit-analyze-consistency`).
+- `drift-watcher` — running a standalone drift/staleness check in isolation, read-only (`spec-kit-sync-artifacts`).
+- `task-executor` — executing one independent task or user story in parallel with others (`spec-kit-execute-tasks`).
+- `pattern-miner` — sampling every instance of one component category (e.g. all repositories, all controllers) to determine its dominant pattern, in parallel with mining of other categories (`spec-kit-establish-constitution`).
 
 ## Capability and Tool Mapping
 

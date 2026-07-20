@@ -1,6 +1,6 @@
 ---
-name: sync-artifacts
-description: Detect drift between spec.md/plan.md/tasks.md and their recorded state.json fingerprints — mechanical hash comparison plus best-effort structural localization by stable ID — and recommend which upstream spec-kit skill to re-invoke, one hop at a time. Never edits spec.md, plan.md, or tasks.md itself; that stays each generating skill's own "Updating an Existing X" procedure. Invocable standalone after editing a source document, or as the Fase 0 staleness check inside generate-plan, generate-tasks, and execute-tasks. When a drift-watcher agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
+name: spec-kit-sync-artifacts
+description: Detect drift between spec.md/plan.md/tasks.md and their recorded state.json fingerprints — mechanical hash comparison plus best-effort structural localization by stable ID — and recommend which upstream spec-kit skill to re-invoke, one hop at a time. Never edits spec.md, plan.md, or tasks.md itself; that stays each generating skill's own "Updating an Existing X" procedure. Invocable standalone after editing a source document, or as the Fase 0 staleness check inside spec-kit-generate-plan, spec-kit-generate-tasks, and spec-kit-execute-tasks. When a drift-watcher agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
 license: MIT
 ---
 
@@ -15,9 +15,9 @@ importantly, the plan and tasks should be able to update accordingly."
 
 This skill is deliberately narrow: it **detects and reports**, using the Content Fingerprint
 Convention (`spec-kit-shared/artifact-conventions.md`). It does **not** regenerate anything itself
-— that stays `generate-spec`'s, `generate-plan`'s, or `generate-tasks`'s own "Updating an Existing
+— that stays `spec-kit-generate-spec`'s, `spec-kit-generate-plan`'s, or `spec-kit-generate-tasks`'s own "Updating an Existing
 X" procedure, each already written to propagate a change through only the sections it actually
-touches. `sync-artifacts` is the shared, canonical definition of the mechanical comparison those
+touches. `spec-kit-sync-artifacts` is the shared, canonical definition of the mechanical comparison those
 skills' own Fase 0 steps already rely on — they reference this file instead of each re-describing
 hashing/comparison logic independently.
 
@@ -37,7 +37,7 @@ feature directory to check, or an explicit note that a specific source document 
 Propagation is one hop at a time, and never silent.**
 
 - A hash mismatch means "something changed" — not "this is a material change requiring a
-  cascade." The consuming skill (`generate-spec`, `generate-plan`, `generate-tasks`) makes that
+  cascade." The consuming skill (`spec-kit-generate-spec`, `spec-kit-generate-plan`, `spec-kit-generate-tasks`) makes that
   judgment when it re-invokes its own "Updating an Existing X" procedure.
 - After a source changes, recommend regenerating the *directly* dependent artifact first (the
   spec that cites it). Do not presume what the plan or tasks will need until the spec's actual,
@@ -59,9 +59,9 @@ Propagation is one hop at a time, and never silent.**
 4. **One hop at a time by default.** Recommend re-invoking the *nearest* downstream skill first.
    Only recommend a full multi-hop cascade upfront if the user explicitly asked for it (e.g. "sync
    everything").
-5. **Recommend, never force.** This skill does not invoke `generate-spec`/`generate-plan`/
-   `generate-tasks` on the user's behalf without explicit confirmation — it reports and asks, the
-   same way `generate-spec`'s Extension Hooks distinguish mandatory from optional actions.
+5. **Recommend, never force.** This skill does not invoke `spec-kit-generate-spec`/`spec-kit-generate-plan`/
+   `spec-kit-generate-tasks` on the user's behalf without explicit confirmation — it reports and asks, the
+   same way `spec-kit-generate-spec`'s Extension Hooks distinguish mandatory from optional actions.
 6. **Report clean results too.** "Nothing changed" is a valid, useful, explicitly stated outcome —
    never silently produce no output when there's nothing to report.
 7. **Every finding cites the exact artifact/source ID and both fingerprint values.** No vague
@@ -69,11 +69,11 @@ Propagation is one hop at a time, and never silent.**
 8. **If `state.json` doesn't exist for the target feature, say so and stop** — there is nothing to
    compare against; this is not the same as "no drift," and must not be reported as such.
 9. **Structural localization (§ Phase 3) is best-effort, not a guarantee.** If a change can't be
-   reliably localized to specific stable IDs (e.g. a source document sync-artifacts can't parse
+   reliably localized to specific stable IDs (e.g. a source document spec-kit-sync-artifacts can't parse
    into a section structure), say so plainly rather than guessing which IDs are affected.
 10. **Never silently touch a completed task.** If drift potentially affects a story whose
     `[CIERRE]` task (or any task) is already marked `[x]`, flag it explicitly as "closed work
-    potentially affected by this change — needs review," and let the human or `generate-tasks`'s
+    potentially affected by this change — needs review," and let the human or `spec-kit-generate-tasks`'s
     own update procedure decide, rather than un-checking or editing it.
 11. **Generate portable agent pairs.** If this workflow creates a `drift-watcher` (or other support
     agent), it must generate and validate both a Kiro CLI and a Claude Code definition per the
@@ -87,12 +87,12 @@ materializes — read that file completely and follow it exactly. If the active 
 the reference, follow its fallback section.
 
 `drift-watcher` is the standard role for this skill: running a standalone drift check in
-isolation, read-only, without the rest of a `generate-plan`/`generate-tasks` invocation's context.
+isolation, read-only, without the rest of a `spec-kit-generate-plan`/`spec-kit-generate-tasks` invocation's context.
 Do not invent a different name or redefine it for another purpose.
 
 ## Artifact Conventions
 
-The `.specify/` layout (including `.specify/specs/<feature-dir>/`), `state.json` schema, and Content Fingerprint
+The `.speckit/` layout (including `.speckit/specs/<feature-dir>/`), `state.json` schema, and Content Fingerprint
 Convention live in `spec-kit-shared/artifact-conventions.md`. Read it before Phase 1 below — this
 skill's entire mechanism is built directly on that document's schema.
 
@@ -101,7 +101,7 @@ skill's entire mechanism is built directly on that document's schema.
 ### Resolving the Target Feature
 
 1. If the user gave an explicit feature directory, use it.
-2. Otherwise, read `.specify/feature.json` for the active feature directory.
+2. Otherwise, read `.speckit/feature.json` for the active feature directory.
 3. If neither resolves, stop and ask:
 
    > Provide the feature directory to check for drift. If you just edited a source document, name
@@ -109,7 +109,7 @@ skill's entire mechanism is built directly on that document's schema.
 
 ### Missing State
 
-If `.specify/specs/<feature-dir>/state.json` does not exist, stop and report:
+If `.speckit/specs/<feature-dir>/state.json` does not exist, stop and report:
 
 > No recorded state for this feature — nothing to compare against yet. This is expected before a
 > first `plan.md`/`tasks.md` exists; it is not the same as confirming there's no drift.
@@ -136,9 +136,9 @@ Convention and compare:
   corresponding update in `plan.md`'s `based_on_spec_hash`) means `spec.md` was hand-edited or
   regenerated since the plan was built.
 - **`artifacts.plan.based_on_spec_hash`** vs. `artifacts.spec.content_hash` (current): the direct
-  spec→plan staleness check `generate-plan`'s own Fase 0 relies on.
+  spec→plan staleness check `spec-kit-generate-plan`'s own Fase 0 relies on.
 - **`artifacts.tasks.based_on_plan_hash`** vs. `artifacts.plan.content_hash` (current): the direct
-  plan→tasks staleness check `generate-tasks`'s own Fase 0 relies on.
+  plan→tasks staleness check `spec-kit-generate-tasks`'s own Fase 0 relies on.
 
 Every comparison is reported, matched or not — a full "everything matches" result is a valid
 report (Rule 6).
@@ -153,7 +153,7 @@ For every mismatch found in Phase 2, attempt to localize which stable IDs are in
 - **Spec→plan drift**: if the previous `spec.md` version is available (git history, or the prior
   content implied by `plan.md`'s own traceability citations), identify which `R-FR##`/`R-AC##`/
   `E-##`/`R-QR##` IDs' surrounding text differs; otherwise, report "spec.md changed, could not
-  localize which sections — recommend `generate-plan` review the full spec diff."
+  localize which sections — recommend `spec-kit-generate-plan` review the full spec diff."
 - **Plan→tasks drift**: same approach against `O-0#`/`A-D0#`/Safe Deferral entries.
 
 State plainly when localization isn't possible (Rule 9) rather than asserting an ID list you
@@ -165,7 +165,7 @@ For each mismatch, in dependency order (source → spec → plan → tasks):
 
 1. State what changed (fingerprints, and localized IDs when available).
 2. Recommend the **nearest** downstream skill to re-invoke (Rule 4) — e.g. a source mismatch
-   recommends `generate-spec` (update mode) first, not `generate-plan` directly, even if `plan.md`
+   recommends `spec-kit-generate-spec` (update mode) first, not `spec-kit-generate-plan` directly, even if `plan.md`
    also looks stale — that staleness is a *consequence* to re-check after the spec is actually
    updated, not a parallel action to take now.
 2. If any task in an affected story is already `[x]`, flag it explicitly per Rule 10.
@@ -174,9 +174,9 @@ For each mismatch, in dependency order (source → spec → plan → tasks):
 
 ## Writing `state.json`
 
-Each generating skill (`generate-spec`, `generate-plan`, `generate-tasks`) already writes its own
-artifact's hash entries in `state.json` when it finishes regenerating. `sync-artifacts` does not
-duplicate that write. The one exception: if the user asks `sync-artifacts` to simply **acknowledge**
+Each generating skill (`spec-kit-generate-spec`, `spec-kit-generate-plan`, `spec-kit-generate-tasks`) already writes its own
+artifact's hash entries in `state.json` when it finishes regenerating. `spec-kit-sync-artifacts` does not
+duplicate that write. The one exception: if the user asks `spec-kit-sync-artifacts` to simply **acknowledge**
 a source change without regenerating anything yet (e.g. "yes, the PRD changed, but don't update
 the spec right now") — in that case, and only with explicit confirmation, it may refresh
 `source_documents.<ID>.fingerprint` and `read_at` to the current value, so the next check doesn't
@@ -222,7 +222,7 @@ the spec is now knowingly stale against its own source until someone regenerates
 
 ## How Other `spec-kit` Skills Use This
 
-`generate-plan`'s and `generate-tasks`'s own Fase 0 sections read this file's Phase 1/2 procedure
+`spec-kit-generate-plan`'s and `spec-kit-generate-tasks`'s own Fase 0 sections read this file's Phase 1/2 procedure
 and apply it against their own specific `based_on_*` field — they do not re-describe the hashing
 mechanism independently. If either skill's Fase 0 finds drift, it follows its own
 "Updating an Existing Plan"/"Updating an Existing Task List" section to propagate the change — this
