@@ -1,15 +1,16 @@
 ---
 name: git-commits
-description: Write clear, semantic git commit messages and PR descriptions following Conventional Commits. Use when the user asks to write commit messages, create PR descriptions, format git history, improve commit quality, or mentions "commit message", "conventional commits", "PR description", "merge message", or "git history". Generates professional, consistent commit messages that make project history easy to understand.
+description: Write clear, semantic git commit messages and PR/MR titles following Conventional Commits. Use when the user asks to write commit messages, format git history, improve commit quality, or set a PR/MR title, or mentions "commit message", "conventional commits", "merge message", or "git history". For the full PR/MR body description, use the create-pull-request skill instead. Generates professional, consistent commit messages and titles that make project history easy to understand.
 license: MIT
 ---
 
 # GIT-COMMITS.md — Conventional Commits Engineering Skill
 
 > **Purpose:** this is the operational rulebook an AI agent (or a human) follows to write commit
-> messages, PR descriptions, and merge messages that make project history easy to read, bisect, and
+> messages, PR/MR titles, and merge messages that make project history easy to read, bisect, and
 > automate against — without the vagueness, mixed concerns, and inconsistency that make git history
-> useless six months later.
+> useless six months later. The full PR/MR body description is the `create-pull-request` skill's
+> job — this file only owns the title format it shares with that skill.
 >
 > **This file is self-contained by design.** It doesn't assume access to any specific repo's own
 > `CONTRIBUTING.md` or commit conventions. If the target repo has its own documented commit
@@ -28,8 +29,8 @@ license: MIT
 3. **For anything other than a plain new commit** (a revert, a merge, an amend, a squash, a hotfix,
    a dependency bump), check §5 — these have their own shape and their own rules about what's safe to
    rewrite.
-4. **Before opening a PR**, use §7 for the PR title/description template and §8 for real scenario
-   examples.
+4. **Before opening a PR**, use §7 for the PR/MR title format and §8 for real scenario examples. For
+   the PR/MR body, use the `create-pull-request` skill instead.
 5. **Before delivering the final message**, run it through §10 (quality checklist) and follow §11's
    delivery rules for *where* the result goes (file vs. terminal).
 6. If the user's repo has its own commit convention that conflicts with this file, **the repo's own
@@ -336,7 +337,7 @@ working, they're related and belong in one commit. If they're independently reve
 
 ---
 
-## 7. Pull Request / Merge Message Format
+## 7. Pull Request / Merge Title Format
 
 ### 7.1 PR Title
 
@@ -346,43 +347,12 @@ Same format as a commit:
 <type>(<scope>): <brief description>
 ```
 
-### 7.2 PR Description Template
+### 7.2 PR Description
 
-```markdown
-## Description
-
-[Brief overview of what this PR does]
-
-## Changes
-
-- Specific change 1
-- Specific change 2
-- Specific change 3
-
-## Type of Change
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that breaks existing functionality)
-
-## Related Issues
-
-Closes #[issue-number]
-Refs #[related-issue]
-
-## Testing
-
-- [ ] Unit tests added/updated
-- [ ] Integration tests added/updated
-- [ ] Manual testing completed
-
-## Screenshots (if applicable)
-
-[Add screenshots for UI changes]
-```
-
-Fill in only the sections that apply — an empty "Screenshots" section on a backend-only PR is noise,
-delete it rather than leaving `[Add screenshots for UI changes]` as a placeholder.
+Drafting the PR/MR **body** (summary, changes made, testing, impact/risks, related issue) is out of
+scope for this file — use the `create-pull-request` skill, which looks for the repo's own PR template
+first, grounds every section in the actual diff, and saves the result to `.pr-suggestions/PR-00N.md`.
+This file only supplies the title format above and the shared anti-patterns in §9.
 
 ---
 
@@ -423,43 +393,16 @@ Closes #156
 Refs #89
 ```
 
-### 8.4 Simple PR
+### 8.4 PR Titles
 
-```markdown
+```
 fix(auth): resolve login redirect loop
-
-## Changes
-
-- Fix infinite redirect when session expires
-- Add proper error handling for expired tokens
-- Update tests
-
-Closes #45
-```
-
-### 8.5 Feature PR
-
-```markdown
 feat(dashboard): add user dashboard with analytics
-
-## Changes
-
-- Implement activity charts with Chart.js
-- Add date range filters (daily/weekly/monthly)
-- Optimize database queries with indexing
-- Add loading states and error handling
-
-## Testing
-
-- Added unit tests for chart components
-- Added integration tests for data fetching
-- Manual testing on Chrome, Firefox, Safari
-
-Closes #23
-Refs #67
 ```
 
-### 8.6 Dependency Updates
+The body for either of these is drafted by the `create-pull-request` skill, not here (§7.2).
+
+### 8.5 Dependency Updates
 
 ```bash
 # Single package
@@ -472,7 +415,7 @@ chore(deps): update security dependencies
 - express: 4.17.1 -> 4.18.2
 ```
 
-### 8.7 Configuration Changes
+### 8.6 Configuration Changes
 
 ```bash
 chore(config): update ESLint rules for TypeScript
@@ -482,7 +425,7 @@ chore(config): update ESLint rules for TypeScript
 - Update prettier integration
 ```
 
-### 8.8 Revert
+### 8.7 Revert
 
 ```bash
 revert: feat(search): add fuzzy matching to search
@@ -492,7 +435,7 @@ This reverts commit a1b2c3d4e5f6.
 Reason: caused a 3x latency regression on the search endpoint under production load; reverting while the indexing strategy is redesigned.
 ```
 
-### 8.9 Performance fix
+### 8.8 Performance fix
 
 ```bash
 perf(images): lazy-load offscreen thumbnails
@@ -607,8 +550,9 @@ Before committing, verify:
 
 ## 11. Delivering the Result
 
-Once the commit message (or PR description) is drafted, deliver it according to these rules, in
-order:
+Once the commit message (or PR/MR title) is drafted, deliver it according to these rules, in order.
+(A full PR/MR body follows the `create-pull-request` skill's own delivery contract instead — always
+a numbered file in `.pr-suggestions/`, never a question, never terminal-only.)
 
 1. **Prefer writing it to a Markdown file.** Default to saving the result in a `.md` file rather than
    only printing it in the chat.

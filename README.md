@@ -16,6 +16,7 @@ skills/
 ├── code-architecture-explainer/SKILL.md   # Explain code & architecture
 ├── code-documentation/SKILL.md            # Document code professionally
 ├── git-commits/SKILL.md                   # Conventional commits & PR descriptions
+├── create-pull-request/SKILL.md           # PR description: diff-grounded, repo template first
 ├── latex-academic-reports/SKILL.md        # Academic reports & papers in LaTeX
 │
 │   Orchestration — architectural brain for multi-agent work (own memory tree, own
@@ -98,11 +99,17 @@ Documents code clearly, concisely, and professionally. Generates documentation (
 
 #### 10. Git Commits
 
-Writes clear, semantic git commit messages and PR descriptions following Conventional Commits.
+Writes clear, semantic git commit messages and PR/MR titles following Conventional Commits. The full PR/MR body is the Create Pull Request skill's job.
 
-**Use when:** writing commit messages, creating PR descriptions, formatting git history, or improving commit quality.
+**Use when:** writing commit messages, setting a PR/MR title, formatting git history, or improving commit quality.
 
-#### 11. LaTeX Academic Reports
+#### 11. Create Pull Request
+
+Creates Pull Request/Merge Request descriptions grounded in the actual git diff. Always looks for the repository's own PR template first (GitHub `pull_request_template` files, GitLab `merge_request_templates`, Azure DevOps, or `CONTRIBUTING.md`); if the repo defines none, falls back to an improved default template. Title follows Conventional Commits. Never fabricates changed files, test results, issue numbers, or breaking-change claims.
+
+**Use when:** creating, drafting, or writing a pull request description; preparing a PR for review.
+
+#### 12. LaTeX Academic Reports
 
 Generates academic reports, papers, theses, and technical documentation using LaTeX, producing publication-quality PDFs with proper formatting, citations, figures, tables, and mathematical notation. Ideal for Computer Science, Engineering, and scientific documents.
 
@@ -130,43 +137,43 @@ Skip step 1 if the project has no established conventions yet, and skip step 5 i
 confident `tasks.md` is already consistent — every other step depends on the `READY` output of
 the one before it.
 
-#### 12. Establish Constitution
+#### 13. Establish Constitution
 
 Creates or updates a project's `constitution.md` — non-negotiable architecture/security/quality principles — from explicit documentation and/or by mining consistent patterns across existing code, with evidence, coverage, and confidence for every mined principle. Nothing mined becomes binding without explicit confirmation. Optional; re-invocable to check for drift.
 
 **Use when:** starting spec-driven work on a project that already has established conventions, or checking whether code has drifted from a previously established constitution.
 
-#### 13. Generate Spec
+#### 14. Generate Spec
 
 Generates or updates a governed specification (a REASONS Canvas) from a PRD, free-form text, or referenced documents — with a source Evidence Catalog, conflict resolution, and a quality checklist. Does not implement code.
 
 **Use when:** starting a new feature from a requirement or document, or updating an existing specification after a material change.
 
-#### 14. Generate Plan
+#### 15. Generate Plan
 
 Converts a `READY` specification into a verified technical plan — real Technical Context, a two-gate Constitution Check, verified Project Structure, and an explicit Safe Deferral table for any phased rollout. Does not implement code.
 
 **Use when:** a specification is approved and you need a technically grounded implementation plan before task breakdown.
 
-#### 15. Generate Tasks
+#### 16. Generate Tasks
 
 Decomposes a `READY` plan into an ordered task list organized by user story (priority order), with a mandatory closure checkpoint per story — never a flat task list, never an unsafe "later" deferral.
 
 **Use when:** a plan is approved and you need executable, independently verifiable tasks.
 
-#### 16. Analyze Consistency
+#### 17. Analyze Consistency
 
 Read-only cross-check of `spec.md`/`plan.md`/`tasks.md` for coverage gaps, orphan tasks, unsafe deferrals, and incomplete story checkpoints, with a `READY_FOR_EXECUTION` verdict.
 
 **Use when:** before executing tasks, to catch a gap upstream skills' own checklists might have missed.
 
-#### 17. Sync Artifacts
+#### 18. Sync Artifacts
 
 Detects drift between a source document and the spec/plan/tasks chain via content-hash comparison, and recommends the nearest upstream skill to re-invoke — one hop at a time, never a silent cascade.
 
 **Use when:** a source document, spec, or plan changed and you need to know exactly what's now stale downstream.
 
-#### 18. Execute Tasks
+#### 19. Execute Tasks
 
 Executes a `READY` task list into real code, delegating implementation discipline, commit messages, documentation, and final review to the skills that already own those concerns — sequentially by default, or in parallel across genuinely independent user stories.
 
@@ -174,7 +181,7 @@ Executes a `READY` task list into real code, delegating implementation disciplin
 
 ### Orchestration
 
-#### 19. Brain / Architect / Orchestrator
+#### 20. Brain / Architect / Orchestrator
 
 Acts as the architectural brain of a multi-agent operation instead of as an implementer: investigates an unfamiliar, large, or legacy codebase; models how it really works; diagnoses root causes rather than symptoms; designs the minimal architecturally-correct change; decomposes it into scoped task contracts with a dependency DAG; persists architecture, decisions, invariants, tasks, findings and handoffs to a `.agent/` memory tree; delegates to subagents with bounded scope; verifies their results against their contracts; integrates; and replans when evidence invalidates the plan. Runs in LIGHT/STANDARD/FULL modes so small work doesn't pay for the full method.
 
@@ -302,8 +309,11 @@ Use the code-architecture-explainer skill on [file/module]
 # Document code
 Apply the code-documentation skill to [file/module]
 
-# Commit messages / PRs
-Use the git-commits skill for this commit/PR
+# Commit messages / PR title
+Use the git-commits skill for this commit / PR title
+
+# PR description / Create PR
+Use the create-pull-request skill to write this PR's description
 
 # Academic report
 Use the latex-academic-reports skill for [document]
