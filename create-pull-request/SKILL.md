@@ -60,6 +60,13 @@ license: MIT
 - **Number every PR file sequentially.** Files are `PR-001.md`, `PR-002.md`, … — one
   per suggestion, never overwritten and never reused. The highest number is always
   the most recent PR created.
+- **Never constrain paragraph width.** No manual line wrapping/breaks inside
+  paragraphs (e.g. hard-wrapping at 80 columns); write each paragraph as a single
+  continuous line and let the renderer wrap it.
+- **Always suggest a branch name.** Every PR description includes a proposed branch
+  name (§3, Step 3), following the repo's own naming convention when one is
+  detectable, or the `<type>/<scope>-<short-description>` kebab-case default
+  otherwise. Never skip it, and never invent one unrelated to the actual change.
 
 ---
 
@@ -155,6 +162,22 @@ chore(deps): upgrade react to 18.2
 - `scope` consistent with the repo's existing vocabulary — check
   `git log --oneline -20` before inventing one.
 - Description: imperative, short, no trailing period, in the repo's language.
+
+**Branch name suggestion (mandatory, alongside the title):**
+
+- First check the naming convention already in use: `git branch -a` /
+  `git log --all --oneline --decorate` for recently merged branch names (e.g.
+  `feature/...`, `feat/...`, `fix/JIRA-123-...`). If the repo has a clear pattern,
+  follow it.
+- If no convention is detectable, default to
+  `<type>/<scope>-<short-kebab-case-description>` (e.g. `feat/auth-google-login`),
+  reusing the same `type`/`scope` chosen for the PR title.
+- If an issue number is known (§ Step 4, "Related issue"), include it when that
+  matches the repo's own pattern (e.g. `fix/123-resolve-500-on-user-endpoint`) —
+  never invent one to include it.
+- Report the suggested branch name in the chat next to the title; it is a
+  suggestion only — never create or rename a branch on the user's behalf without
+  explicit instruction.
 
 ### Step 4 — PR Body
 
