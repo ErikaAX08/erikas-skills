@@ -18,6 +18,10 @@ skills/
 ├── git-commits/SKILL.md                   # Conventional commits & PR descriptions
 ├── latex-academic-reports/SKILL.md        # Academic reports & papers in LaTeX
 │
+│   Orchestration — architectural brain for multi-agent work (own memory tree, own
+│   templates; composes with every skill above and with Spec Kit):
+├── brain-orchestrator/SKILL.md            # Investigate → diagnose → design → delegate → verify
+│
 │   Spec Kit — spec-driven development chain (see spec-kit-shared/README.md), one flat
 │   top-level folder per skill like everything else above:
 ├── spec-kit-establish-constitution/SKILL.md        # Make project conventions explicit (optional)
@@ -168,6 +172,18 @@ Executes a `READY` task list into real code, delegating implementation disciplin
 
 **Use when:** tasks are approved and ready to implement.
 
+### Orchestration
+
+#### 19. Brain / Architect / Orchestrator
+
+Acts as the architectural brain of a multi-agent operation instead of as an implementer: investigates an unfamiliar, large, or legacy codebase; models how it really works; diagnoses root causes rather than symptoms; designs the minimal architecturally-correct change; decomposes it into scoped task contracts with a dependency DAG; persists architecture, decisions, invariants, tasks, findings and handoffs to a `.agent/` memory tree; delegates to subagents with bounded scope; verifies their results against their contracts; integrates; and replans when evidence invalidates the plan. Runs in LIGHT/STANDARD/FULL modes so small work doesn't pay for the full method.
+
+**Use when:** a bug has no obvious single-file cause, a change touches shared contracts or schemas, work spans several modules or a codebase nobody fully understands, several agents will work in sequence or in parallel, or work must resume after a session ended or context was lost.
+
+**Don't use when:** the change is trivial, local, low-risk, and fully understood — `verify-before-implement` covers that.
+
+See `brain-orchestrator/README.md` for the multi-agent model, install notes, and how it composes with Spec Kit.
+
 ---
 
 ## How to Use with AI Tools
@@ -291,6 +307,10 @@ Use the git-commits skill for this commit/PR
 
 # Academic report
 Use the latex-academic-reports skill for [document]
+
+# Brain / Architect / Orchestrator
+Use the brain-orchestrator skill: [bug, refactor, or migration to plan and coordinate]
+Use the brain-orchestrator skill: resume the operation in .agent/ and tell me what's next
 
 # Spec Kit — sequential chain
 Use the spec-kit-establish-constitution skill for this project        # optional, once
