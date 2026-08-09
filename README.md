@@ -19,9 +19,10 @@ skills/
 ├── create-pull-request/SKILL.md           # PR description: diff-grounded, repo template first
 ├── latex-academic-reports/SKILL.md        # Academic reports & papers in LaTeX
 │
-│   Orchestration — architectural brain for multi-agent work (own memory tree, own
-│   templates; composes with every skill above and with Spec Kit):
+│   Orchestration & project knowledge — own memory trees, own templates; compose with
+│   every skill above and with Spec Kit:
 ├── brain-orchestrator/SKILL.md            # Investigate → diagnose → design → delegate → verify
+├── project-intelligence/SKILL.md          # Living technical model of a project (.ai/ memory)
 │
 │   Spec Kit — spec-driven development chain (see spec-kit-shared/README.md), one flat
 │   top-level folder per skill like everything else above:
@@ -179,7 +180,7 @@ Executes a `READY` task list into real code, delegating implementation disciplin
 
 **Use when:** tasks are approved and ready to implement.
 
-### Orchestration
+### Orchestration & Project Knowledge
 
 #### 20. Brain / Architect / Orchestrator
 
@@ -190,6 +191,16 @@ Acts as the architectural brain of a multi-agent operation instead of as an impl
 **Don't use when:** the change is trivial, local, low-risk, and fully understood — `verify-before-implement` covers that.
 
 See `brain-orchestrator/README.md` for the multi-agent model, install notes, and how it composes with Spec Kit.
+
+#### 21. Project Intelligence
+
+Acts as the technical brain and living memory of a project: discovers and interprets the whole system — code, configuration, IaC, containers, CI/CD, migrations, docs and git history — and maintains an evidence-backed model of its stack, architecture, AWS and other infrastructure, external integrations, databases, environments, environment variables, business flows, and the history of what changed and why. Every claim is stamped `CONFIRMED` / `INFERRED` / `UNKNOWN` with its evidence, and everything is persisted under `.ai/` (or `docs/ai/`) so no agent has to rediscover the system. Runs in modes — BOOTSTRAP, REFRESH, ANSWER, IMPACT, RECORD, OPERATE, HANDOFF — so a single question never pays for a full project scan. Before any real database or cloud operation it resolves the environment from the configuration chain rather than from a name, treats an unidentified environment as production, and enumerates side effects that the database itself does not show.
+
+**Use when:** entering an unfamiliar or inherited codebase; asking what the project uses, where something lives, how it is deployed, which environments and variables exist, or how to test a flow; analyzing what a change would break; recording what a change did and why; preparing a context package for another agent; or running a real database/infrastructure operation safely.
+
+**Don't use when:** the answer is one file the user already named, a module just needs explaining (`code-architecture-explainer`), or work needs planning and delegating (`brain-orchestrator`).
+
+See `project-intelligence/README.md` for the modes, install notes, safety rules, and how `.ai/` relates to the Brain's `.agent/`.
 
 ---
 
@@ -321,6 +332,14 @@ Use the latex-academic-reports skill for [document]
 # Brain / Architect / Orchestrator
 Use the brain-orchestrator skill: [bug, refactor, or migration to plan and coordinate]
 Use the brain-orchestrator skill: resume the operation in .agent/ and tell me what's next
+
+# Project Intelligence
+Use the project-intelligence skill to map this project
+Use the project-intelligence skill: what does this project use from AWS?
+Use the project-intelligence skill: where is [functionality], end to end?
+Use the project-intelligence skill: what breaks if I change [thing]?
+Use the project-intelligence skill to record what this change did and why
+Use the project-intelligence skill: I need to [DB operation] — figure out the safe way
 
 # Spec Kit — sequential chain
 Use the spec-kit-establish-constitution skill for this project        # optional, once
