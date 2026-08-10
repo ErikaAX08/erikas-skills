@@ -212,12 +212,12 @@ format or convention.
 1. **Closure re-verification**: for every story completed in this run, re-confirm its `[CIERRE]`
    task's conditions still hold against the final code state (Rule 6).
 2. **`pre-pr-review`** over the accumulated diff — the last safety net, run unconditionally (Rule
-   10). If it surfaces a 🔴 Blocker or 🟠 Major categorized as "incomplete feature" or similar that
-   the closure check in step 1 did not catch, that is not just a bug to patch — it is a signal
-   that `spec-kit-generate-plan`'s Safe Deferral classification for the relevant operation was applied
-   incorrectly (an operation that looked `Dormant`/`Flagged`/`Additive` turned out not to be, in
-   practice). Report this explicitly as feedback toward `spec-kit-generate-plan`, in addition to fixing the
-   immediate issue.
+   10). If it returns `pedir cambios` or `no aprobar hasta verificar X` because a feature is incomplete
+   or a deferral is unsafe or materially unverified, that is not just an immediate finding to resolve
+   — it is a signal that `spec-kit-generate-plan`'s Safe Deferral classification for the relevant
+   operation was applied incorrectly (an operation that looked `Dormant`/`Flagged`/`Additive` turned
+   out not to be, in practice). Resolve the finding or required verification before reporting done,
+   and report the misclassification explicitly as feedback toward `spec-kit-generate-plan`.
 
 ## Handling Unplanned Scope Discovered Mid-Execution
 
