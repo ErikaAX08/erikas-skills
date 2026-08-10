@@ -1,3 +1,5 @@
 .tokensave
 .commit-suggestions
 .pr-suggestions
+.DS_Store
+.serena/
