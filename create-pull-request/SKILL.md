@@ -39,8 +39,9 @@ license: MIT
 - **The repo's template always wins.** If the repository defines its own PR template,
   or its `CONTRIBUTING.md` specifies the format, follow that. This file is the default
   for repos with no stated convention, not an override.
-- **Every "Change" listed must exist in the actual diff.** Describing a file that
-  never changed, or a change that was never made, is fabrication.
+- **Every "Change" listed must exist in the actual diff.** Describing a change that
+  was never made is fabrication — each bullet under Changes made must map to a real
+  behavioral/functional difference in the diff.
 - **Never report tests you did not run.** Write only results whose output you read in
   the session. If not run, write `Not run — pending in CI` and leave the checkbox
   unchecked.
@@ -95,7 +96,7 @@ git log --oneline <base>..HEAD      # commits the PR will include
 git diff --stat <base>..HEAD        # files and volume of changes
 git diff <base>..HEAD               # full detail: slow to read entirely, but
                                     # mandatory to be able to cite any change
-git diff <base>..HEAD --name-only   # exact 1:1 list of touched paths
+git diff <base>..HEAD --name-only   # exact 1:1 list of touched paths (internal verification only)
 ```
 
 Notes:
@@ -104,10 +105,12 @@ Notes:
   `git branch --show-current` and the user's conversation.
 - **Untracked files**: `git status` shows them; they don't appear in
   `git diff <base>..HEAD`. Add them to the scope (as "Added") and read them directly.
-- Extract the raw material of the description from the diff: which files, what kind
-  of change (added/modified/removed/refactored), affected config
-  (`package.json`, `.env*`, CI), migrations, public contracts, touched
-  `**/test*`/`*spec*` files.
+- Extract the raw material of the description from the diff: what kind of change
+  (added/modified/removed/refactored) and its functional effect, plus affected
+  config (`package.json`, `.env*`, CI), migrations, public contracts, and touched
+  `**/test*`/`*spec*` files. Use `git diff --name-only` / `--stat` only for
+  internal scope analysis — do not copy file paths verbatim into the final
+  Changes made section (see §4).
 - Recur to the branch history (`git log --oneline <base>..HEAD -p`) for the "why":
   each commit message and the reasoning behind technical decisions.
 
@@ -188,7 +191,7 @@ chore(deps): upgrade react to 18.2
 | Section              | Content source                                                           |
 | -------------------- | ------------------------------------------------------------------------ |
 | Summary/Objective    | the "why": problem solved, commit rationale / what the user stated. 2–3 lines, not an implementation recap                            |
-| Changes made         | `git diff --name-only` + reading the diff; bullets carry the file path and what changed |
+| Changes made         | summary of functional/behavioral changes grouped by type (Added/Modified/Removed/Refactored) — describe *what* changed and *why*, without listing individual file paths |
 | Technical decisions  | motivation, alternatives evaluated and why rejected — from commits/history/discussion, never invented |
 | Automated tests      | **real** outputs you ran; anything not run is marked pending             |
 | How to test it       | setup/start commands, numbered steps 1..n, expected result                  |
@@ -197,7 +200,7 @@ chore(deps): upgrade react to 18.2
 
 ### Step 5 — Final Verification (before delivering)
 
-- [ ] Every bullet under "Changes made" exists verbatim in the diff.
+- [ ] Every bullet under "Changes made" corresponds to a real change in the diff (functional/behavioral, not invented) — no file-path listing required.
 - [ ] Every testing claim = command actually run in the session + output read.
 - [ ] No placeholders (`[complete]`, `...`, empty bullets) or unevaluated `[ ]` left in.
 - [ ] Title: type/scope correct and inside the repo's vocabulary.
@@ -237,10 +240,12 @@ Briefly explain what problem or need this PR solves and why it was necessary
 
 ## Changes made
 
-- **Added**: `path/to/file` — what was brought and what it's for.
-- **Modified**: `path/to/file` — what changed and how it differs from before.
-- **Removed**: `path/to/file` — why it was removed and what replaces it.
-- **Refactored**: `path/to/file` — no behavior change; what was reorganized.
+- **Added**: what was added and what it's for.
+- **Modified**: what changed and how it differs from before.
+- **Removed**: what was removed and why, and what replaces it if applicable.
+- **Refactored**: what was reorganized with no behavior change.
+
+> Do not list individual file paths — keep bullets focused on the functional change grouped by type. This avoids an excessively long list when many files are touched.
 
 ## Technical decisions
 
@@ -319,7 +324,7 @@ Rules for this template:
 - Delete any section that doesn't apply (**Evidence**, **Technical decisions**,
   **How to test it** when already covered for validation); the **Impact / Risks**
   section is always kept, even when it says "No known breaking changes."
-- Keep the leading bullet prefixes (**Added**/etc.) — they make review easier.
+- Keep the leading bullet prefixes (**Added**/Modified/Removed/Refactored) — they make review easier. Do not add `path/to/file` or any individual file listings to these bullets.
 
 ---
 
