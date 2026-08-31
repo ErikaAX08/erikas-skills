@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/latex-academic-reports",
+  "version": "0.1.0",
+  "description": "Generate academic reports, papers, and technical documentation using LaTeX. Use when the user asks to create research papers, lab reports, theses, technical documentation, IEEE-style papers, or any academic document requiring professional typesetting. Produces publication-quality PDFs with proper formatting, citations, figures, tables, and mathematical notation. Ideal for Computer Science, Engineering, and scientific documents.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "latex-academic-reports"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "latex-academic-reports"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/latex-academic-reports",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

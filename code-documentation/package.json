@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/code-documentation",
+  "version": "0.1.0",
+  "description": "Document code clearly, concisely, and professionally. Use when the user asks to document functions, classes, structs, or code files; add comments to existing code; improve existing documentation; or mentions \"document\", \"comments\", \"docstrings\", \"JSDoc\", \"godoc\", or \"code documentation\". Generates documentation that other engineers can quickly understand without being verbose, with strict prose line-count caps and no comment-width limit, while allowing one line per structured parameter, return, or error entry and forbidding per-property documentation except for extreme type ambiguity.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "code-documentation"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "code-documentation"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/code-documentation",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

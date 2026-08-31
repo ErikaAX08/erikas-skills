@@ -1,0 +1,34 @@
+{
+  "name": "@erikaax/project-intelligence",
+  "version": "0.1.0",
+  "description": "Act as the technical brain and living memory of a software project — build, maintain, and answer from an evidence-backed model of its stack, architecture, AWS and other infrastructure, external integrations, databases, environments, environment variables, business flows, and the history of what changed and why. Use when entering an unfamiliar or inherited codebase, answering \"what does this project use / where does X live / how is this deployed / how do I test this flow / what breaks if I change this\", recording what a change did and why it was made, preparing a context package for another agent, or running a real database or infrastructure operation safely. Every claim is stamped CONFIRMED / INFERRED / UNKNOWN with its evidence, and the knowledge persists under `.ai/` (or `docs/ai/`) so no agent has to rediscover the system.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "project-intelligence"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "project-intelligence"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/project-intelligence",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md",
+    "references/**/*",
+    "templates/**/*",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

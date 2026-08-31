@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/verify-before-implement",
+  "version": "0.1.0",
+  "description": "Analyze and implement code changes with strict verification protocol. Use when implementing features, fixing bugs, or modifying existing code. Enforces reality-checking against actual codebase, contracts, and specs before making changes. Prevents assumption-based development and invented parameters/entities.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "verify-before-implement"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "verify-before-implement"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/verify-before-implement",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

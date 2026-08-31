@@ -1,0 +1,48 @@
+{
+  "name": "@erikaax/spec-kit",
+  "version": "0.1.0",
+  "description": "Kit completo Spec Kit — spec-driven development chain: constitution, spec, plan, tasks, consistency, sync y execute. Incluye spec-kit-shared como contrato compartido. Instalación atómica: todas las skills del kit se instalan juntas.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "spec-kit",
+    "spec-driven",
+    "constitution",
+    "spec",
+    "plan",
+    "tasks"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "spec-kit"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/spec-kit",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "spec-kit-establish-constitution/**/*",
+    "spec-kit-generate-spec/**/*",
+    "spec-kit-generate-plan/**/*",
+    "spec-kit-generate-tasks/**/*",
+    "spec-kit-analyze-consistency/**/*",
+    "spec-kit-sync-artifacts/**/*",
+    "spec-kit-execute-tasks/**/*",
+    "spec-kit-shared/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "prepack": "node ./scripts/prepare.mjs",
+    "postpack": "node ./scripts/clean.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

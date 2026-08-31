@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/project-setup",
+  "version": "0.1.0",
+  "description": "Standard for initializing new projects by asking which architecture skills to apply and providing setup commands with latest library versions. Never generates the project directly; always provides commands for the user to execute. Ensures libraries are always at their latest versions without hardcoding version numbers.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "project-setup"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "project-setup"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/project-setup",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/pre-pr-review",
+  "version": "0.1.0",
+  "description": "Analyze code changes before creating a PR with production-impact focus. Use when reviewing your own changes, preparing a PR, or conducting self-review before requesting team review. Identifies breaking changes, integration bugs, missing validations, and regressions by verifying against actual codebase, contracts, and production flows. Generates detailed, actionable feedback organized by severity.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "pre-pr-review"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "pre-pr-review"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/pre-pr-review",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

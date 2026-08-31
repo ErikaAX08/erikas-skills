@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/frontend-architecture",
+  "version": "0.1.0",
+  "description": "Defines a Clean Architecture and reusable component structures for frontend. Especially useful when the user wants to organize pages, tables, lists, item cards, subpages, and modal dialogs in a predictable and maintainable way. Applies to React, Vue, Svelte, or similar frameworks.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "frontend-architecture"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "frontend-architecture"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/frontend-architecture",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

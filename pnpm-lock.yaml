@@ -1,0 +1,37 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  backend-api-standards: {}
+
+  brain-orchestrator: {}
+
+  code-architecture-explainer: {}
+
+  code-documentation: {}
+
+  create-pull-request: {}
+
+  frontend-architecture: {}
+
+  frontend-design: {}
+
+  git-commits: {}
+
+  latex-academic-reports: {}
+
+  pre-pr-review: {}
+
+  project-intelligence: {}
+
+  project-setup: {}
+
+  spec-kit: {}
+
+  verify-before-implement: {}
