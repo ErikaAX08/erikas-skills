@@ -6,43 +6,43 @@ const command = args[0];
 
 function printHelp() {
   console.log(`
-erikas-skills — instalador de skills con pnpm
+erikas-skills — pnpm skill installer
 
-Uso:
-  npx erikas-skills install [opciones]
-  pnpm dlx erikas-skills install [opciones]
-  erikas-skills install [opciones]   (si ya está instalado)
+Usage:
+  npx erikas-skills install [options]
+  pnpm dlx erikas-skills install [options]
+  erikas-skills install [options]   (if already installed)
 
-Comandos:
-  install     Copia los SKILL.md al destino del asistente
-  list        Lista skills disponibles
-  validate    Valida frontmatter y package.json de cada skill
-  help        Muestra esta ayuda
+Commands:
+  install     Copy SKILL.md files to the assistant destination
+  list        List available skills
+  validate    Validate frontmatter and package.json for each skill
+  help        Show this help
 
-Opciones de install:
-  --skills <lista>   Skills a instalar (coma-separado). Default: todos
-                     Ej: --skills frontend-architecture,backend-api-standards
-                     Ej: --skills spec-kit (instala las 7 skills del kit + spec-kit-shared)
-                     Nota: spec-kit es atómico — pedir spec-kit-generate-spec instala el kit completo
-  --target <t>       Destino: claude | opencode | cursor | windsurf | codex | all | dir
+Install options:
+  --skills <list>    Skills to install (comma-separated). Default: all
+                     Eg: --skills frontend-architecture,backend-api-standards
+                     Eg: --skills spec-kit (installs the 7 kit skills + spec-kit-shared)
+                     Note: spec-kit is atomic — requesting spec-kit-generate-spec installs the full kit
+  --target <t>       Destination: claude | opencode | cursor | windsurf | codex | all | dir
                      Default: claude
-  --dir <ruta>       Directorio destino (cuando --target dir)
-  --global           Instala en el directorio global del usuario en lugar del proyecto
+  --dir <path>       Destination directory (when --target dir)
+  --global           Install to the user global directory instead of the project
                      (claude: ~/.claude/skills, opencode: ~/.config/opencode/skills)
-  --dry-run          Solo muestra qué haría sin copiar archivos
-  --force            Sobrescribe skills existentes
+  --dry-run          Show what would be done without copying files
+  --force            Overwrite existing skills
 
-Ejemplos:
+Examples:
   pnpm add -D erikas-skills
   npx erikas-skills install
   npx erikas-skills install --skills frontend-architecture,frontend-design --target claude
-  npx erikas-skills install --skills spec-kit --target claude   # kit completo (7 skills)
+  npx erikas-skills install --skills spec-kit --target claude   # full kit (7 skills)
   npx erikas-skills install --target opencode --global
   npx erikas-skills install --target dir --dir ./my-skills
-  pnpm add @erikaax/frontend-architecture   # skill suelto
-  pnpm add @erikaax/spec-kit                # kit completo (no @erikaax/spec-kit-generate-spec)
+  pnpm add @erikaax/frontend-architecture   # single skill
+  pnpm add @erikaax/spec-kit                # full kit (no @erikaax/spec-kit-generate-spec)
 
-Requiere: Node >=18, pnpm >=9
+Requires: Node >=18, pnpm >=9
 Repo: https://github.com/ErikaAX08/erikas-skills
 `);
 }
@@ -68,7 +68,7 @@ async function main() {
     await installSkills(opts);
     process.exit(0);
   }
-  console.error(`Comando desconocido: ${command}\n`);
+  console.error(`Unknown command: ${command}\n`);
   printHelp();
   process.exit(1);
 }
@@ -94,7 +94,7 @@ function parseInstallArgs(argv) {
     else if (a === "--dry-run") opts.dryRun = true;
     else if (a === "--force") opts.force = true;
     else if (a === "--help" || a === "-h") { printHelp(); process.exit(0); }
-    else console.warn(`Aviso: opción no reconocida ${a}`);
+    else console.warn(`Warning: unrecognized option ${a}`);
   }
   return opts;
 }

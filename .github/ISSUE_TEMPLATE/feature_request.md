@@ -1,14 +1,14 @@
 ---
 name: Feature request
-about: Sugiere una nueva skill o mejora
+about: Suggest a new skill or improvement
 title: "feat: "
 labels: enhancement
 ---
 
-### Problema / caso de uso
+### Problem / use case
 
-### Propuesta
+### Proposal
 
-### Alternativas consideradas
+### Alternatives considered
 
-### Notas
+### Notes

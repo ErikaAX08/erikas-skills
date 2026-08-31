@@ -1,27 +1,27 @@
-<!-- Usa Conventional Commits en el título: feat/fix/docs/chore/refactor/test -->
-<!-- Este template se auto-aplica al crear el PR. Bórralo si no aplica. -->
+<!-- Use Conventional Commits for the title: feat/fix/docs/chore/refactor/test -->
+<!-- This template is auto-applied when creating a PR. Remove sections that don't apply. -->
 
-## Qué cambia
+## What changed
 
-<!-- Resumen en 1-3 líneas -->
+<!-- Summary in 1-3 lines -->
 
-## Por qué
+## Why
 
-<!-- Contexto / issue relacionado: Closes #... -->
+<!-- Context / related issue: Closes #... -->
 
-## Cómo se probó
+## How it was tested
 
-- [ ] `pnpm run validate` pasa
-- [ ] `pnpm pack --dry-run` revisado (si cambia `files` o `package.json`)
-- [ ] Probado `npx erikas-skills install --dry-run --target claude`
+- [ ] `pnpm run validate` passes
+- [ ] `pnpm pack --dry-run` reviewed (if `files` or `package.json` changed)
+- [ ] Tested `npx erikas-skills install --dry-run --target claude`
 
 ## Checklist
 
-- [ ] Título sigue Conventional Commits
-- [ ] `pnpm run sync:versions` ejecutado si cambió `version`
-- [ ] Docs actualizadas (README / SKILL.md) si aplica
-- [ ] No se listan rutas de archivos como "cambios" — se describe comportamiento
+- [ ] Title follows Conventional Commits
+- [ ] `pnpm run sync:versions` executed if `version` changed
+- [ ] Docs updated (README / SKILL.md) if applicable
+- [ ] No file paths listed as "changes" — behavior is described instead
 
 ## Breaking changes
 
-<!-- Si hay, describe migración. Si no, borra esta sección. -->
+<!-- If any, describe migration. Otherwise delete this section. -->

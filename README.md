@@ -6,9 +6,9 @@
 [![node](https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js)](https://nodejs.org)
 [![CI](https://github.com/ErikaAX08/erikas-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/ErikaAX08/erikas-skills/actions/workflows/ci.yml)
 
-Colección de **skills reutilizables** para generación de código consistente con Claude Code, Copilot, Cursor, Windsurf, OpenCode y otros asistentes — arquitectura frontend, API standards, Spec Kit, orquestación y calidad.
+Reusable **skills collection** for consistent code generation with Claude Code, Copilot, Cursor, Windsurf, OpenCode and other assistants — frontend architecture, API standards, Spec Kit, orchestration and quality.
 
-> **Monorepo pnpm** con 14 paquetes `@erikaax/*` + bundle `erikas-skills` con CLI instalador. Cada skill es instalable por separado o como kit completo (`@erikaax/spec-kit`).
+> **pnpm monorepo** with 14 `@erikaax/*` packages + `erikas-skills` bundle with installer CLI. Each skill can be installed individually or as a complete bundle (`@erikaax/spec-kit`).
 
 ## Installation with pnpm
 

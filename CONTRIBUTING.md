@@ -1,35 +1,35 @@
 # Contributing
 
-## Requisitos
+## Requirements
 
 - Node >= 18, pnpm >= 9 (`corepack enable pnpm`)
 
-## Flujo
+## Workflow
 
 ```bash
 pnpm install
-pnpm run validate          # frontmatter + versiones sincronizadas
-pnpm run sync:versions     # si cambias version en el root
-pnpm pack --dry-run        # qué entra en el tarball
+pnpm run validate          # frontmatter + synchronized versions
+pnpm run sync:versions     # if you change the version in the root
+pnpm pack --dry-run        # inspect tarball contents
 npx erikas-skills install --dry-run --target claude
 ```
 
-## Reglas
+## Rules
 
-- Una skill = una carpeta top-level con `SKILL.md` (con frontmatter `name`/`description`) + `package.json` (`@erikaax/<carpeta>`).
-- Spec Kit es atómico: no se publica una skill suelta del kit. Usa `@erikaax/spec-kit` (incluye 7 skills + `spec-kit-shared`).
-- Si tocas `version` en `package.json` raíz, corre `pnpm run sync:versions` para propagar a los 14 workspaces.
-- Commits y títulos de PR en [Conventional Commits](https://www.conventionalcommits.org/).
-- No listes rutas de archivos como "cambios" en el PR — describe comportamiento.
+- One skill = one top-level folder with `SKILL.md` (frontmatter `name`/`description`) + `package.json` (`@erikaax/<folder>`).
+- Spec Kit is atomic: do not publish a single skill from the kit. Use `@erikaax/spec-kit` (includes 7 skills + `spec-kit-shared`).
+- If you change `version` in the root `package.json`, run `pnpm run sync:versions` to propagate it to all 14 workspaces.
+- Commits and PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/).
+- Do not list file paths as "changes" in a PR — describe behavior instead.
 
-## Publicar
+## Publishing
 
 ```bash
 pnpm -r publish --access public   # skills + spec-kit
-pnpm publish --access public      # bundle erikas-skills
-# o pushea un tag v* y el workflow .github/workflows/release.yml lo hace
+pnpm publish --access public      # erikas-skills bundle
+# or push a v* tag and .github/workflows/release.yml will handle it
 ```
 
-## Reporte de bugs / propuestas
+## Bug reports / proposals
 
-Usa las plantillas de issue en `.github/ISSUE_TEMPLATE/`.
+Use the issue templates in `.github/ISSUE_TEMPLATE/`.

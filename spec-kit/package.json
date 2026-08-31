@@ -1,7 +1,7 @@
 {
   "name": "@erikaax/spec-kit",
   "version": "0.1.0",
-  "description": "Kit completo Spec Kit — spec-driven development chain: constitution, spec, plan, tasks, consistency, sync y execute. Incluye spec-kit-shared como contrato compartido. Instalación atómica: todas las skills del kit se instalan juntas.",
+  "description": "Complete Spec Kit bundle — spec-driven development chain: constitution, spec, plan, tasks, consistency, sync and execute. Includes spec-kit-shared as a shared contract. Atomic installation: all kit skills are installed together.",
   "keywords": [
     "claude-code",
     "opencode",

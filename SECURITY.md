@@ -8,4 +8,4 @@
 
 ## Reporting a Vulnerability
 
-Abre un issue privado o escribe a `eamastalxochimitl@gmail.com` con los detalles. Responderemos en máximo 7 días. Por favor no publiques el exploit hasta coordinar el fix.
+Open a private issue or email `eamastalxochimitl@gmail.com` with details. We will respond within 7 days. Please do not disclose the exploit publicly until a fix has been coordinated.

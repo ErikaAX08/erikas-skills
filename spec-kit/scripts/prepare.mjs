@@ -37,8 +37,8 @@ const sharedDest = path.join(DEST, "spec-kit-shared");
 if (fs.existsSync(sharedDest)) fs.rmSync(sharedDest, { recursive: true, force: true });
 if (fs.existsSync(sharedSrc)) copyDir(sharedSrc, sharedDest);
 
-// README para el paquete
-const readme = `# @erikaax/spec-kit\n\nKit completo Spec Kit — 7 skills + spec-kit-shared. Instalación atómica.\n\nVer https://github.com/ErikaAX08/erikas-skills/tree/main/spec-kit-shared para el flujo completo.\n`;
+// README for the package
+const readme = `# @erikaax/spec-kit\n\nComplete Spec Kit bundle — 7 skills + spec-kit-shared. Atomic installation.\n\nSee https://github.com/ErikaAX08/erikas-skills/tree/main/spec-kit-shared for the full workflow.\n`;
 if (!fs.existsSync(path.join(DEST, "README.md"))) fs.writeFileSync(path.join(DEST, "README.md"), readme);
 
-console.log("spec-kit prepack: copiados", SKILLS.length, "skills + spec-kit-shared");
+console.log("spec-kit prepack: copied", SKILLS.length, "skills + spec-kit-shared");

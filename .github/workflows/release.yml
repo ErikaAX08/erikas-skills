@@ -6,7 +6,7 @@ on:
 
 permissions:
   contents: write
-  id-token: write  # OIDC para npm provenance
+  id-token: write  # OIDC for npm provenance
 
 jobs:
   publish:
@@ -21,7 +21,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
       - run: pnpm run validate
-      # Publica el bundle + los 14 workspaces con provenance (requiere NPM_TOKEN si no usas Trusted Publisher)
+      # Publish the bundle + 14 workspaces with provenance (requires NPM_TOKEN unless using Trusted Publisher)
       - run: pnpm -r publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

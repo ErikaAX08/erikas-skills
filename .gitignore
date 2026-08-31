@@ -11,7 +11,7 @@ node_modules
 *.tgz
 .DS_Store
 .env
-# spec-kit prepack artifacts (copiados temporalmente para publish)
+# spec-kit prepack artifacts (temporarily copied for publish)
 spec-kit/spec-kit-*
 spec-kit/spec-kit-shared
 spec-kit/README.md

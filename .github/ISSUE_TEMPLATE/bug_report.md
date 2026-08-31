@@ -1,22 +1,22 @@
 ---
 name: Bug report
-about: Reporta un bug en una skill o en el instalador
+about: Report a bug in a skill or the installer
 title: "bug: "
 labels: bug
 ---
 
-### Skill / paquete afectado
-<!-- ej: @erikaax/frontend-architecture, erikas-skills CLI, spec-kit -->
+### Affected skill / package
+<!-- e.g. @erikaax/frontend-architecture, erikas-skills CLI, spec-kit -->
 
-### Qué pasó
+### What happened
 
-### Qué esperabas que pasara
+### Expected behavior
 
-### Pasos para reproducir
+### Steps to reproduce
 
-### Entorno
+### Environment
 
 - `erikas-skills` version:
 - Node / pnpm:
 
-### Contexto adicional
+### Additional context

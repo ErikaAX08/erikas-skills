@@ -1,7 +1,7 @@
 {
   "name": "erikas-skills",
   "version": "0.1.0",
-  "description": "Colección de skills reutilizables para generación de código con Claude Code, Copilot, Cursor y otros asistentes — arquitectura frontend, API standards, Spec Kit, orquestación y calidad.",
+  "description": "Reusable skills collection for consistent code generation with Claude Code, Copilot, Cursor and other assistants — frontend architecture, API standards, Spec Kit, orchestration and quality.",
   "keywords": [
     "claude-code",
     "opencode",

@@ -15,8 +15,8 @@ export const SPEC_KIT_SKILLS = [
   "spec-kit-execute-tasks",
 ];
 
-// Skills instalables = entradas de pnpm-workspace.yaml
-// spec-kit es un kit atómico: una sola entrada que expande a las 7 skills + spec-kit-shared
+// Installable skills = entries in pnpm-workspace.yaml
+// spec-kit is an atomic kit: a single entry that expands to 7 skills + spec-kit-shared
 export function listSkills() {
   const ws = fs.readFileSync(path.join(ROOT, "pnpm-workspace.yaml"), "utf8");
   return ws.split("\n").filter((l) => l.trim().startsWith("-")).map((l) => l.replace(/^\s*-\s*/, "").trim()).filter(Boolean);
@@ -28,9 +28,9 @@ export function expandSkills(skills) {
     if (s === "spec-kit") {
       out.push(...SPEC_KIT_SKILLS, "spec-kit-shared");
     } else if (SPEC_KIT_SKILLS.includes(s)) {
-      // No se permite instalar una skill suelta del kit — se expande al kit completo
+      // Individual kit skills cannot be installed alone — expand to the full kit
       if (!out.includes("spec-kit")) {
-        console.warn(`  ! ${s} es parte del kit spec-kit — se instalará el kit completo (@erikaax/spec-kit)`);
+        console.warn(`  ! ${s} is part of the spec-kit bundle — the full kit will be installed (@erikaax/spec-kit)`);
         out.push(...SPEC_KIT_SKILLS, "spec-kit-shared");
       }
     } else {
@@ -59,7 +59,7 @@ function resolveTargetDir(target, global) {
     case "dir":
       return null; // caller must provide --dir
     default:
-      throw new Error(`Target desconocido: ${target}. Usa claude|opencode|cursor|windsurf|codex|all|dir`);
+      throw new Error(`Unknown target: ${target}. Use claude|opencode|cursor|windsurf|codex|all|dir`);
   }
 }
 
@@ -75,12 +75,12 @@ function copyDirRecursive(src, dest) {
 
 export async function installSkills({ skills, target, dir, global, dryRun, force }) {
   const available = listSkills();
-  // Normalizar: si piden una skill suelta de spec-kit, redirigir a spec-kit (atómico)
+  // Normalize: if a single spec-kit skill is requested, redirect to spec-kit (atomic)
   let normalizedSkills = skills;
   if (skills) {
     normalizedSkills = skills.map((s) => {
       if (SPEC_KIT_SKILLS.includes(s)) {
-        console.warn(`  ! ${s} es parte del kit spec-kit — se instalará el kit completo (@erikaax/spec-kit)`);
+        console.warn(`  ! ${s} is part of the spec-kit bundle — the full kit will be installed (@erikaax/spec-kit)`);
         return "spec-kit";
       }
       return s;
@@ -89,7 +89,7 @@ export async function installSkills({ skills, target, dir, global, dryRun, force
   }
   const toInstallRaw = normalizedSkills ? normalizedSkills.filter((s) => {
     if (!available.includes(s)) {
-      console.warn(`  ! skill no encontrado: ${s} (omitido). Disponibles: ${available.join(", ")}`);
+      console.warn(`  ! skill not found: ${s} (skipped). Available: ${available.join(", ")}`);
       return false;
     }
     return true;
@@ -97,11 +97,11 @@ export async function installSkills({ skills, target, dir, global, dryRun, force
   const toInstall = expandSkills(toInstallRaw);
 
   if (toInstall.length === 0) {
-    console.error("No hay skills para instalar.");
+    console.error("No skills to install.");
     process.exit(1);
   }
 
-  // resolver directorios destino
+  // resolve destination directories
   let targets = [];
   if (target === "all") {
     const allTargets = global
@@ -110,7 +110,7 @@ export async function installSkills({ skills, target, dir, global, dryRun, force
     targets = allTargets;
   } else if (target === "dir") {
     if (!dir) {
-      console.error("Error: --target dir requiere --dir <ruta>");
+      console.error("Error: --target dir requires --dir <path>");
       process.exit(1);
     }
     targets = [path.resolve(dir)];
@@ -119,13 +119,13 @@ export async function installSkills({ skills, target, dir, global, dryRun, force
   }
 
   for (const destRoot of targets) {
-    console.log(`\nDestino: ${destRoot} ${global ? "(global)" : "(proyecto)"}  target=${target}`);
+    console.log(`\nDestination: ${destRoot} ${global ? "(global)" : "(project)"}  target=${target}`);
     for (const skill of toInstall) {
       const src = path.join(ROOT, skill);
       const dest = path.join(destRoot, skill);
       const exists = fs.existsSync(dest);
       if (exists && !force && !dryRun) {
-        console.log(`  · ${skill} ya existe en ${dest} — usa --force para sobrescribir (omitido)`);
+        console.log(`  · ${skill} already exists at ${dest} — use --force to overwrite (skipped)`);
         continue;
       }
       if (dryRun) {
@@ -139,9 +139,9 @@ export async function installSkills({ skills, target, dir, global, dryRun, force
   }
 
   if (!dryRun) {
-    console.log(`\nInstalados ${toInstall.length} skill(s) en ${targets.length} destino(s).`);
-    console.log(`Tip: verifica con  ls ${targets[0]}`);
+    console.log(`\nInstalled ${toInstall.length} skill(s) to ${targets.length} destination(s).`);
+    console.log(`Tip: verify with  ls ${targets[0]}`);
   } else {
-    console.log(`\n[dry-run] ${toInstall.length} skill(s) se instalarían.`);
+    console.log(`\n[dry-run] ${toInstall.length} skill(s) would be installed.`);
   }
 }

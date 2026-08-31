@@ -19,7 +19,7 @@ for (const skill of skills) {
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
     console.log(`  ↻ ${skill}: version -> ${version}`);
   } else {
-    console.log(`  = ${skill}: ${version} ya sincronizado`);
+    console.log(`  = ${skill}: ${version} already in sync`);
   }
 }
-console.log(`\nSincronizadas ${skills.length} packages a ${version}`);
+console.log(`\nSynced ${skills.length} packages to ${version}`);
