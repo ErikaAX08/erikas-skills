@@ -13,7 +13,7 @@
     "cursor"
   ],
   "license": "MIT",
-  "author": "ErikaAX08",
+  "author": "ErikaAX08 <eamastalxochimitl@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/ErikaAX08/erikas-skills.git"
@@ -21,6 +21,10 @@
   "homepage": "https://github.com/ErikaAX08/erikas-skills#readme",
   "bugs": {
     "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "type": "module",
   "packageManager": "pnpm@10.26.0",

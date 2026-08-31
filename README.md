@@ -1,6 +1,14 @@
-# Project Skills Configuration
+# erikas-skills
 
-This repository contains reusable AI skills for consistent code generation across different tools and assistants.
+[![npm version](https://img.shields.io/npm/v/erikas-skills?color=cb0000)](https://www.npmjs.com/package/erikas-skills)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![pnpm](https://img.shields.io/badge/pnpm-10.x-F69220?logo=pnpm)](https://pnpm.io)
+[![node](https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js)](https://nodejs.org)
+[![CI](https://github.com/ErikaAX08/erikas-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/ErikaAX08/erikas-skills/actions/workflows/ci.yml)
+
+Colección de **skills reutilizables** para generación de código consistente con Claude Code, Copilot, Cursor, Windsurf, OpenCode y otros asistentes — arquitectura frontend, API standards, Spec Kit, orquestación y calidad.
+
+> **Monorepo pnpm** con 14 paquetes `@erikaax/*` + bundle `erikas-skills` con CLI instalador. Cada skill es instalable por separado o como kit completo (`@erikaax/spec-kit`).
 
 ## Installation with pnpm
 

@@ -2,11 +2,15 @@
 .commit-suggestions
 .pr-suggestions
 node_modules
+.pnpm-store
 .claude/skills
 .opencode/skills
 .cursor/skills
 .windsurf/skills
+.codex/skills
 *.tgz
+.DS_Store
+.env
 # spec-kit prepack artifacts (copiados temporalmente para publish)
 spec-kit/spec-kit-*
 spec-kit/spec-kit-shared
