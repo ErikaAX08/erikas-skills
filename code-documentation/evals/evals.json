@@ -1,0 +1,80 @@
+{
+  "skill_name": "code-documentation",
+  "evals": [
+    {
+      "id": 0,
+      "name": "exported-struct-field-comments",
+      "prompt": "Document this exported Go struct for a payments package: `type PaymentRequest struct { AmountCents int64; Currency CurrencyCode; Method PaymentMethod; RetryOnTransientFailure bool; id string }`. A reviewer asked for a comment on every exported field explaining the units, the currency format, the allowed method values, and the retry default. How should it be documented?",
+      "expected_output": "Documentation that gives the struct a single declaration line and leaves every field uncommented, pushing units, formats, allowed values, and defaults into names, dedicated types, and validation rather than per-field prose.",
+      "files": [],
+      "assertions": [
+        "Documents the struct once at its declaration in 1 prose line using godoc position immediately above the type.",
+        "Leaves all fields, including the exported ones, without individual comments.",
+        "States explicitly that exported/public visibility does not justify field-by-field documentation.",
+        "Redirects units, currency format, allowed method values, and retry defaults into precise field names, dedicated types, validation, or the structure-level contract.",
+        "Does not use trailing `Field Type // comment` documentation on any field.",
+        "Declines the reviewer's per-field request rather than complying with it, and explains the noise and staleness cost."
+      ]
+    },
+    {
+      "id": 1,
+      "name": "complex-function-prose-cap",
+      "prompt": "Write a godoc comment for `SyncInventory(products []string, source string) (*Summary, error)`. It is roughly 180 lines: it normalizes SKUs, detects conflicts between warehouse and e-commerce inventory, resolves each conflict by comparing inventory_updated_at normalized to UTC epoch seconds with the highest value winning and ties favoring the warehouse, writes both systems, and returns partial results together with a non-nil error when individual SKUs fail. Our house style wraps comments at 100 columns.",
+      "expected_output": "A doc comment of at most 2 descriptive prose lines that keeps the conflict-resolution rule and the partial-results-with-error contract, with no wrapping to the 100-column house style and no contract facts pushed into the body.",
+      "files": [],
+      "assertions": [
+        "Produces at most 2 lines of descriptive prose despite the function's size and complexity.",
+        "Keeps every line complete and unwrapped, explicitly rejecting the 100-column wrap for documentation comments.",
+        "Retains the conflict-resolution rule, including UTC epoch-second normalization, highest value winning, and ties favoring the warehouse.",
+        "Documents that partial results are returned alongside a non-nil error when individual SKUs fail.",
+        "Does not hide caller-visible contract facts inside the function body to stay within the cap.",
+        "Places any implementation-local reasoning as a single-line inline comment at the step it explains rather than in the declaration comment."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "ambiguous-field-exception",
+      "prompt": "A Go struct persists legacy records: `type LegacyAttribute struct { Value any }`. The stored data encodes Value as either UTF-8 text or a base-10 integer, and a compatibility constraint blocks changing the type. A second struct in the same file has `Timeout int` measured in seconds and `Status string` accepting only \"open\" or \"closed\". Which of these fields should get comments?",
+      "expected_output": "Guidance that allows exactly one 1-line comment on Value under the extreme-ambiguity exception and refuses comments on Timeout and Status, redirecting those to precise names and dedicated types.",
+      "files": [],
+      "assertions": [
+        "Allows a field comment on `Value` because `any` erases two legal runtime representations and an external constraint blocks a precise type.",
+        "Limits that exceptional comment to exactly 1 complete line placed immediately above the field.",
+        "Refuses a comment on `Timeout`, redirecting the unit into a precise name such as TimeoutSeconds or a dedicated duration type.",
+        "Refuses a comment on `Status`, redirecting the allowed values into a dedicated enum-like type or validation.",
+        "States that units, formats, valid ranges, defaults, and enum options never qualify for the exception.",
+        "Documents the enclosing structs at their declarations in 1 prose line each."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "documentation-pass-coverage-and-noise",
+      "prompt": "Audit a Python module before we merge it: the public module has no docstring; an exported `process_payment(amount, method, retry=True)` has a five-paragraph docstring restating each branch and linking to https://example.com/date-formats for its date rules; a private `_get_user_name(user)` returning `user.name` carries a \"Get the user's name.\" docstring; a public class `CacheManager` has no docstring but every attribute has one; and one loop carries the comment `# Iterate over users`. What changes?",
+      "expected_output": "A pass that adds the missing module and class documentation, cuts the exported function to 2 prose lines plus structured entries, removes the external link, deletes the private docstring, the per-attribute docstrings, and the obvious inline comment.",
+      "files": [],
+      "assertions": [
+        "Adds a 1-prose-line module docstring as the first statement in the module, before imports.",
+        "Cuts `process_payment` to at most 2 prose lines and moves parameter, return, and error facts into Args/Returns/Raises entries at one entry per line.",
+        "Removes the external URL and restates the date rules as a self-contained contract in terms of the code.",
+        "Deletes the `_get_user_name` docstring because the private callable is trivial and self-evident.",
+        "Adds a 1-prose-line class docstring to `CacheManager` while deleting the per-attribute docstrings.",
+        "Removes the `# Iterate over users` comment as obvious and redundant."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "interface-members-uncommented",
+      "prompt": "Document this Go interface: `type InvoiceRepository interface { Create(ctx context.Context, data core.Invoice) (core.Invoice, error); UpdateStatus(ctx context.Context, id ULID, status string, officialID string) error; GetByID(ctx context.Context, id ULID) (core.Invoice, error) }`. Create returns ErrDuplicateInvoice on a repeated ID, and UpdateStatus and GetByID return ErrInvoiceNotFound for an unknown id. Also document the TypeScript `interface InvoiceRecord { id: string; status: InvoiceStatus; totalCents: number; issuedAtUtc: string; cancel(reason: CancellationReason): Promise<void> }`. Our Go reviewers expect a godoc line on every exported interface method.",
+      "expected_output": "One declaration line per interface and no comment on any member, with the per-operation error contracts pushed onto the concrete implementations rather than onto each method signature.",
+      "files": [],
+      "assertions": [
+        "Gives `InvoiceRepository` exactly 1 prose line at its declaration and no comment on Create, UpdateStatus, or GetByID.",
+        "Gives `InvoiceRecord` exactly 1 prose line at its declaration and no comment on any property or on the `cancel` method signature.",
+        "Places the ErrDuplicateInvoice and ErrInvoiceNotFound contracts on the concrete implementations, documented under the function rule, instead of on the interface method signatures.",
+        "Declines the Go reviewers' per-method request and explains that the duplicated contract drifts from the implementations that restate it.",
+        "Leaves `totalCents` and `issuedAtUtc` uncommented because the unit and format already live in the member names, and `status` uncommented because InvoiceStatus carries the allowed values.",
+        "Does not invoke the extreme-ambiguity exception for any method signature, since a signature is not an ambiguous runtime type."
+      ]
+    }
+  ]
+}
