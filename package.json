@@ -1,0 +1,67 @@
+{
+  "name": "erikas-skills",
+  "version": "0.1.0",
+  "description": "Colección de skills reutilizables para generación de código con Claude Code, Copilot, Cursor y otros asistentes — arquitectura frontend, API standards, Spec Kit, orquestación y calidad.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skills",
+    "ai",
+    "spec-kit",
+    "frontend-architecture",
+    "copilot",
+    "cursor"
+  ],
+  "license": "MIT",
+  "author": "ErikaAX08",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills#readme",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "packageManager": "pnpm@10.26.0",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=9"
+  },
+  "files": [
+    "backend-api-standards/**/*",
+    "brain-orchestrator/**/*",
+    "code-architecture-explainer/**/*",
+    "code-documentation/**/*",
+    "create-pull-request/**/*",
+    "frontend-architecture/**/*",
+    "frontend-design/**/*",
+    "git-commits/**/*",
+    "latex-academic-reports/**/*",
+    "pre-pr-review/**/*",
+    "project-intelligence/**/*",
+    "project-setup/**/*",
+    "spec-kit/**/*",
+    "spec-kit-analyze-consistency/**/*",
+    "spec-kit-establish-constitution/**/*",
+    "spec-kit-execute-tasks/**/*",
+    "spec-kit-generate-plan/**/*",
+    "spec-kit-generate-spec/**/*",
+    "spec-kit-generate-tasks/**/*",
+    "spec-kit-shared/**/*",
+    "spec-kit-sync-artifacts/**/*",
+    "verify-before-implement/**/*",
+    "brand-guidelines/**/*",
+    "bin/**/*",
+    "scripts/**/*"
+  ],
+  "bin": {
+    "erikas-skills": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "install:skills": "node ./scripts/install.mjs",
+    "validate": "node ./scripts/validate.mjs",
+    "sync:versions": "node ./scripts/sync-versions.mjs",
+    "test": "node ./scripts/validate.mjs"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/backend-api-standards",
+  "version": "0.1.0",
+  "description": "Defines mandatory standards for REST API contracts and data format, including unified response structure, OpenAPI documentation, ULID identifiers, JWT auth headers, mandatory entity fields, and HTTP status codes. Framework-agnostic — describes what the API must return, not how to build it.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "backend-api-standards"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "backend-api-standards"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/backend-api-standards",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

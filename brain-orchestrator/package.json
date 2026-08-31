@@ -1,0 +1,34 @@
+{
+  "name": "@erikaax/brain-orchestrator",
+  "version": "0.1.0",
+  "description": "Act as the architectural brain of a multi-agent engineering operation — investigate an unfamiliar, large, or legacy codebase, model how it really works, diagnose root causes instead of symptoms, design the minimal architecturally-correct change, decompose it into scoped task contracts with a dependency DAG, persist everything to a `.agent/` memory tree, delegate to subagents, verify their work against their contracts, integrate, and replan when evidence invalidates the plan. Use for complex, cross-module, high-risk, multi-session, or multi-agent work — bug hunts in systems nobody fully understands, changes that touch shared contracts, coordinating parallel agents, or resuming work whose conversational context was lost. Not for trivial single-file edits.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "brain-orchestrator"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "brain-orchestrator"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/brain-orchestrator",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md",
+    "references/**/*",
+    "templates/**/*",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

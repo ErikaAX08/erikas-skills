@@ -1,3 +1,13 @@
 .tokensave
 .commit-suggestions
 .pr-suggestions
+node_modules
+.claude/skills
+.opencode/skills
+.cursor/skills
+.windsurf/skills
+*.tgz
+# spec-kit prepack artifacts (copiados temporalmente para publish)
+spec-kit/spec-kit-*
+spec-kit/spec-kit-shared
+spec-kit/README.md

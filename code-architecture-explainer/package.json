@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/code-architecture-explainer",
+  "version": "0.1.0",
+  "description": "Analyze and explain code from multiple levels - from implementation details to software architecture. Use when understanding new codebases, explaining system design, documenting architecture, learning patterns, or analyzing technical decisions. Provides technical deep-dives, architectural overviews, flow diagrams, and concrete examples. Works at any abstraction level from \"what does this function do\" to \"how does this system scale\".",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "code-architecture-explainer"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "code-architecture-explainer"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/code-architecture-explainer",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

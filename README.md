@@ -2,6 +2,44 @@
 
 This repository contains reusable AI skills for consistent code generation across different tools and assistants.
 
+## Installation with pnpm
+
+Requires **Node >=18** and **pnpm >=9** (`corepack enable pnpm`).
+
+```bash
+# 1) All skills (recommended)
+pnpm add -D erikas-skills
+npx erikas-skills install              # -> .claude/skills/ (project)
+npx erikas-skills install --global     # -> ~/.claude/skills (global)
+npx erikas-skills install --target opencode          # -> .opencode/skills/
+npx erikas-skills install --target all --global      # Claude + Opencode
+
+# 2) Only the ones you need
+npx erikas-skills install --skills frontend-architecture,backend-api-standards --target claude
+npx erikas-skills install --skills spec-kit --target claude   # complete kit (7 skills + spec-kit-shared)
+
+# 3) Granular installation per skill (workspace)
+pnpm add @erikaax/frontend-architecture
+pnpm add @erikaax/brain-orchestrator
+pnpm add @erikaax/spec-kit   # complete kit — there is no @erikaax/spec-kit-generate-spec standalone
+# ...each skill is publishable as @erikaax/<folder-name> (see pnpm-workspace.yaml)
+#    Spec Kit is atomic: @erikaax/spec-kit includes the 7 skills + spec-kit-shared
+
+# 4) Custom directory
+npx erikas-skills install --target dir --dir ./my-skills
+
+# Validate everything is synchronized (versions, frontmatter)
+pnpm run validate
+pnpm run sync:versions  # syncs root version to the 14 packages (13 skills + spec-kit)
+
+# Dry run (without copying)
+npx erikas-skills install --dry-run --target claude
+npx erikas-skills list            # lists 14 entries; spec-kit = complete kit
+npx erikas-skills install --skills spec-kit-generate-spec --dry-run  # redirects to the complete kit
+```
+
+**pnpm workspace**: this repo is a monorepo `pnpm-workspace.yaml` with 14 packages (`@erikaax/*`: 13 standalone skills + `@erikaax/spec-kit` bundling 7 skills + `spec-kit-shared`). `pnpm install` installs the workspace, `pnpm -r exec` runs in each package and `pnpm pack --dry-run` shows what would be published. The root tarball `erikas-skills-0.1.0.tgz` includes all skills + `spec-kit/` + `spec-kit-shared/` and `brand-guidelines/` via `files` in the root `package.json`. To publish: `pnpm -r publish --access public` (standalone skills + spec-kit) and `pnpm publish --access public` (bundle).
+
 ## Skills
 
 ```
