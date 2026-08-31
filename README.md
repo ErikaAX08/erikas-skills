@@ -60,7 +60,7 @@ skills/
 ├── verify-before-implement/SKILL.md       # Verification protocol before coding
 ├── pre-pr-review/SKILL.md                 # Self-review before opening a PR
 ├── code-architecture-explainer/SKILL.md   # Explain code & architecture
-├── code-documentation/SKILL.md            # Document code professionally
+├── code-documentation/                    # Document code professionally (+ references/, evals/)
 ├── git-commits/SKILL.md                   # Conventional commits & PR descriptions
 ├── create-pull-request/SKILL.md           # PR description: diff-grounded, repo template first
 ├── latex-academic-reports/SKILL.md        # Academic reports & papers in LaTeX
