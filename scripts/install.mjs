@@ -15,11 +15,36 @@ export const SPEC_KIT_SKILLS = [
   "spec-kit-execute-tasks",
 ];
 
-// Installable skills = entries in pnpm-workspace.yaml
+// Installable skills = entries in pnpm-workspace.yaml (with fallback for installed package)
+const FALLBACK_SKILLS = [
+  "backend-api-standards",
+  "brain-orchestrator",
+  "code-architecture-explainer",
+  "code-documentation",
+  "create-pull-request",
+  "frontend-architecture",
+  "frontend-design",
+  "git-commits",
+  "latex-academic-reports",
+  "pre-pr-review",
+  "project-intelligence",
+  "project-setup",
+  "spec-kit",
+  "verify-before-implement",
+];
+
 // spec-kit is an atomic kit: a single entry that expands to 7 skills + spec-kit-shared
 export function listSkills() {
-  const ws = fs.readFileSync(path.join(ROOT, "pnpm-workspace.yaml"), "utf8");
-  return ws.split("\n").filter((l) => l.trim().startsWith("-")).map((l) => l.replace(/^\s*-\s*/, "").trim()).filter(Boolean);
+  const wsPath = path.join(ROOT, "pnpm-workspace.yaml");
+  if (fs.existsSync(wsPath)) {
+    const ws = fs.readFileSync(wsPath, "utf8");
+    return ws.split("\n").filter((l) => l.trim().startsWith("-")).map((l) => l.replace(/^\s*-\s*/, "").trim()).filter(Boolean);
+  }
+  // Fallback when installed as npm package (pnpm-workspace.yaml not bundled)
+  // Detect available skills by checking for SKILL.md or directory existence
+  const available = FALLBACK_SKILLS.filter((s) => fs.existsSync(path.join(ROOT, s)));
+  if (available.length > 0) return available;
+  return FALLBACK_SKILLS;
 }
 
 export function expandSkills(skills) {
