@@ -24,7 +24,7 @@ Install options:
                      Eg: --skills frontend-architecture,backend-api-standards
                      Eg: --skills spec-kit (installs the 7 kit skills + spec-kit-shared)
                      Note: spec-kit is atomic — requesting spec-kit-generate-spec installs the full kit
-  --target <t>       Destination: claude | opencode | cursor | windsurf | codex | all | dir
+  --target <t>       Destination: claude | opencode | cursor | windsurf | codex | antigravity | all | dir
                      Default: claude
   --dir <path>       Destination directory (when --target dir)
   --global           Install to the user global directory instead of the project

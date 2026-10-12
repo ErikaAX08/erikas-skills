@@ -79,12 +79,14 @@ function resolveTargetDir(target, global) {
       return global ? path.join(home, ".windsurf", "skills") : path.join(cwd, ".windsurf", "skills");
     case "codex":
       return global ? path.join(home, ".codex", "skills") : path.join(cwd, ".codex", "skills");
+    case "antigravity":
+      return global ? path.join(home, ".gemini", "config", "skills") : path.join(cwd, ".agents", "skills");
     case "all":
       return null; // handled separately
     case "dir":
       return null; // caller must provide --dir
     default:
-      throw new Error(`Unknown target: ${target}. Use claude|opencode|cursor|windsurf|codex|all|dir`);
+      throw new Error(`Unknown target: ${target}. Use claude|opencode|cursor|windsurf|codex|antigravity|all|dir`);
   }
 }
 
@@ -130,8 +132,16 @@ export async function installSkills({ skills, target, dir, global, dryRun, force
   let targets = [];
   if (target === "all") {
     const allTargets = global
-      ? [path.join(process.env.HOME || "", ".claude", "skills"), path.join(process.env.HOME || "", ".config", "opencode", "skills")]
-      : [path.join(process.cwd(), ".claude", "skills"), path.join(process.cwd(), ".opencode", "skills")];
+      ? [
+          path.join(process.env.HOME || "", ".claude", "skills"),
+          path.join(process.env.HOME || "", ".config", "opencode", "skills"),
+          path.join(process.env.HOME || "", ".gemini", "config", "skills"),
+        ]
+      : [
+          path.join(process.cwd(), ".claude", "skills"),
+          path.join(process.cwd(), ".opencode", "skills"),
+          path.join(process.cwd(), ".agents", "skills"),
+        ];
     targets = allTargets;
   } else if (target === "dir") {
     if (!dir) {
