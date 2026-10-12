@@ -1,12 +1,14 @@
 {
   "name": "@erikaax/pre-pr-review",
   "version": "0.1.0",
-  "description": "Analyze code changes before creating a PR with production-impact focus. Use when reviewing your own changes, preparing a PR, or conducting self-review before requesting team review. Identifies breaking changes, integration bugs, missing validations, and regressions by verifying against actual codebase, contracts, and production flows. Generates detailed, actionable feedback organized by severity.",
+  "description": "Audit local diffs before opening a PR (pre-PR self-review) and open PRs before merging (pre-merge audit) with evidence, to decide whether they are safe to merge and deploy. Use when asked to review a PR, audit a diff, compare changes against develop/main or another base branch, perform a technical review, find production risks, prepare a merge decision, or analyze changes involving backend, frontend, jobs, APIs, auth, databases, migrations, events, queues, external integrations, payments, feature flags, dependencies, infrastructure, CloudWatch, operational logs, or critical product flows. Scales to a parallel multi-agent review with adversarial verification for large or high-risk diffs. Not for writing PR descriptions (use create-pull-request), style-only linting, generating code, or post-merge incident response.",
   "keywords": [
     "claude-code",
     "opencode",
     "skill",
-    "pre-pr-review"
+    "pre-pr-review",
+    "code-review",
+    "multi-agent"
   ],
   "license": "MIT",
   "repository": {
@@ -20,7 +22,11 @@
   },
   "type": "module",
   "files": [
-    "SKILL.md"
+    "SKILL.md",
+    "references/**/*",
+    "scripts/**/*",
+    "assets/**/*",
+    "evals/**/*"
   ],
   "publishConfig": {
     "access": "public"

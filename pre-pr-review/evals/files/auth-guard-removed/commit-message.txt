@@ -1,0 +1,1 @@
+refactor(users): apply auth middleware at router level

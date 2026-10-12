@@ -1,0 +1,8 @@
+{
+  "name": "accounts-api",
+  "version": "1.4.0",
+  "private": true,
+  "scripts": { "test": "jest" },
+  "dependencies": { "express": "^4.19.2" },
+  "devDependencies": { "jest": "^29.7.0", "supertest": "^7.0.0" }
+}
