@@ -3,6 +3,7 @@
 //
 //   node fingerprint.mjs <file>...            print "sha256:<hex>  <file>" per file
 //   node fingerprint.mjs --state <feature-dir> compare spec/plan/tasks against state.json
+//     exit 0 = no drift, 1 = drift, 2 = no state.json, 3 = state.json newer than this contract
 //
 // tasks.md is hashed progress-insensitively (checkboxes normalized to "[ ]"); --tasks forces that
 // normalization on any file and --raw disables it.
@@ -12,6 +13,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const CHECKBOX = /^(\s*[-*]\s+)\[[xX]\]/gm;
+// Contract version of spec-kit-shared/artifact-conventions.md; state.json without schema_version is version 1.
+const CONTRACT_VERSION = 2;
 
 function sha256(text) {
   return "sha256:" + crypto.createHash("sha256").update(text).digest("hex");
@@ -29,7 +32,14 @@ function compareState(dir) {
     console.log(`STATE_FOUND: false (${statePath}) — nothing to compare; this is not "no drift".`);
     return 2;
   }
-  const { artifacts = {} } = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  const version = state.schema_version ?? 1;
+  if (version > CONTRACT_VERSION) {
+    console.log(`SCHEMA_VERSION: ${version} — newer than this kit's contract (${CONTRACT_VERSION}); update the kit before comparing.`);
+    return 3;
+  }
+  console.log(`SCHEMA_VERSION: ${version}${version < CONTRACT_VERSION ? " (legacy — migrates on next write)" : ""}`);
+  const { artifacts = {} } = state;
   const current = {};
   let drift = false;
   for (const name of ["spec", "plan", "tasks"]) {

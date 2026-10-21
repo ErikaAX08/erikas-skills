@@ -119,8 +119,12 @@ Do not proceed past this point when state is missing (Rule 8).
 
 ### Phase 1 — Load State
 
-Read `state.json` completely: `artifacts.spec`/`artifacts.plan`/`artifacts.tasks` (whichever
-exist) and `source_documents`.
+Read `state.json` completely: `schema_version`, `artifacts.spec`/`artifacts.plan`/`artifacts.tasks`
+(whichever exist), and `source_documents`. Apply `artifact-conventions.md` § Schema Versions and
+Migrations: a version newer than the contract stops the check (report it — comparing with rules
+this kit does not know would be guesswork); a version-1 file is compared with the version-1
+meaning, and this skill reports it as `SCHEMA_VERSION: 1 (migrates on next write)` without
+migrating it.
 
 ### Phase 2 — Recompute Fingerprints and Compare
 
@@ -250,6 +254,7 @@ Report:
 
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
 - `STATE_FOUND`: `true`/`false`.
+- `SCHEMA_VERSION`: the version found, and whether it migrates on the next write.
 - `SOURCES_CHECKED` / `SOURCES_DRIFTED`: counts.
 - `ARTIFACT_CHAIN_STATUS`: spec/plan/tasks each MATCH/DRIFT/absent.
 - `CLOSED_WORK_FLAGGED`: task IDs already `[x]` potentially affected, or "none".

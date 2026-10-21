@@ -217,6 +217,10 @@ Applied only where Rule 11's safety condition genuinely holds:
    the same thread — parallelism is never forced onto a boundary that isn't actually independent.
 4. After parallel branches complete, verify there is no cross-branch conflict (e.g. two branches
    editing overlapping code unexpectedly) before treating the batch as done.
+5. A `task-executor` implements and runs its tasks' validations, then reports results; it never
+   writes `tasks.md`, `amendments.md`, or a commit. This orchestrating run is the only writer of
+   checkbox state, amendment status, and commits (`artifact-conventions.md` § Write Ownership), and
+   marks `[x]` only from a reported, observed pass.
 
 ### Phase 4 — Story Closure
 

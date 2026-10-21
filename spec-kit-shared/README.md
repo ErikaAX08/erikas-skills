@@ -130,7 +130,7 @@ No skill in `spec-kit` reimplements what one of these already does.
     ├── research.md / data-model.md / quickstart.md / contracts/
     ├── tasks.md                 # spec-kit-generate-tasks
     ├── amendments.md            # spec-kit-amend-artifacts
-    ├── state.json               # drift-detection state (spec-kit-sync-artifacts, artifact-conventions.md)
+    ├── state.json               # drift-detection state (written per artifact-conventions.md § Write Ownership)
     └── checklists/
         ├── requirements.md          # spec-kit-generate-spec
         ├── plan-quality.md          # spec-kit-generate-plan
