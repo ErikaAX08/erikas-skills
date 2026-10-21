@@ -53,37 +53,53 @@ Treat the plan as the bridge between approved intent and executable work:
    level, that is a clarification to raise, not a decision to make silently.
 3. **Separate facts from assumptions.** Every unverified technical choice is marked
    `NEEDS CLARIFICATION` in Technical Context or recorded as an explicit assumption — never
-   written as settled fact.
-4. **Surface conflicts.** If the spec's requirements conflict with the real project (an existing
+   written as settled fact. Every verified claim carries its evidence level (`executed` / `read`
+   / `assumption`, per `spec-kit-shared/artifact-conventions.md` § Evidence Levels); "Verified"
+   alone is not an evidence level.
+4. **Runtime premises are executed, not read.** A decision that depends on *when*, *in what
+   order*, *how many times*, *how long*, or *with what side effect* a library or the project's
+   wiring does something needs `executed` evidence — a scratch probe against the installed
+   dependency or an executed test, with the command and observed output cited in `research.md`
+   (`verify-before-implement` §6.9). If it cannot run during planning, record it as `assumption`
+   and require a `[SONDA]` task in `tasks.md` that runs before anything depending on it.
+5. **Surface conflicts.** If the spec's requirements conflict with the real project (an existing
    contract, an installed dependency's actual capabilities, a constitution principle), report the
    conflict; do not silently pick the path of least resistance.
-5. **Abstraction before operations.** Complete Technical Context, both Constitution Check gates,
+6. **Abstraction before operations.** Complete Technical Context, both Constitution Check gates,
    Data Model, and Contracts before drafting `plan.md`'s strategy and decisions section.
-6. **No code before approval.** Do not implement, scaffold, or generate product code as part of
+7. **No code before approval.** Do not implement, scaffold, or generate product code as part of
    this skill. Code samples inside `plan.md` (contract shapes, signatures) illustrate a decision;
-   they are not committed source.
-7. **No hollow plan.** Every section of `plan.md` must contain specific, verified content. Do not
+   they are not committed source. A scratch probe run outside the repo to establish evidence is
+   research, not product code.
+8. **No hollow plan.** Every section of `plan.md` must contain specific, verified content. Do not
    leave `[NEEDS CLARIFICATION]` markers, template placeholders, or unresolved `Option N` labels
    in a plan reported as complete.
-8. **Use verified project context.** Inspect the actual codebase for existing patterns, contracts,
+9. **Use verified project context.** Inspect the actual codebase for existing patterns, contracts,
    and structure before naming concrete components — never assume a pattern exists because it's
    common elsewhere.
-9. **Keep scope controlled.** Do not add operations, components, or dependencies beyond what
+10. **Keep scope controlled.** Do not add operations, components, or dependencies beyond what
    `spec.md` requires. A plan that "future-proofs" beyond the approved spec is scope creep, not
    thoroughness.
-10. **Constitution Check gates are mandatory, not advisory.** Both gates run and are reported as
+11. **Constitution Check gates are mandatory, not advisory.** Both gates run and are reported as
     `PASS`/`FAIL` per principle — including `N/A — sin constitución` when no constitution exists.
     A `FAIL` only proceeds with a justified row in Complexity Tracking; skipping a gate silently is
     never acceptable, even under time pressure.
-11. **Safe Deferral is enforced, not suggested.** An operation pushed to a future phase must
+12. **Safe Deferral is enforced, not suggested.** An operation pushed to a future phase must
     satisfy `Dormant`, `Flagged`, or `Additive` (§ Safe Deferral below). If none applies, the
     operation is completed in the current phase or the phases are reordered — it is never marked
     deferrable "because it's documented as future work."
-12. **Every plan entry is traceable.** Each `plan.md` decision, component, and operation cites the
-    `R-FR##`/`R-AC##`/`E-##`/`R-QR##` it satisfies.
-13. **Never claim readiness without validation.** A plan is `READY` only after
+13. **Every plan entry is traceable and owns its IDs.** Each `plan.md` decision, component, and
+    operation cites the `R-FR##`/`R-AC##`/`E-##`/`R-QR##`/`S-SG##` it satisfies. The plan's own
+    entries use the plan namespace — `PL-D##` decisions, `PL-O##` operations, `RS-##` research —
+    never the spec's `A-D##`/`O-##` prefixes (`artifact-conventions.md` § Stable ID Namespaces).
+14. **Say what may change, not what must not.** Project Structure lists the files and components
+    this plan expects to touch; it is not a prohibition on others. A negative constraint ("X does
+    not change") belongs in the plan only when it restates a spec `S-SG##` (a protected behavior or
+    contract), and then it cites that safeguard. A file-level "does not change" clause turns a
+    one-line fix into a design change.
+15. **Never claim readiness without validation.** A plan is `READY` only after
     `checklists/plan-quality.md` passes and no blocking `NEEDS CLARIFICATION` remains.
-14. **Generate portable agent pairs.** If this workflow creates a `plan-reviewer` (or other support
+16. **Generate portable agent pairs.** If this workflow creates a `plan-reviewer` (or other support
     agent), it must generate and validate both a Kiro CLI and a Claude Code definition per the
     shared portability contract.
 
@@ -207,6 +223,26 @@ installed — never against memory of "how this library usually works." Resolve 
 `NEEDS CLARIFICATION` left from Technical Context here, or escalate per the Clarification Policy
 above.
 
+Record each finding as an `RS-##` entry:
+
+```markdown
+### RS-01 — [question]
+
+- **Answer**: [what is true for the installed version]
+- **Evidence level**: executed | read | assumption
+- **Evidence**: [for executed: probe command + observed output; for read: file/line of the
+  installed source or version-matched doc]
+- **Runtime premise**: yes | no — [yes when the answer is about when/order/how often/how long/side
+  effects; then `executed` is required, or the entry stays `assumption` and needs a `[SONDA]`]
+- **Used by**: [PL-D## / PL-O##]
+```
+
+Run probes in a scratch directory outside the repository, against the dependencies already
+installed (no installs, no network, no shared systems). Typical runtime premises worth a probe:
+retry counts and delays including `retry-after`, effective timeouts end to end, when a logger or
+serializer binds its input, middleware/hook ordering, what an error object exposes, what a client
+actually sends.
+
 For a dependency not currently installed, state that explicitly ("not installed — proposed
 addition") rather than treating a proposed library the same as a verified one.
 
@@ -267,7 +303,7 @@ For every new or modified component in `S-C0#` (from `spec.md`'s Structure secti
 
 | Component (S-C0#) | Pattern Followed | Evidence / Constitution Reference | Deviation |
 | ------------------ | ----------------- | ----------------------------------- | ---------- |
-| [component] | [existing pattern name, or "new"] | [file example or constitution principle ID] | [none, or → A-D0#] |
+| [component] | [existing pattern name, or "new"] | [file example or constitution principle ID] | [none, or → PL-D##] |
 
 A component must reference a concrete existing pattern (a file example already inspected, or a
 confirmed constitution principle) — never a generic claim like "follows best practices." A
@@ -283,15 +319,25 @@ project-wide.
 
 #### Key Decisions and Trade-offs
 
-Standard REASONS-style decision table: alternatives considered, rationale, consequences, evidence
-(`S#`/`P#` from `spec.md`, or a freshly verified project fact).
+Standard REASONS-style decision table with `PL-D##` IDs: alternatives considered, rationale,
+consequences, evidence (`S#`/`P#` from `spec.md`, an `RS-##`, or a freshly verified project fact)
+and its **evidence level**. A decision resting on a runtime premise cites the `RS-##` that executed
+it, or is marked `assumption → [SONDA] required`.
+
+#### Operations
+
+The technical operations `spec-kit-generate-tasks` decomposes, as `PL-O##` entries in dependency
+order. Each one cites the spec `O-##` capability and the `R-FR##`/`R-AC##` it realizes, the files
+or components it expects to touch (Project Structure), the `PL-D##` it applies, and its observable
+validation. `spec.md`'s `O-##` stay capability-level; this is where the file-level detail lives,
+so a technical change updates this section — not the spec.
 
 #### Safe Deferral
 
 Fill **only** if this plan proposes phases or maps to multiple user stories that will ship
-incrementally. For every operation (`O-0#`) pushed to a later phase or story:
+incrementally. For every operation (`PL-O##`) pushed to a later phase or story:
 
-| Operation (O-0#) | Deferred To | Condition | Justification |
+| Operation (PL-O##) | Deferred To | Condition | Justification |
 | ------------------ | ------------ | ---------- | --------------- |
 | [operation] | [user story / phase] | Dormant / Flagged / Additive | [why this condition genuinely holds] |
 
@@ -321,13 +367,17 @@ to run, expected observable results. Not a copy of the acceptance criteria; a ru
 Before validating the checklist:
 
 - Every entry in `plan.md`'s Strategy, Data Model, Contracts, and Operations cites at least one
-  `R-FR##`/`R-AC##`/`E-##`/`R-QR##` from `spec.md`.
+  `R-FR##`/`R-AC##`/`E-##`/`R-QR##`/`S-SG##` from `spec.md`.
+- Every `PL-D##` that rests on a runtime premise cites an `executed` `RS-##`, or is marked
+  `assumption → [SONDA] required`.
+- No `plan.md` entry reuses a spec-owned prefix (`A-D##`, `O-##`) for a plan-owned item (legacy
+  plans excepted, per the convention).
 - No component or operation in the plan is absent from `spec.md`'s scope — if the design genuinely
   needs something outside it, that's a gap to report, not to add silently.
 - Terminology (entity names, component names) matches `spec.md` exactly; if the plan needs to
   introduce a new technical term (e.g. a library-specific concept), it's clearly distinguished from
   domain vocabulary.
-- Every `Safe Deferral` entry references a real `O-0#` that also appears in Operations/Strategy.
+- Every `Safe Deferral` entry references a real `PL-O##` that also appears in Operations.
 
 ## Validate and Iterate
 
@@ -345,6 +395,12 @@ Create `checklists/plan-quality.md`:
 - [ ] Every Technical Context field is verified or explicitly `NEEDS CLARIFICATION`
 - [ ] No field contains a plausible-sounding guess unsupported by a manifest/lockfile/spec citation
 
+## Evidence
+
+- [ ] Every `RS-##` and `PL-D##` states its evidence level (`executed` / `read` / `assumption`)
+- [ ] Every runtime premise is `executed` (probe/test command + output cited) or is an `assumption` with a `[SONDA]` required
+- [ ] No claim is labeled "Verified" without a level
+
 ## Constitution
 
 - [ ] Gate 1 and Gate 2 are both reported as PASS/FAIL tables (or `N/A — sin constitución`)
@@ -356,6 +412,8 @@ Create `checklists/plan-quality.md`:
 - [ ] Data Model entities all trace to `spec.md` §E — no invented entities
 - [ ] Contracts cite a verified source or are explicitly marked "new — proposed"
 - [ ] Project Structure documents the real, verified tree (or a justified greenfield choice)
+- [ ] Project Structure says which files/components may change; every "does not change" clause cites an `S-SG##`
+- [ ] Operations lists every `PL-O##`, each citing its spec `O-##`, `R-FR##`/`R-AC##`, files, and validation
 - [ ] Structure Decision references the actual tree, with no unresolved Option labels
 
 ## Convention Enforcement
@@ -402,15 +460,23 @@ When `spec.md` changed since the last `plan.md` (Fase 0 detected material drift)
    `R-FR##`/`R-AC##` changed.
 3. Re-run both Constitution Check gates only if the changed sections could plausibly affect them
    (a new dependency, a new component) — otherwise note that the gates are unaffected and why.
-4. Preserve stable IDs (`A-D0#`, `S-C0#`, `O-0#`) where semantics are unchanged; add new ones for
-   new semantics.
+4. Preserve stable IDs (`PL-D##`, `PL-O##`, `RS-##`, or a legacy plan's `A-D0#`/`O-0#`) where
+   semantics are unchanged; add new `PL-` IDs for new semantics.
 5. Update `state.json`'s `artifacts.plan.content_hash` and `based_on_spec_hash` only after the
    targeted regeneration validates.
-6. Re-run the full `plan-quality.md` checklist regardless of how small the change was.
+6. Re-run the full `plan-quality.md` checklist regardless of how small the change was — except
+   when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
+   the checklist items that touch the changed IDs plus the Evidence, Traceability, and Governance
+   sections, and record `Scoped validation (AM-##)` in the checklist Notes.
 7. Summarize exactly which `plan.md` sections changed and why.
 
+A plan can also change **without** a spec change — a technical decision, a refuted runtime
+premise, a different file or wiring point — per the lowest-affected-layer rule
+(`artifact-conventions.md` § Layer Ownership). That is a plan update in its own right: Fase 0
+finds no spec drift, and the spec stays untouched.
+
 If `spec.md` drifted in a way that invalidates a decision already consumed by an existing
-`tasks.md` (i.e. `tasks.md` exists and cites the changed `O-0#`), state this plainly in the
+`tasks.md` (i.e. `tasks.md` exists and cites the changed `PL-O##`), state this plainly in the
 Completion Report — this plan does not update `tasks.md` itself; that is `spec-kit-generate-tasks`'s job,
 triggered separately.
 
@@ -439,6 +505,8 @@ Report:
 - `CONSTITUTION`: `Gate 1: PASS/FAIL/N/A`, `Gate 2: PASS/FAIL/N/A`, count of Complexity Tracking
   rows if any.
 - `SAFE_DEFERRAL`: count of deferred operations and their conditions, or `N/A — single phase`.
+- `EVIDENCE`: `RS-##` counts by level (`executed`/`read`/`assumption`), and every runtime premise
+  left as `assumption` (each needs a `[SONDA]`).
 - `VALIDATION`: passed/total checklist items and unresolved failures.
 - `TRACEABILITY`: requirement/entity/operation counts covered.
 - `CHANGES`: for updates, the `plan.md` sections changed.
@@ -460,6 +528,7 @@ Report:
 - [ ] Convention Enforcement covers every new/modified component with a concrete pattern
       reference.
 - [ ] Safe Deferral covers every operation pushed to a future phase, with a valid condition.
+- [ ] Every runtime premise is `executed` or an `assumption` flagged for a `[SONDA]`.
 - [ ] `plan.md`, its Phase 0/1 companions, and `checklists/plan-quality.md` were written.
 - [ ] `state.json` was created or updated with accurate content hashes.
 - [ ] Every generated support agent has a validated Kiro/Claude pair, or `AGENTS: none` is

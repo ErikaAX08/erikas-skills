@@ -47,7 +47,7 @@ holds — closure is structural, not an afterthought.**
 1. **Do not invent facts.** Never fabricate a file path, an existing helper, or a test framework
    convention not already verified in `plan.md`'s Technical Context or Project Structure. Use
    `verify-before-implement` when a task needs a fact `plan.md` didn't already establish.
-2. **Preserve plan intent.** Do not reinterpret, split, or merge an `O-0#` operation in a way that
+2. **Preserve plan intent.** Do not reinterpret, split, or merge a `PL-O##` operation in a way that
    changes what `plan.md` decided. Decomposing into smaller tasks is expected; changing the
    approach is not.
 3. **Separate facts from assumptions.** A task whose exact file path isn't yet verifiable is
@@ -75,12 +75,27 @@ holds — closure is structural, not an afterthought.**
     table marks an operation `Dormant` for a later story, no task in an earlier story may invoke
     that deferred code path — doing so silently invalidates the `Dormant` classification. If this
     happens, report it as a conflict with `plan.md`, do not silently write the task anyway.
-12. **Every task is traceable.** Each task cites the `R-FR##`/`R-AC##`/`O-0#` it satisfies.
+12. **Every task is traceable.** Each task cites the `R-FR##`/`R-AC##`/`PL-O##` it satisfies (a
+    legacy plan's `O-0#` counts as its `PL-O##`, per the convention's Stable ID Namespaces).
 13. **Never claim readiness without validation.** `tasks.md` is `READY` only after
     `checklists/tasks-quality.md` passes.
 14. **Generate portable agent pairs.** If this workflow creates a `task-decomposer` (or other
     support agent), it must generate and validate both a Kiro CLI and a Claude Code definition per
     the shared portability contract.
+15. **Validations describe observable behavior, not implementation shape.** A `Validación` names
+    what to run and what to observe — a test, a grep with its expected count, an HTTP call and its
+    status/body, a log line and what it must (not) contain. It never depends on a parameter name,
+    a variable name, a hunk or line count, or "file X unchanged": those make a task impossible to
+    close when a correct implementation differs in shape. A negative check is allowed only when it
+    restates a spec `S-SG##` (cite it) and is phrased as behavior ("no request log contains the
+    full phone number"), not as a file that must stay untouched.
+16. **Every runtime premise marked `assumption` gets a `[SONDA]` task** (`plan.md` `PL-D##`/`RS-##`
+    with evidence level `assumption`), placed in Foundational — or first in the earliest story that
+    needs it — and listed in `Depende de` of every task built on that premise.
+17. **Closed tasks follow the Task Lifecycle** in `spec-kit-shared/artifact-conventions.md`: never
+    edited except for one appended `Superada por:` line; rework is an `[ENMIENDA T0XX]` task; each
+    story keeps exactly one active `[CIERRE]`, and a new one is created only when the story's
+    `R-AC` set changes.
 
 ## Cross-Platform Agent Compatibility
 
@@ -140,7 +155,7 @@ below and follow it exactly.
 3. If `spec-kit-sync-artifacts` reports a match, `plan.md` hasn't changed since the last task generation —
    proceed normally.
 4. If it reports drift, this skill does the classification `spec-kit-sync-artifacts` leaves to the
-   consuming skill: identify which `O-0#`/`A-D0#`/Safe-Deferral entries actually changed (using
+   consuming skill: identify which `PL-O##`/`PL-D##`/`RS-##`/Safe-Deferral entries actually changed (using
    `spec-kit-sync-artifacts`'s best-effort localization, or a direct diff if it couldn't resolve one), and
    classify each as functionally material (a new/changed/removed operation, a changed Safe
    Deferral condition) or non-material (wording). Only material changes make `tasks.md` stale with
@@ -160,7 +175,7 @@ Order user-story phases `P1 → P2 → P3`; within the same priority, preserve `
 order. If a story has no assigned priority (an older `spec.md` predating the priority field),
 treat it as `P1` and flag this in the Completion Report rather than silently guessing an order.
 
-Cross-check every `O-0#` in `plan.md` against which `R-US##`/`R-FR##` it satisfies, so each
+Cross-check every `PL-O##` in `plan.md` against which `R-US##`/`R-FR##` it satisfies, so each
 operation can be placed in the correct story phase in Phase 4 below.
 
 ### Phase 2 — Setup Tasks
@@ -184,6 +199,10 @@ that actually needs it; an oversized Foundational phase delays every story's sta
 Same rule as Setup: if no shared prerequisite work is actually needed beyond what already exists,
 say so explicitly rather than inventing a task.
 
+`[SONDA]` tasks (Rule 16) for premises shared by several stories go here, first — a refuted
+premise found now costs a plan amendment; found after the stories are built, it costs rework of
+closed tasks.
+
 Ends with a checkpoint statement: foundation ready, user stories may start.
 
 ### Phase 4 — One Phase per User Story (in Priority order)
@@ -193,19 +212,36 @@ For each `R-US##`, in the order from Phase 1:
 1. State the **Goal** (from `R-US##`) and **Independent test** (from its `R-AC##`).
 2. **Tests** (optional — only if `spec.md` explicitly requests tests): write them first; they must
    fail before implementation exists.
-3. **Implementation tasks**: decompose every `O-0#` this plan assigned to this story into atomic
+3. **Implementation tasks**: decompose every `PL-O##` this plan assigned to this story into atomic
    tasks. Use the task format below.
-4. **Closure task** (§ Closure Rule): always the last task of the phase.
+4. **Closure task** (§ Closure Rule): always the last task of the phase as generated; later
+   `[ENMIENDA]` tasks go after it under `#### Enmiendas` (Rule 17).
 5. **Checkpoint** statement: the story works and is independently verifiable.
 
 #### Task Format
 
 ```markdown
 - [ ] T0XX [P?] [USn] Description
-      Traza a: R-FR0#, O-0#
+      Traza a: R-FR0#, PL-O0#
       Archivo(s): ruta verificada, o "nuevo: ruta propuesta"
       Depende de: ninguna | T0YY
       Validación: comando o criterio observable
+```
+
+`Archivo(s)` is where the work is expected to land, not a fence: touching another file the same
+`PL-O##` needs does not invalidate the task. Write `Validación` per Rule 15 — for example
+"`npm test -- prelude-block` pasa; `GET /allow-list?phone=…` deja en el log de request el teléfono
+enmascarado (`+52…1234`)", never "el parámetro se llama `now`" or "`main.js` sin cambios".
+
+Probe task (Rule 16):
+
+```markdown
+- [ ] T0XX [SONDA] Confirmar <premisa de runtime> (PL-D0#, RS-0#)
+      Traza a: PL-D0#, RS-0#
+      Archivo(s): ninguno (script en scratch, fuera del repo)
+      Depende de: ninguna
+      Validación: el comando <probe> muestra <comportamiento esperado>; si muestra otra cosa, la
+        premisa queda refutada y se detienen las tareas que dependen de ella
 ```
 
 - `[P]`: parallelizable — different files, no cross-dependency with other `[P]` tasks in the same
@@ -226,7 +262,8 @@ For each `R-US##`, in the order from Phase 1:
 ```
 
 This task is marked `[x]` only when it actively confirmed nothing was left half-done — never for
-merely producing code. Cross-reference `plan.md`'s Safe Deferral table: if this story is the
+merely producing code. Only the story's **active** `[CIERRE]` (no `Superada por:` line) counts;
+earlier ones are history. Cross-reference `plan.md`'s Safe Deferral table: if this story is the
 target of a deferred operation from an earlier story, the closure task also confirms that
 operation genuinely remains `Dormant`/behind its `Flag`/purely `Additive` and hasn't been
 accidentally activated by this story's own work.
@@ -241,7 +278,7 @@ being complete.
 
 - **Dependencies & Execution Order**: phase dependencies (Setup → Foundational → stories →
   Polish) and, within each story, task-level order (tests before implementation, models before
-  services, `[CIERRE]` always last).
+  services, the active `[CIERRE]` last except for later `[ENMIENDA]` tasks).
 - **Parallel Example**: one concrete block showing `[P]` tasks from the `P1` story launchable
   together.
 - **Implementation Strategy**: MVP-first (Setup + Foundational + the `P1` story only, stop and
@@ -253,10 +290,13 @@ being complete.
 
 Before validating the checklist:
 
-- Every task cites at least one `R-FR##`/`R-AC##` and the `O-0#` it decomposes.
-- Every `O-0#` in `plan.md` appears in at least one task, in the story `plan.md` assigned it to.
-- Every user-story phase ends with exactly one `[CIERRE]` task covering all of that story's
-  `R-AC##`.
+- Every task cites at least one `R-FR##`/`R-AC##` and the `PL-O##` it decomposes — except a
+  `[SONDA]`, which cites the `PL-D##`/`RS-##` it probes.
+- Every `PL-O##` in `plan.md` appears in at least one task, in the story `plan.md` assigned it to.
+- Every user-story phase has exactly one active `[CIERRE]` task covering all of that story's
+  `R-AC##`; it is the last task of the phase except for `[ENMIENDA]` tasks under `#### Enmiendas`.
+- Every `PL-D##` with evidence level `assumption` has a `[SONDA]` that precedes every task citing it.
+- Every `Validación` follows Rule 15.
 - No task in a story earlier than a `Dormant`-deferred operation's target story invokes that
   operation's code path (Non-Negotiable Rule 11).
 - Task IDs are sequential and unique across the whole document.
@@ -284,10 +324,12 @@ Create `checklists/tasks-quality.md`:
 - [ ] Every task has Traza a / Archivo(s) / Depende de / Validación
 - [ ] No task uses a vague description without a concrete action and file
 - [ ] Every file path is verified, or explicitly marked "nuevo: <proposed path>"
+- [ ] Every Validación is observable behavior — no parameter/variable names, hunk or line counts, or "file X unchanged" (Rule 15)
+- [ ] Every `assumption` runtime premise in plan.md has a `[SONDA]` placed before its dependent tasks
 
 ## Closure Rule
 
-- [ ] Every user-story phase ends with exactly one [CIERRE] task
+- [ ] Every user-story phase has exactly one active [CIERRE] task (superseded ones carry `Superada por:`)
 - [ ] Every [CIERRE] task's Verifica block covers dangling references, half-wired paths, and R-AC coverage
 - [ ] Foundational's checkpoint is present if it gates all stories
 
@@ -298,7 +340,7 @@ Create `checklists/tasks-quality.md`:
 
 ## Traceability
 
-- [ ] Every O-0# from plan.md appears in at least one task
+- [ ] Every PL-O## from plan.md appears in at least one task
 - [ ] Every task's R-FR##/R-AC## citation exists in spec.md
 
 ## Governance
@@ -322,20 +364,26 @@ remains, set `STATUS` to `DRAFT — NEEDS CLARIFICATION`. Set `READY` only when 
 
 When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected drift):
 
-1. Identify affected `O-0#`/story IDs from the diff.
+1. Identify affected `PL-O##`/story IDs from the diff.
 2. Propagate only through the story phases those IDs touch — add/modify/remove tasks within the
    affected story phase(s); do not regenerate unrelated stories.
 3. **Never silently modify a task already marked `[x]`.** If a completed task is affected by the
    change, flag it explicitly as "closed task affected by plan change — needs review" rather than
    editing or unmarking it automatically. This is the same non-negotiable `spec-kit-sync-artifacts` carries
    in the design doc: work already done on an assumption that just changed is a risk to surface,
-   not silently paper over.
+   not silently paper over. Once the rework is decided, apply the Task Lifecycle (Rule 17): add an
+   `[ENMIENDA T0XX]` task under the story's `#### Enmiendas`, append `Superada por:` to `T0XX` only
+   if the new task replaces it, and create a new `[CIERRE]` only if the story's `R-AC` set
+   changed — otherwise the amendment's `Validación` re-walks the active one.
 4. Preserve task IDs where semantics are unchanged; append new IDs (continuing the sequence) for
    new tasks — never renumber existing tasks.
 5. Re-verify the affected story's `[CIERRE]` task still covers the right `R-AC##` set.
 6. Update `state.json`'s `artifacts.tasks.content_hash` and `based_on_plan_hash` only after the
    targeted regeneration validates.
-7. Re-run the full `tasks-quality.md` checklist regardless of how small the change was.
+7. Re-run the full `tasks-quality.md` checklist regardless of how small the change was — except
+   when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
+   the items that touch the changed tasks and stories plus Traceability and Governance, and record
+   `Scoped validation (AM-##)` in the checklist Notes.
 8. Summarize exactly which task phases changed and why.
 
 ## Pre-Execution Extension Hooks
@@ -378,10 +426,13 @@ Report:
       priority fallback was flagged).
 - [ ] `tasks.md` follows Setup → Foundational → one phase per story (priority order) → Polish,
       with no task outside that structure.
-- [ ] Every user-story phase ends with a `[CIERRE]` task covering that story's full `R-AC##` set.
+- [ ] Every user-story phase has exactly one active `[CIERRE]` task covering that story's full
+      `R-AC##` set.
+- [ ] Every `assumption` runtime premise has a `[SONDA]` ahead of its dependent tasks.
+- [ ] Every `Validación` describes observable behavior (Rule 15).
 - [ ] No task violates a `Dormant`/`Flagged`/`Additive` classification from `plan.md`'s Safe
       Deferral table.
-- [ ] Every task is traceable to `plan.md`'s `O-0#` and `spec.md`'s `R-FR##`/`R-AC##`.
+- [ ] Every task is traceable to `plan.md`'s `PL-O##` and `spec.md`'s `R-FR##`/`R-AC##`.
 - [ ] Dependencies & Execution Order, Parallel Example, and Implementation Strategy sections were
       generated.
 - [ ] `tasks.md` and `checklists/tasks-quality.md` were written.

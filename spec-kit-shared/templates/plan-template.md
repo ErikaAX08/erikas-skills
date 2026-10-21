@@ -7,8 +7,9 @@
 
 **Note**: This template is filled in by the `spec-kit-generate-plan` skill; its `SKILL.md` describes the
 execution workflow. Adapted from a general-purpose spec-kit plan template to this repo's REASONS
-vocabulary (`R-FR##`, `R-AC##`, `E-##`, `O-##`) and its Constitution Check / Complexity Tracking /
-Safe Deferral mechanics.
+vocabulary (cites `R-FR##`, `R-AC##`, `E-##`, `S-SG##`, `O-##` from `spec.md`; owns `PL-D##`,
+`PL-O##`, `RS-##` — see `spec-kit-shared/artifact-conventions.md` § Stable ID Namespaces) and its
+Constitution Check / Complexity Tracking / Safe Deferral mechanics.
 
 ## Summary
 
@@ -58,6 +59,15 @@ given the scope of this plan.
 actually installed, never against memory. Resolve every `NEEDS CLARIFICATION` left over from
 Technical Context here, or escalate it explicitly.]
 
+Each entry in `research.md` is an `RS-##` with an **evidence level** (`executed` / `read` /
+`assumption`). A runtime premise (when / order / how often / how long / side effects) is only
+settled at `executed` — probe command and observed output cited; otherwise it stays `assumption`
+and `tasks.md` gets a `[SONDA]` for it.
+
+| ID | Question | Answer | Runtime premise | Evidence level | Evidence |
+| -- | -------- | ------ | --------------- | -------------- | -------- |
+| RS-01 | [...] | [...] | yes / no | executed / read / assumption | [probe + output, or file:line] |
+
 ## Phase 1: Design
 
 ### Data Model
@@ -100,8 +110,12 @@ endpoint/schema.]
 -->
 
 ```text
-[Real tree for this project, with concrete paths this feature will touch or create.]
+[Real tree for this project, with concrete paths this feature expects to touch or create.]
 ```
+
+This is the expected change surface, not a prohibition: other files may change if a `PL-O##`
+needs it. A "does not change" statement appears here only when it restates a spec `S-SG##`, and it
+cites that safeguard.
 
 **Structure Decision**: [One sentence referencing the real tree above — never left as a template
 placeholder.]
@@ -137,31 +151,37 @@ For every new or modified component in this plan's Structure (`S-C0#`):
 
 | Component (S-C0#) | Pattern Followed | Evidence / Constitution Reference | Deviation |
 | ------------------ | ----------------- | ----------------------------------- | ---------- |
-| [component] | [existing pattern name, or "new"] | [file example or constitution principle ID] | [none, or → A-D0#] |
+| [component] | [existing pattern name, or "new"] | [file example or constitution principle ID] | [none, or → PL-D##] |
 
 Any deviation from the dominant pattern or the constitution is recorded as an explicit decision in
-`A-D0#` below (or, if it violates a `FAIL` principle, in Complexity Tracking) — never as a silent
+`PL-D##` below (or, if it violates a `FAIL` principle, in Complexity Tracking) — never as a silent
 omission.
 
 ## Key Decisions and Trade-offs
 
-| ID | Decision | Alternatives Considered | Rationale | Consequences | Evidence |
-| -- | -------- | ------------------------ | --------- | ------------- | -------- |
-| A-D01 | [...] | [...] | [...] | [...] | [S#/P#] |
+| ID | Decision | Alternatives Considered | Rationale | Consequences | Evidence | Evidence level |
+| -- | -------- | ------------------------ | --------- | ------------- | -------- | -------------- |
+| PL-D01 | [...] | [...] | [...] | [...] | [S#/P#/RS-##] | executed / read / assumption → [SONDA] |
+
+## Operations
+
+| ID | Operation | Realizes (spec) | Applies | Expected files/components | Validation |
+| -- | --------- | --------------- | ------- | ------------------------- | ---------- |
+| PL-O01 | [...] | [O-##, R-FR##, R-AC##] | [PL-D##] | [paths from Project Structure] | [observable behavior] |
 
 ## Safe Deferral (only if this plan proposes phases / user stories spanning multiple increments)
 
-| Operation (O-0#) | Deferred To | Condition | Justification |
+| Operation (PL-O##) | Deferred To | Condition | Justification |
 | ------------------ | ------------ | ---------- | --------------- |
 | [operation] | [user story / phase] | Dormant / Flagged / Additive | [why this condition genuinely holds] |
 
 An operation with no valid condition here is **not** deferred — it is completed in the current
-phase, or the phases are reordered until it is safe. See `plan-spec-kit.md` §3 "Cierre de ciclos"
-and §7.3 for the full rule.
+phase, or the phases are reordered until it is safe. See `spec-kit-generate-plan/SKILL.md`
+§ Safe Deferral for the full rule.
 
 ## Traceability
 
-[Confirm every entry above cites the `R-FR##`/`R-AC##`/`E-##` it satisfies. Optional summary table
+[Confirm every entry above cites the `R-FR##`/`R-AC##`/`E-##`/`S-SG##` it satisfies. Optional summary table
 of requirement → plan-section coverage.]
 
 ## Compatibility and Evolution

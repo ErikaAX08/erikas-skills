@@ -56,6 +56,7 @@ Treat the specification as a first-class delivery artifact:
 11. **Make every requirement verifiable.** Requirements, acceptance criteria, operations, and safeguards must have observable completion conditions.
 12. **Never claim readiness without validation.** A specification is `READY` only after its checklist passes and no blocking decisions remain.
 13. **Generate portable agent pairs.** If this workflow creates a support agent, it must generate and validate both a Kiro CLI JSON definition and a Claude Code Markdown definition with equivalent intent and least-privilege capabilities.
+14. **Stay at the behavior layer.** The spec owns what the system must do and must never do — behavior, rules, entities, invariants, safeguards — and describes Approach, Structure, and Operations at the capability level. Library choices, file-level change lists, wiring points, concrete values that satisfy a stated `R-QR`, and runtime premises belong to `plan.md` (`spec-kit-shared/artifact-conventions.md` § Layer Ownership). A spec that pins file-level detail forces a new spec version for every technical fix.
 
 ## Cross-Platform Agent Compatibility
 
@@ -432,11 +433,11 @@ Every `[S#]` and `[P#]` citation in this specification must resolve to one row i
 
 - **S-CS01**: `[verified/path/or/component]` — [reason for change].
 
-Do not put guessed paths, classes, or signatures in Change Surface. Use logical component names and mark them `Proposed` when technical context is unavailable.
+Change Surface is the **expected** surface, for orientation — never a list of what may not change. Do not put guessed paths, classes, or signatures in Change Surface. Use logical component names and mark them `Proposed` when technical context is unavailable. The binding, file-level surface is `plan.md`'s Project Structure.
 
 ## O — Operations
 
-List operations in dependency order. Every operation must map to requirements and include a validation method. Use exact files and signatures only when verified.
+List operations in dependency order, at the **capability level**: what capability is created or changed and how it is validated as behavior. Every operation must map to requirements and include a validation method. File-level steps, library calls, and wiring order belong to `plan.md`'s `PL-O##` operations, which cite these `O-##`.
 
 ### O-01 — [Create / Update / Migrate / Verify] [Component or Capability]
 
@@ -474,6 +475,25 @@ State non-negotiable boundaries as testable `MUST`, `MUST NOT`, or quantified li
 
 - **S-SG02**: [Access, sensitive data, abuse prevention, audit, or compliance constraint supported by context].
 
+#### Sensitive Data by Channel
+
+Mandatory whenever the feature handles personal, secret, or regulated data (phone numbers, emails, tokens, document IDs, payment data, health data). One row per channel; every row is filled — a safeguard ID, or `N/A — <narrow reason>`. A channel nobody enumerated is a channel nobody protects.
+
+| Channel | Sensitive data that can reach it | Allowed form (absent / masked: rule / full) | Safeguard |
+| ------- | -------------------------------- | ------------------------------------------- | --------- |
+| Request body | [...] | [...] | [S-SG## / N/A — reason] |
+| Query string | [...] | [...] | [...] |
+| Path parameters | [...] | [...] | [...] |
+| Request/response headers | [...] | [...] | [...] |
+| Request/access logs (framework or proxy) | [...] | [...] | [...] |
+| Application and error logs (including library error messages, e.g. SQL text) | [...] | [...] | [...] |
+| Validation error responses (e.g. echoed input values) | [...] | [...] | [...] |
+| Other error responses (5xx bodies, stack traces) | [...] | [...] | [...] |
+| Success responses | [...] | [...] | [...] |
+| Persistence and audit records | [...] | [...] | [...] |
+| Calls to third parties | [...] | [...] | [...] |
+| Metrics, traces, analytics | [...] | [...] | [...] |
+
 ### Data and Integrity Safeguards
 
 - **S-SG03**: [Invariant, consistency, idempotency, retention, migration, or recovery constraint].
@@ -488,7 +508,9 @@ State non-negotiable boundaries as testable `MUST`, `MUST NOT`, or quantified li
 
 ### Prohibited Changes
 
-- **S-SG06**: The implementation MUST NOT modify [unrelated component, contract, or behavior].
+- **S-SG06**: The implementation MUST NOT modify [unrelated behavior or contract — stated as observable behavior, e.g. "the public response of `POST /login` for unaffected numbers"].
+
+A prohibited change protects a behavior or a contract, not a file. "File X does not change" is not a safeguard: it fails the moment a correct fix needs one line there, and it is a technical decision that belongs to `plan.md`.
 ```
 
 #### Section Construction Rules
@@ -499,6 +521,7 @@ State non-negotiable boundaries as testable `MUST`, `MUST NOT`, or quantified li
 - Use stable IDs and cite source IDs for source-derived claims.
 - Every `R-US##` declares a `Priority` of `P1`, `P2`, or `P3` — `P1` is the minimum viable increment, `P2`/`P3` are later increments. Assign it from what the source explicitly distinguishes (e.g. "first I need X, then Y"); if the source does not distinguish priority, default every story to `P1` and record that default as an assumption (`R-AS##`) rather than presenting it as a stated fact. `spec-kit-generate-tasks` depends on this field to order work — do not leave it blank.
 - Acceptance criteria must test observable behavior, preferably in Given/When/Then form.
+- When an acceptance criterion sets a **terminal or persistent state** (`failed`, `expired`, `deleted`, "stays active"), say under which exact outcome it applies — and distinguish a **definitive** outcome from an **ambiguous** one (timeout, network error, 5xx, a status that does not prove what happened on the other side). An ambiguous outcome mapped to a terminal state is the usual way an acceptance criterion silently contradicts an invariant.
 - Do not disguise implementation choices as business requirements.
 - Quantify metrics only when provided, governed by project standards, or explicitly accepted as proposed targets.
 
@@ -507,6 +530,7 @@ State non-negotiable boundaries as testable `MUST`, `MUST NOT`, or quantified li
 - Use the terminology from source documents and the existing domain.
 - Distinguish existing entities from new or proposed concepts.
 - Define ownership, lifecycle, states, relationships, and invariants relevant to this feature.
+- For every state an invariant constrains, check which `R-AC` can produce that state; § Phase 7's terminal-state check depends on this mapping being explicit.
 - Preserve existing simple data structures when they satisfy the requirement.
 - Do not create wrapper entities, DTOs, or abstractions without a functional need.
 - Do not add guessed attributes to make a diagram look complete.
@@ -532,7 +556,7 @@ State non-negotiable boundaries as testable `MUST`, `MUST NOT`, or quantified li
 - Order operations by dependency and keep each independently reviewable.
 - Include product behavior, migrations, observability, tests, documentation, and rollout work when the requirements demand them.
 - Map every operation to requirement and acceptance IDs.
-- Use method signatures, types, annotations, and exact paths only if project inspection verified them.
+- Keep operations at the capability level: name the verified component or contract involved, not method signatures, annotations, or line-level steps — those belong to `plan.md`'s `PL-O##`. Any concrete name used here must still be verified by project inspection.
 - Do not implement the operations during this skill.
 
 ##### N — Norms: reusable engineering standards
@@ -547,6 +571,8 @@ State non-negotiable boundaries as testable `MUST`, `MUST NOT`, or quantified li
 
 - Convert critical risks and exclusions into verifiable constraints.
 - Cover scope, security/privacy, integrity, reliability/performance, compatibility/integration, and prohibited changes as applicable.
+- Fill the Sensitive Data by Channel table whenever sensitive data is in scope; every row gets a safeguard or a narrow `N/A` reason.
+- Express prohibited changes as protected behavior or contracts, never as files that must stay untouched.
 - Do not add unsupported compliance names or arbitrary thresholds.
 - If a category truly does not apply, state the narrow reason rather than inventing a safeguard.
 
@@ -581,6 +607,8 @@ Create `<feature-directory>/checklists/requirements.md` with this structure:
 ## Abstraction and Design
 
 - [ ] Entities use consistent domain language and define relevant invariants
+- [ ] Every terminal or persistent state an `R-AC` produces is compatible with every `E-I` invariant, including under ambiguous outcomes (timeout, network error, 5xx)
+- [ ] Approach, Structure, and Operations stay at the capability level; no file-level constraint or runtime premise is pinned in the spec
 - [ ] Approach explains key decisions, rationale, alternatives, and trade-offs
 - [ ] Structure defines cohesive responsibilities and valid dependencies
 - [ ] Existing architecture and contracts are represented accurately
@@ -597,6 +625,8 @@ Create `<feature-directory>/checklists/requirements.md` with this structure:
 
 - [ ] Norms are applicable, enforceable, and source-backed or labeled Proposed
 - [ ] Safeguards are explicit and verifiable
+- [ ] When sensitive data is in scope, the Sensitive Data by Channel table has every row filled (safeguard ID or narrow `N/A` reason)
+- [ ] Prohibited Changes protect behaviors or contracts, not files
 - [ ] Security, privacy, integrity, reliability, compatibility, and scope risks are addressed as applicable
 - [ ] The specification contains no TODOs, placeholders, contradictions, or accidental implementation
 - [ ] The artifact is ready to be versioned and reviewed independently of chat history
@@ -637,6 +667,8 @@ Also perform these consistency checks:
 - Every entity and component named in Operations exists in Entities/Structure or is clearly introduced there.
 - Operations do not introduce scope absent from Requirements.
 - Safeguards do not contradict Approach or Acceptance Criteria.
+- **Terminal-state check**: for every `R-AC` that leaves an entity in a terminal or persistent state, walk every `E-I` invariant that constrains that entity, once for a definitive outcome and once for each ambiguous outcome the flow can produce (timeout, network error, 5xx, a retry that exhausts). Any combination where the `R-AC` result violates an `E-I` is a blocking contradiction — resolve it (usually by splitting the `R-AC` into definitive vs. ambiguous cases) before `READY`.
+- **Channel check**: every Sensitive Data by Channel row that is not `N/A` cites an `S-SG##` that exists and is verifiable.
 - Terminology is consistent across all seven sections.
 - Source IDs referenced in the spec exist in the persisted Evidence Catalog and resolve to a name/path, role, and read status.
 - No generated agent is referenced without both platform files, matching semantics, and recorded validation status.
@@ -658,12 +690,12 @@ When the user supplies an existing REASONS specification:
 
 1. Read the entire current artifact and its checklist.
 2. Reuse its parent feature directory as `SPECIFY_FEATURE_DIRECTORY`, keep that file as `SPEC_FILE`, and keep `.speckit/feature.json` pointed to the same directory; do not create a replacement feature directory.
-3. Treat the requested change as a delta, not permission to regenerate unrelated sections.
+3. Treat the requested change as a delta, not permission to regenerate unrelated sections. First apply the lowest-affected-layer rule (`spec-kit-shared/artifact-conventions.md` § Layer Ownership): if the change touches no requirement, entity, invariant, safeguard, or scope, it is not a spec change — say so and route it to `spec-kit-generate-plan` (or `spec-kit-amend-artifacts` for a decided change) instead of producing a spec version with nothing to say.
 4. Identify affected requirement IDs and propagate the change through Entities, Approach, Structure, Operations, Norms, Safeguards, and traceability.
 5. Preserve stable IDs where semantics remain the same; add new IDs for new semantics; never silently reuse an ID for a different requirement.
 6. Update the persisted Evidence Catalog for new, removed, or superseded evidence, recomputing the source fingerprint for every row whose underlying source was re-read as part of this update — a stale fingerprint left over from a prior version defeats the purpose of recording one. If `.speckit/specs/<feature-dir>/state.json` exists (see `spec-kit-shared/artifact-conventions.md`), refresh its `source_documents.<ID>.fingerprint`/`read_at` entries to match at the same time — the Evidence Catalog table inside `spec.md` and `state.json`'s copy must never be left pointing at two different fingerprints for the same source, or the next `spec-kit-sync-artifacts` check will report a already-resolved drift as if it were still open.
 7. Record superseded decisions and migration/compatibility consequences where relevant.
-8. Re-run the complete checklist.
+8. Re-run the complete checklist — except when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate the items touching the changed IDs plus Traceability, the terminal-state check, and the channel check, and record `Scoped validation (AM-##)` in the checklist Notes.
 9. Summarize exactly which REASONS sections changed and why.
 
 Follow the SPDD direction rule:

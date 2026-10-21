@@ -9,9 +9,9 @@ available.
 **Organization**: tasks are grouped by user story (`R-US##` from `spec.md`, in `Priority`
 `P1 → P2 → P3` order) so each story can be implemented, tested, and delivered as an independent
 MVP increment. This is the primary mechanism by which "cierre de ciclos" is enforced — see
-`plan-spec-kit.md` §3 and §7.4: a story only counts as complete when its checkpoint holds, and a
-checkpoint requires the story to be independently functional, which excludes leaving the system
-broken by construction.
+`spec-kit-generate-tasks/SKILL.md` § Closure Rule: a story only counts as complete when its
+checkpoint holds, and a checkpoint requires the story to be independently functional, which
+excludes leaving the system broken by construction.
 
 **Note**: adapted from a general-purpose spec-kit tasks template to this repo's REASONS
 vocabulary and mandatory per-story closure checkpoints.
@@ -23,10 +23,16 @@ vocabulary and mandatory per-story closure checkpoints.
 - **`[Story]`**: which user story (`US1`, `US2`, ...) this task belongs to. Setup/Foundational
   tasks carry no story tag.
 - **`[CIERRE]`**: the mandatory closing consistency task for a story or phase — see "Closure Rule"
-  below. Never omitted, never treated as optional polish.
-- Every task also carries, inline or as a sub-line: `Traza a:` (requirement/operation IDs it
-  satisfies), `Archivo(s):` (verified path, or `nuevo: <proposed path>`), `Depende de:` (task IDs
-  or "ninguna"), `Validación:` (an observable, executable criterion — not "looks correct").
+  below. Never omitted, never treated as optional polish. Exactly one is active per story.
+- **`[SONDA]`**: a probe that confirms a runtime premise `plan.md` left as `assumption`; it runs
+  before every task that depends on it.
+- **`[ENMIENDA T0XX]`**: rework applied through `amendments.md` (`AM-##`); see the Task Lifecycle in
+  `spec-kit-shared/artifact-conventions.md`.
+- Every task also carries, inline or as a sub-line: `Traza a:` (requirement IDs and the `PL-O##`
+  it decomposes), `Archivo(s):` (verified path, or `nuevo: <proposed path>` — expected, not a
+  fence), `Depende de:` (task IDs or "ninguna"), `Validación:` (an observable, executable
+  criterion — a test, a grep with expected count, an HTTP call, a log line; never a parameter
+  name, a hunk count, "looks correct", or "file X unchanged").
 
 <!--
   IMPORTANT: everything below Phase 1 is illustrative shape only. spec-kit-generate-tasks MUST replace it
@@ -49,8 +55,11 @@ vocabulary and mandatory per-story closure checkpoints.
 
 ⚠️ **No user story task starts until this phase is complete.**
 
-- [ ] T003 [P] [shared infrastructure task]
-      Traza a: S-C0# — Depende de: T001 — Validación: [comando/criterio observable]
+- [ ] T003 [SONDA] Confirmar [premisa de runtime] (PL-D0#, RS-0#) — only if plan.md left one as `assumption`
+      Traza a: PL-D0#, RS-0# — Archivo(s): ninguno (script en scratch) — Depende de: ninguna
+      Validación: [comando de la sonda] muestra [comportamiento esperado]
+- [ ] T004 [P] [shared infrastructure task]
+      Traza a: S-C0#, PL-O0# — Depende de: T001, T003 — Validación: [comando/criterio observable]
 
 **Checkpoint**: foundation ready — user stories may start, in parallel if capacity allows.
 
@@ -63,14 +72,19 @@ vocabulary and mandatory per-story closure checkpoints.
 
 ### Tests for US1 (OPTIONAL — only if `spec.md` requests tests)
 
-- [ ] T004 [P] [US1] Contract/integration test for [behavior]
+- [ ] T005 [P] [US1] Contract/integration test for [behavior]
       Archivo(s): tests/… — Depende de: ninguna — Validación: falla antes de implementar
 
 ### Implementation for US1
 
-- [ ] T005 [P] [US1] [task] — Traza a: R-FR0#, O-0# — Archivo(s): [ruta] — Depende de: ninguna
-- [ ] T006 [US1] [task] — Traza a: R-FR0#, O-0# — Archivo(s): [ruta] — Depende de: T005
-- [ ] T007 [US1] [CIERRE] Verificar cierre de US1 (ver Closure Rule)
+- [ ] T006 [P] [US1] [task] — Traza a: R-FR0#, PL-O0# — Archivo(s): [ruta] — Depende de: ninguna
+- [ ] T007 [US1] [task] — Traza a: R-FR0#, PL-O0# — Archivo(s): [ruta] — Depende de: T006
+- [ ] T008 [US1] [CIERRE] Verificar cierre de US1 (ver Closure Rule)
+
+#### Enmiendas (only once an amendment touches this story after its [CIERRE] closed)
+
+- [ ] T0NN [US1] [ENMIENDA T007] [change] — Enmienda: AM-01 — Traza a: R-AC0#, PL-O0#
+      Validación: [comportamiento observable]; re-recorrer el `Verifica` de T008 (cierre activo)
 
 **Checkpoint**: US1 funciona y es verificable de forma independiente — primer incremento
 desplegable (MVP).
@@ -120,6 +134,10 @@ This task is not marked `[x]` for producing new code — it is marked `[x]` only
 confirmed nothing was left half-done that would break the system in the state this increment is
 delivered in.
 
+A story has exactly one **active** `[CIERRE]`. Rework that does not change the story's `R-AC` set
+re-walks the active one instead of adding another; a new `[CIERRE]` is created only when the `R-AC`
+set changes, and the old one then gets `Superada por: T0NN (AM-##)`.
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -139,7 +157,7 @@ delivered in.
 
 - Tests (if included) are written first and must fail before implementation.
 - Models before services; services before endpoints; core implementation before integration.
-- `[CIERRE]` is always the last task of the story.
+- The active `[CIERRE]` is the last task of the story, except for later `[ENMIENDA]` tasks.
 
 ## Parallel Example: US1
 
@@ -154,7 +172,7 @@ Task: "T00X [P] [US1] [description]"
 - **MVP first**: Setup + Foundational + US1 only. Stop at US1's checkpoint, validate, deploy/demo.
 - **Incremental delivery**: one story at a time; each one is a working, deployable increment.
 - **Parallel execution strategy**: once Foundational is done, independent user stories may be
-  delegated to separate `task-executor` agents in `spec-kit-execute-tasks` (see `plan-spec-kit.md` §7.7) —
+  delegated to separate `task-executor` agents in `spec-kit-execute-tasks` (see its Phase 3) —
   the story boundary is the primary parallelism unit; task-level `[P]` parallelism within a story
   is a secondary, smaller-grained option.
 
