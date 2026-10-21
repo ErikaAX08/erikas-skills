@@ -285,6 +285,11 @@ artifact only cites it.
 own entries. `tasks.md` traces to `PL-O##` (and to the `R-FR`/`R-AC` it satisfies), never directly
 to a spec `O-##`.
 
+The two operation layers stay linked in both directions: every `PL-O##` cites the spec `O-##` it
+realizes, and every spec `O-##` is realized by at least one `PL-O##` (or covered by a Safe
+Deferral entry). The spec's `O-##` list stays mandatory — it is the REASONS canvas's capability
+view — but never holds file-level steps, so a technical change touches only `PL-O##`.
+
 **Legacy plans**: a `plan.md` generated before this convention defines its decisions and
 operations as `A-D0#`/`O-0#`. A skill reading such a plan resolves those IDs in `plan.md` first and
 only then in `spec.md`, and reports the ambiguity when both define the same ID. Updating a legacy
@@ -329,6 +334,29 @@ contains, what a library actually sends over the wire. Reading the code of such 
 `read`, not `executed`, however carefully it was read. A runtime premise that cannot be executed
 during planning is recorded as `assumption` and gets a probe task (`[SONDA]`, see § Task
 Lifecycle) that runs before any task depending on it.
+
+## Grammar Tokens
+
+The artifacts use a small set of fixed tokens. They are **language-independent keys**: written
+exactly as below whatever language the surrounding prose uses, never translated, and matched
+literally by every skill (and by any script that parses the artifacts). They are in Spanish for
+historical reasons; changing them would break existing artifacts, so they are part of the contract
+instead.
+
+| Token | Where | Meaning |
+| --- | --- | --- |
+| `Traza a:` | task sub-line | Requirement and operation IDs the task satisfies |
+| `Archivo(s):` | task sub-line | Expected files; `nuevo: <path>` for a proposed one, `ninguno` for none |
+| `Depende de:` | task sub-line | Task IDs, or `ninguna` |
+| `Validación:` | task sub-line | Observable criterion that must pass before `[x]` |
+| `Verifica:` | `[CIERRE]` task | Conditions the closure walks |
+| `Enmienda:` | `[ENMIENDA]` task | The `AM-##` the task comes from |
+| `Superada por:` | appended to a closed task | The task (and `AM-##`) that replaced it |
+| `[P]`, `[USn]` | task tags | Parallelizable; owning user story |
+| `[CIERRE]`, `[SONDA]`, `[ENMIENDA T0XX]` | task tags | § Task Lifecycle |
+| `#### Enmiendas` | story phase subsection | Where amendment tasks go after the active `[CIERRE]` |
+| `READY`, `DRAFT — NEEDS CLARIFICATION` | checklist `Status` | Artifact readiness |
+| `N/A — sin constitución` | Constitution Check gates | No constitution exists |
 
 ## Task Lifecycle
 

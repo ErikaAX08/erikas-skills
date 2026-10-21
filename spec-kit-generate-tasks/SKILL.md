@@ -229,7 +229,9 @@ For each `R-US##`, in the order from Phase 1:
       Validación: comando o criterio observable
 ```
 
-`Archivo(s)` is where the work is expected to land, not a fence: touching another file the same
+Field labels and tags (`Traza a:`, `Validación:`, `[CIERRE]`, …) are the fixed Grammar Tokens of
+`artifact-conventions.md`: write them exactly as shown, whatever language the task descriptions
+use. `Archivo(s)` is where the work is expected to land, not a fence: touching another file the same
 `PL-O##` needs does not invalidate the task. Write `Validación` per Rule 15 — for example
 "`npm test -- prelude-block` pasa; `GET /allow-list?phone=…` deja en el log de request el teléfono
 enmascarado (`+52…1234`)", never "el parámetro se llama `now`" or "`main.js` sin cambios".

@@ -28,6 +28,8 @@ vocabulary and mandatory per-story closure checkpoints.
   before every task that depends on it.
 - **`[ENMIENDA T0XX]`**: rework applied through `amendments.md` (`AM-##`); see the Task Lifecycle in
   `spec-kit-shared/artifact-conventions.md`.
+- Field labels and tags are fixed Grammar Tokens (`spec-kit-shared/artifact-conventions.md`) —
+  never translated, even when the task text is in another language.
 - Every task also carries, inline or as a sub-line: `Traza a:` (requirement IDs and the `PL-O##`
   it decomposes), `Archivo(s):` (verified path, or `nuevo: <proposed path>` — expected, not a
   fence), `Depende de:` (task IDs or "ninguna"), `Validación:` (an observable, executable

@@ -160,6 +160,10 @@ otherwise silently corrupt every check that relies on it.
   this isn't an oversight, and `spec.md`'s own status is very likely `DRAFT` over the same root
   cause, which makes this a confirmed gap, not a candidate for a coverage nudge.
 - Every `R-AC##` has ≥1 `PL-O##` or explicit verification path → otherwise `ADVISORY`.
+- The two operation layers link both ways (`artifact-conventions.md` § Stable ID Namespaces): every
+  `PL-O##` cites ≥1 spec `O-##`, and every spec `O-##` is realized by ≥1 `PL-O##` or covered by a
+  Safe Deferral entry → otherwise `ADVISORY`: "unlinked operation" (a legacy plan's `O-0#` entries
+  are exempt).
 - Every `S-SG##` (Safeguard) has ≥1 downstream verification anywhere in `tasks.md` (if it exists;
   otherwise checked against `plan.md`'s stated Validation/Constraints) → otherwise `BLOCKING`
   (Rule 5).
