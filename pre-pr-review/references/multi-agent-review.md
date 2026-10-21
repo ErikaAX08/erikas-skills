@@ -81,7 +81,8 @@ The packet contains:
 1. Repository path, entry point (A/B), base ref with confirmation status, merge-base SHA, and
    head SHA (from `scripts/collect-diff.sh`).
 2. Declared objective, acceptance criteria, and out-of-scope items from Phase 1, each with its
-   source (issue, PR description, commit). Write `no context` when none exists.
+   source (issue, PR description, commit, or the caller's declared objective with its IDs). Write
+   `no context` when none exists.
 3. The full changed-file inventory with status and hand-reviewed/noise classification, plus
    local changes that are not in any commit, marked in scope (entry point A) or excluded (B).
 4. Known entry points and callers already found in Phase 2.
@@ -89,7 +90,7 @@ The packet contains:
 6. Path to a base-branch worktree, if one was created.
 
 Write the packet fresh for every review from its sources (the diff, Phase 1's intent sources, and
-the current spec artifacts when the change is spec-driven); never append to a packet from an
+the caller's current declared objective when there is one); never append to a packet from an
 earlier review of the same branch — a packet that accumulates sections across reviews hides
 which items still apply.
 

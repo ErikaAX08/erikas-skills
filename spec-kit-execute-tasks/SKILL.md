@@ -268,9 +268,13 @@ a previous gate's packet or notes:
 - **Already decided**: `amendments.md` entries with `Layer: none`, so an accepted risk is not
   re-raised as new.
 
-Pass this to `pre-pr-review` as the declared objective (it is a governing spec in that skill's
-Phase 1 intent precedence). Regenerating it each time keeps it as long as the stories under review
-need, not as long as the history of previous gates.
+Pass this to `pre-pr-review` in the shape of its declared-objective contract
+(`pre-pr-review/assets/declared-objective.md`): `R-US##` → Objective, `R-AC##` → Acceptance
+criteria, `S-SG##`/`E-I##` → Invariants and boundaries, the channel table rows → Sensitive data by
+channel, `PL-D##` with its level → Technical decisions under test, out-of-scope items → Out of
+scope, `Layer: none` amendments → Already decided. `pre-pr-review` knows nothing about spec-kit;
+this mapping is the only coupling, and it lives here. Regenerating it each time keeps it as long as
+the stories under review need, not as long as the history of previous gates.
 
 ## Review Verdict Handling
 
