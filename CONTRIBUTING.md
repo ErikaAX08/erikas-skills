@@ -9,7 +9,7 @@
 ```bash
 pnpm install
 pnpm run validate          # frontmatter + synchronized versions + Spec Kit cross-references
-pnpm run test:spec-kit     # Spec Kit script tests (fingerprint, lint, reference check), also run in CI
+pnpm run test:spec-kit     # Spec Kit script tests (fingerprint, lint, run log, reference check), also run in CI
 pnpm run sync:versions     # if you change the version in the root
 pnpm pack --dry-run        # inspect tarball contents
 npx erikas-skills install --dry-run --target claude

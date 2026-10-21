@@ -52,10 +52,12 @@ explicit path, that explicit path wins.
 
 ```json
 {
-  "feature_numbering": "timestamp" | "sequential"
+  "feature_numbering": "timestamp" | "sequential",
+  "run_log": "on" | "off"
 }
 ```
 
+`run_log` (default `on`) turns the § Run Log off for the whole project when set to `off`.
 `timestamp` → `YYYYMMDD-HHMMSS` feature directory names. `sequential` (default when absent) → next
 three-digit number under `.speckit/specs/`. A deprecated `branch_numbering` key is honored with a warning if
 `feature_numbering` is absent — see `spec-kit-generate-spec` Phase 5.
@@ -111,6 +113,7 @@ stays the responsibility of the skill that owns this invocation.
 ├── contracts/                # spec-kit-generate-plan, Phase 1
 ├── tasks.md                 # spec-kit-generate-tasks (checkboxes: spec-kit-execute-tasks)
 ├── amendments.md            # spec-kit-amend-artifacts — see § amendments.md
+├── runs.jsonl               # every skill, append-only — see § Run Log
 ├── state.json                # one entry per generating skill — see § Write Ownership
 └── checklists/
     ├── requirements.md      # spec-kit-generate-spec
@@ -146,6 +149,7 @@ procedure, as that owner — it never gains write access of its own.
 | `state.json` `artifacts.plan` | `spec-kit-generate-plan` | |
 | `state.json` `artifacts.tasks` | `spec-kit-generate-tasks` | Never rewritten for checkbox changes (the hash ignores them) |
 | `state.json` acknowledgment / legacy-hash exceptions | `spec-kit-sync-artifacts` | Only the two exceptions in `spec-kit-sync-artifacts` § Writing `state.json` |
+| `runs.jsonl` (feature) and `.speckit/runs.jsonl` (project) | Every skill, for its own run only | Append-only through `log-event.mjs` and the scripts' `--log`; no line is ever edited or removed (§ Run Log) |
 
 ### `state.json`
 
@@ -478,6 +482,49 @@ Tags:
   (§ Evidence Levels). It runs before every task that depends on the premise; if the probe refutes
   the premise, execution stops and the change goes to `spec-kit-amend-artifacts` at the `plan`
   layer.
+
+## Run Log
+
+Every skill invocation leaves an append-only trace of what it did and **why**, so the kit's behavior
+can be measured across runs and improved: which checks fail repeatedly, which decisions were later
+reversed, where a premise was wrong. It is observability, not a second source of truth — artifacts
+stay authoritative, and nothing reads the log to decide what to do.
+
+**Where**: `.speckit/specs/<feature>/runs.jsonl` for a feature's runs; `.speckit/runs.jsonl` for
+project-wide runs (`spec-kit-establish-constitution`). One JSON object per line, written only with
+`spec-kit-shared/scripts/log-event.mjs` (or a script's `--log`), never by hand. Off for the whole
+project when `init-options.json` has `"run_log": "off"`; the commands then succeed and write nothing.
+
+**Event** (`v` 1): `{ "v": 1, "ts": "<UTC>", "run": "<run id>", "skill": "<skill>", "event": "<type>", "data": { … } }`
+
+| Event | Required `data` | Record it when |
+| --- | --- | --- |
+| `run.start` | `mode` (plus `inputs`, `trigger` when known) | First thing, after resolving the target. Prints the `RUN_ID` every later call passes as `--run` |
+| `phase` | `name`, `outcome` (`done` / `skipped` / `stopped`) | A phase is skipped or stops the run (completed phases need no event) |
+| `decision` | `kind`, `value`, `rationale` (plus `ids`, `evidence`) | The skill chooses between alternatives: kinds `readiness`, `drift`, `layer`, `escalation`, `verdict-route`, `severity`, `parallelism`, `probe`, `closure`, `scope`, `evidence`, `other` |
+| `check` | `tool`, `exit` | Written by `lint-artifacts.mjs` / `fingerprint.mjs --state` themselves with `--log`; by the skill for a test, probe, or review it ran |
+| `finding` | `origin`, `severity`, `summary` (plus `id`, `ids`, `status`) | A review or analysis reports a finding the skill acts on |
+| `artifact` | `path`, `action` | Written by `fingerprint.mjs --record --log`; by the skill for other artifact writes |
+| `user` | `kind` (`question` / `decision` / `confirmation` / `override`), `summary` | The user is asked something or decides something |
+| `deviation` | `rule`, `reason` (plus `approved_by`) | A non-negotiable rule is not followed — executing a draft, accepting a known gap — and who approved it |
+| `run.end` | `status` (`done` / `stopped` / `failed`) (plus `reason`, `next`) | Last thing, including when the run stops early |
+
+A `decision`'s `rationale` is one or two sentences in the skill's own words, citing the IDs that
+drove it — that is what makes the reasoning reviewable later. Record decisions, not narration.
+
+**Privacy**: the log holds IDs, counts, commands, and short rationales — never artifact text, code,
+secrets, or personal data. `log-event.mjs` masks long digit runs (phone numbers), e-mail addresses,
+and token shapes before writing; it is a backstop, not permission to paste sensitive values.
+
+**Reading it**: `node spec-kit-shared/scripts/run-report.mjs <feature-dir | .speckit>` summarizes the
+log into runs per skill, why runs stopped, decisions by kind, recurring BLOCKING lint codes,
+findings, artifact versions, amendments, user interactions, rule deviations, a timeline, and
+**signals** — thresholds that point at the skill or rule to improve (spec churn, spec defects found
+only at review, refuted premises, recurring BLOCKING codes, repeated drift stops, deviations, runs
+left open). It is the input for a retrospective and for deciding what to change in the kit next.
+
+Commit `runs.jsonl` with the feature when its history should travel with the artifacts (it is the
+evidence a retrospective cites), or ignore it in version control; the kit works either way.
 
 ## Scoped Validation
 
