@@ -364,6 +364,11 @@ Written by `spec-kit-amend-artifacts` (entries) and `spec-kit-execute-tasks` (st
 re-walk results only). One entry per decided change applied after the artifacts were generated —
 so no decision lives only in chat, and so every amendment task cites a reason.
 
+The entry is a **write-ahead record**: it is written with `Status: planned` right after the
+amendment plan is confirmed and **before** any artifact is edited, then updated after each layer
+validates. If an amendment stops halfway, the entry says what was decided, which layers are done,
+and which artifact hashes it started from — enough to resume it or to undo it without guessing.
+
 ```markdown
 # Amendments: [Feature Name]
 
@@ -375,9 +380,23 @@ so no decision lives only in chat, and so every amendment task cites a reason.
 - **Layer**: spec | plan | tasks | none (accepted as-is, no artifact change)
 - **IDs changed**: [R-AC06, PL-D07, T046 …]
 - **Closed tasks affected**: [T018 → Superada por T050 | T009 re-walked | none]
+- **Base hashes**: spec [sha256:…] · plan [sha256:…] · tasks [sha256:…] — `state.json` values when the entry was written
+- **Layers done**: [spec, plan | none yet]
+- **Stopped at**: [only when Status is stopped: layer — failed validation item]
 - **Closure re-walk**: [T052 [CIERRE] re-walked <date>: holds | fails: …]
-- **Status**: applied | executed | verified
+- **Status**: planned | applied | stopped | escalated | accepted | abandoned | executed | verified
 ```
 
+| Status | Set by | Meaning |
+| --- | --- | --- |
+| `planned` | `spec-kit-amend-artifacts` | Confirmed; no layer applied yet (write-ahead) |
+| `stopped` | `spec-kit-amend-artifacts` | A layer failed validation; `Layers done` and `Stopped at` say where |
+| `applied` | `spec-kit-amend-artifacts` | Every layer validated and `state.json` refreshed by each owner |
+| `escalated` | `spec-kit-amend-artifacts` | Handed to the regular chain (structural change) |
+| `accepted` | `spec-kit-amend-artifacts` | `Layer: none` — a `🟡` accepted as-is; nothing to apply or execute |
+| `abandoned` | `spec-kit-amend-artifacts` | An open entry undone: touched artifacts restored to their base hashes; the decision stays recorded |
+| `executed` | `spec-kit-execute-tasks` | Amendment tasks ran and the closure re-walk was recorded |
+| `verified` | `spec-kit-execute-tasks` | A review gate covering the executed amendment returned `approve` or `approve with conditions` with every `🟡` decided |
+
 `Layer: none` is how a `🟡` accepted without changing anything is recorded: the decision and its
-owner are written down, and no artifact or hash changes.
+owner are written down with `Status: accepted`, and no artifact or hash changes.
