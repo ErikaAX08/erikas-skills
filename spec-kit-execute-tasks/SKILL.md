@@ -43,7 +43,7 @@ passed — not when the code looks right. A story is done when its checkpoint ho
 ## Non-Negotiable Rules
 
 1. **Do not invent facts.** Never write a field, endpoint, signature, config key, or library call
-   without reading its actual definition first — apply `verify-before-implement`'s matching §6
+   without reading its actual definition first — apply the matching `verify-before-implement` §6
    template for the category of change (contract, model, type, endpoint integration, state/enum,
    config, library API, CLI, runtime behavior) before writing the corresponding code.
 2. **Preserve task and plan intent.** Implement exactly what a task describes. If the real code
@@ -77,7 +77,8 @@ passed — not when the code looks right. A story is done when its checkpoint ho
     in addition, never instead.
 11. **Parallelism is a capability, applied only when genuinely safe** — independent stories or
     `[P]` tasks with no shared file/state. Default to sequential execution; do not force
-    parallelism where dependencies or shared files make it unsafe.
+    parallelism where dependencies or shared files make it unsafe. Parallel stories each run in
+    their own git worktree and are integrated and re-validated one at a time (Phase 3).
 12. **Every `task-executor` subagent gets scoped context** — its task or story, plus the relevant
     `plan.md`/`spec.md` excerpts — never the full parent conversation history.
 13. **Never claim something was tested, verified, or committed when it wasn't actually done.**
@@ -213,17 +214,41 @@ Applied only where Rule 11's safety condition genuinely holds:
 1. **Between stories** (primary parallelism unit): once Foundational's checkpoint holds,
    independent story phases — no integration declared between them in `tasks.md`, no shared files
    — may be delegated to separate `task-executor` subagents in parallel, each scoped (Rule 12) to
-   its own story plus the relevant `plan.md`/`spec.md` excerpts.
+   its own story plus the relevant `plan.md`/`spec.md` excerpts, and each in **its own git
+   worktree** (§ Isolated Story Worktrees below). Parallel executors never share a working tree.
 2. **Within a story** (secondary, finer-grained): `[P]`-tagged tasks with no cross-dependency and
-   no shared file may be parallelized the same way, delegated or not.
+   no shared file may be parallelized inside that story's worktree; their validations then run one
+   after another, never concurrently, so one test run cannot disturb another.
 3. Tasks that share a file, or have a real dependency between them, always execute sequentially in
    the same thread — parallelism is never forced onto a boundary that isn't actually independent.
-4. After parallel branches complete, verify there is no cross-branch conflict (e.g. two branches
-   editing overlapping code unexpectedly) before treating the batch as done.
-5. A `task-executor` implements and runs its tasks' validations, then reports results; it never
+4. A `task-executor` implements and runs its tasks' validations, then reports results; it never
    writes `tasks.md`, `amendments.md`, or a commit. This orchestrating run is the only writer of
    checkbox state, amendment status, and commits (`artifact-conventions.md` § Write Ownership), and
-   marks `[x]` only from a reported, observed pass.
+   marks `[x]` only from a pass it observed itself in the integrated tree (step 4 of the procedure
+   below).
+
+#### Isolated Story Worktrees
+
+The orchestrating run manages the worktrees with plain git, so the procedure is the same on every
+host (it does not depend on a platform-specific subagent isolation setting):
+
+1. **Clean base.** The orchestrating branch has no uncommitted changes to files the stories may
+   touch — commit them (Phase 5) or stop. Every worktree starts from the same `HEAD`.
+2. **One worktree per story**, outside the repository (scratchpad or temp directory):
+   `git worktree add <scratch>/speckit-<feature>-<USn> -b speckit/<feature>/<USn> HEAD`. The
+   executor receives that path and works only inside it; `.speckit/` stays with the orchestrator
+   and is never edited in a worktree.
+3. **Integrate one story at a time.** For each finished story: review the worktree's diff against
+   the executor's report, commit it inside the worktree with a `git-commits` message, then
+   `git cherry-pick` that commit onto the orchestrating branch. A conflict means the stories were
+   not independent after all: `git cherry-pick --abort`, report it, and re-run that story
+   sequentially on the integrated tree — never resolve a cross-story conflict by guessing.
+4. **Validate the integrated tree.** After every parallel story is integrated, re-run each
+   integrated task's `Validación` in the orchestrating tree. Only those passes count: mark `[x]`
+   from them, then walk each story's active `[CIERRE]` (Phase 4). A pass seen only inside a worktree
+   is provisional.
+5. **Clean up.** Once a story's commit is on the orchestrating branch, `git worktree remove` its
+   worktree and delete its temporary branch. Report every worktree created and its outcome.
 
 ### Phase 4 — Story Closure
 
@@ -268,9 +293,13 @@ a previous gate's packet or notes:
 - **Already decided**: `amendments.md` entries with `Layer: none`, so an accepted risk is not
   re-raised as new.
 
-Pass this to `pre-pr-review` as the declared objective (it is a governing spec in that skill's
-Phase 1 intent precedence). Regenerating it each time keeps it as long as the stories under review
-need, not as long as the history of previous gates.
+Pass this to `pre-pr-review` in the shape of its declared-objective contract
+(`pre-pr-review/assets/declared-objective.md`): `R-US##` → Objective, `R-AC##` → Acceptance
+criteria, `S-SG##`/`E-I##` → Invariants and boundaries, the channel table rows → Sensitive data by
+channel, `PL-D##` with its level → Technical decisions under test, out-of-scope items → Out of
+scope, `Layer: none` amendments → Already decided. `pre-pr-review` knows nothing about spec-kit;
+this mapping is the only coupling, and it lives here. Regenerating it each time keeps it as long as
+the stories under review need, not as long as the history of previous gates.
 
 ## Review Verdict Handling
 
@@ -343,7 +372,9 @@ Report:
 - `TASKS_COMPLETED` / `TASKS_SKIPPED` (already closed) / `TASKS_FAILED`: counts, with IDs for the
   latter two.
 - `STORIES_CLOSED`: which story checkpoints were confirmed held this run.
-- `PARALLELISM_USED`: `none` / `between-stories` / `within-story`, with which stories/tasks.
+- `PARALLELISM_USED`: `none` / `between-stories` / `within-story`, with which stories/tasks, each
+  worktree created, how it was integrated (cherry-picked / conflict → re-run sequentially), and
+  confirmation that it was removed.
 - `COMMITS`: list of commits made, each with its `git-commits`-formatted message.
 - `PRE_PR_REVIEW`: every gate run (story or final), its verdict key, how each `🔴`/`🟡`/`X` was
   routed (amendment ID or `Layer: none`), and any Safe Deferral misclassification or refuted
@@ -371,6 +402,8 @@ Report:
 - [ ] `pre-pr-review` ran over the full accumulated diff, unconditionally, with a review context
       regenerated from the current artifacts, and its verdict was matched literally and routed.
 - [ ] Every `[SONDA]` ran before its dependent tasks; no task was built on a refuted premise.
+- [ ] Every parallel story ran in its own worktree, was integrated one at a time, and its tasks
+      were marked `[x]` only from validations re-run in the integrated tree; no worktree is left.
 - [ ] Every amendment task's story had its active `[CIERRE]` re-walked and recorded in
       `amendments.md`.
 - [ ] Any `pre-pr-review` finding suggesting a Safe Deferral misclassification was reported as

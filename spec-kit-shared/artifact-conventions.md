@@ -145,7 +145,7 @@ procedure, as that owner — it never gains write access of its own.
 | `state.json` `artifacts.spec`, `source_documents` | `spec-kit-generate-spec` | |
 | `state.json` `artifacts.plan` | `spec-kit-generate-plan` | |
 | `state.json` `artifacts.tasks` | `spec-kit-generate-tasks` | Never rewritten for checkbox changes (the hash ignores them) |
-| `state.json` acknowledgment / legacy-hash exceptions | `spec-kit-sync-artifacts` | Only the two exceptions in its § Writing `state.json` |
+| `state.json` acknowledgment / legacy-hash exceptions | `spec-kit-sync-artifacts` | Only the two exceptions in `spec-kit-sync-artifacts` § Writing `state.json` |
 
 ### `state.json`
 
@@ -478,6 +478,23 @@ Tags:
   (§ Evidence Levels). It runs before every task that depends on the premise; if the probe refutes
   the premise, execution stops and the change goes to `spec-kit-amend-artifacts` at the `plan`
   layer.
+
+## Scoped Validation
+
+When `spec-kit-amend-artifacts` runs a generating skill's update procedure for a bounded amendment,
+that procedure re-validates only this scope instead of its whole checklist — the one exception to
+"re-run the full checklist regardless of how small the change was". It is defined here once so the
+three procedures cannot drift apart.
+
+| Artifact | Re-validate |
+| --- | --- |
+| `spec.md` | Checklist items touching the changed IDs; Traceability; the terminal-state check and the channel check (`spec-kit-generate-spec` Phase 7) |
+| `plan.md` | Checklist items touching the changed IDs; Evidence; Traceability; Governance |
+| `tasks.md` | Checklist items touching the changed tasks and stories; Traceability; Governance |
+| all | `lint-artifacts.mjs` reports no `BLOCKING` finding (an open entry for this same amendment, L19, excepted until it is closed) |
+
+Record `Scoped validation (AM-##)` in the checklist's Notes, listing the items re-validated. A
+scoped validation never turns a `DRAFT` checklist into `READY`: that still takes a full run.
 
 ## `amendments.md`
 

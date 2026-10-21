@@ -8,8 +8,8 @@
 
 ```bash
 pnpm install
-pnpm run validate          # frontmatter + synchronized versions
-pnpm run test:spec-kit     # Spec Kit script tests (fingerprint + lint), also run in CI
+pnpm run validate          # frontmatter + synchronized versions + Spec Kit cross-references
+pnpm run test:spec-kit     # Spec Kit script tests (fingerprint, lint, reference check), also run in CI
 pnpm run sync:versions     # if you change the version in the root
 pnpm pack --dry-run        # inspect tarball contents
 npx erikas-skills install --dry-run --target claude
@@ -19,6 +19,7 @@ npx erikas-skills install --dry-run --target claude
 
 - One skill = one top-level folder with `SKILL.md` (frontmatter `name`/`description`) + `package.json` (`@erikaax/<folder>`).
 - Spec Kit is atomic: do not publish a single skill from the kit. Use `@erikaax/spec-kit` (includes every kit skill + `spec-kit-shared`). The kit's skill list lives only in `speckit.skills` of `spec-kit/package.json`; installer, validator, and packaging scripts read it from there.
+- Spec Kit documents cite each other by file path or `` `file` § Heading `` (a bare `§ Heading` means the same file); `pnpm run validate` fails when a cited path or heading no longer exists, so rename both together.
 - A change to Spec Kit's artifact grammar or mechanical checks updates `spec-kit-shared/artifact-conventions.md`, the scripts, and their tests together; behavior the scripts cannot check gets a case in that skill's `evals/` (see `spec-kit-shared/evals/README.md`).
 - If you change `version` in the root `package.json`, run `pnpm run sync:versions` to propagate it to all 14 workspaces.
 - Commits and PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/).
