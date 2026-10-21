@@ -109,6 +109,12 @@ order to resolve a conflict; if the order itself doesn't resolve it, that's a ge
    source of all for anything specific (a field name, a status value, a library's function
    signature) — fine for guessing where to _look_, never sufficient as the basis for what to _write_.
 
+This hierarchy ranks sources for **shape** — names, signatures, fields, values. For **runtime
+behavior** — _when_, _in what order_, _how many times_, _how long_, or _with what side effect_
+something happens — reading #1 or #2 is still only a reading: the authoritative evidence is the
+behavior observed by running it (a scratch probe or an executed test), and a claim of that kind is
+not verified until it ran (§6.9).
+
 When two sources at different levels disagree, the higher one wins _and the disagreement itself is
 worth reporting_ — a stale README, an out-of-date test, or a contract the code no longer matches are
 all real findings, not just noise to route around.
@@ -193,6 +199,9 @@ against it — never fill in from memory or from what "sounds right."
       commonly change across major versions, and memory doesn't carry a version number with it
 - [ ] Don't assume an argument name, default value, or return shape from a different, more-familiar
       version of the same library
+- [ ] If the change relies on _when/in what order/how often_ the library does something (retries,
+      timeouts, when a logger or serializer captures its input, middleware order, what an error
+      object contains), run a probe — reading its source is not verification of behavior (§6.9)
 
 **If the change reads or writes a config value / environment variable**:
 
@@ -456,6 +465,30 @@ only fails at runtime with an obscure error.
 
 **Behavior Assumption**: [what you're relying on the flag to do, and how you confirmed it]
 ```
+
+### 6.9 Runtime Behavior Verification
+
+**Before relying on when, in what order, how many times, how long, or with what side effect a
+dependency (or the project's own framework wiring) does something** — retries and their delays,
+`retry-after` handling, timeouts, when a logger/serializer captures its input, middleware and
+hook order, transaction/connection lifecycle, the exact contents of an error object:
+
+```markdown
+## Runtime Behavior Verification
+
+**Claim**: [the exact behavior relied on, e.g. "pino-http serializes req on finish, not on entry"]
+**Package & Installed Version**: [from the lockfile]
+**Probe**: [command run — a scratch script against the installed package, an existing test, a
+local request — kept outside the repo unless it becomes a real test]
+**Observed Output**: [the relevant lines, verbatim]
+**Verification Level**: executed | read (not verified — say why it could not be run)
+**Deviations From Assumption**: [none | what actually happens]
+```
+
+A probe is usually a dozen lines that import the installed package and print what it does. It is
+almost always cheaper than the rework a wrong premise causes once a plan or an implementation is
+built on top of it. If it genuinely cannot run (needs credentials, a shared environment), record
+the claim as an explicit assumption (§7) — never as verified.
 
 ---
 
@@ -794,7 +827,12 @@ proactively while implementing, not a historical curiosity.
 11. **Treating a schema/type migration as complete once it compiles**, with no consumer actually
     exercised end-to-end against the new shape — track "no real caller has verified this yet" as an
     explicit, visible gap (§7), not an implicit assumption that it's fine.
-12. **Format claims not matching what the code actually produces** — e.g. documentation or a comment
+12. **Reading a library's behavior and recording it as verified.** "The SDK retries 3 times with a
+    60 s timeout, so the worst case is ~3 min" read from source, while a `retry-after` header
+    stretches the delay; "the logger serializes the request when the response finishes" read from
+    docs, while the child logger was bound at the start. Both read correctly as code and are wrong
+    as behavior. Run a probe (§6.9).
+13. **Format claims not matching what the code actually produces** — e.g. documentation or a comment
     stating an ID "is a UUID" when the implementation actually emits something else. Either fix the
     code or fix the claim; never leave the mismatch unstated once noticed.
 
@@ -810,6 +848,8 @@ Before marking implementation complete:
 - [ ] All referenced contracts/specs were verified.
 - [ ] No invented fields/endpoints/entities/config keys/library arguments.
 - [ ] All library/dependency calls were checked against the actually-installed version.
+- [ ] Every runtime-behavior premise (timing, order, retries, side effects) was observed by running
+      a probe or test, or is documented as an assumption (§6.9).
 - [ ] All assumptions are explicitly documented (§7), none left silently un-flagged.
 - [ ] All conflicts were resolved with user input (§9), not silently picked.
 - [ ] Implementation matches actual codebase patterns.
