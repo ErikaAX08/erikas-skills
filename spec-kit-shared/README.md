@@ -78,6 +78,9 @@ pass, records the decision in amendments.md, then hands off to spec-kit-execute-
   Enforcement) — never re-guessed from scratch each time.
 - **Cross-platform by construction.** Any support agent a skill materializes gets a validated Kiro
   CLI **and** Claude Code definition — see `spec-kit-shared/agent-portability.md`.
+- **Load on demand.** Each skill's `SKILL.md` holds its workflow and rules; templates and the
+  update procedures live in its `references/` folder and are read only when that step runs —
+  so `spec-kit-amend-artifacts` reads three short update procedures, not three whole skills.
 - **No duplicated rules.** Anything more than one skill needs — the agent portability contract, the
   `.speckit/` file layout, the hashing/fingerprint convention — lives once in `spec-kit-shared/`
   and is referenced, not copy-pasted.

@@ -57,10 +57,11 @@ or a short description of a change the user already decided.
 2. **Lowest affected layer, propagating downward only.** Classify per
    `artifact-conventions.md` § Layer Ownership. A change that touches no requirement, entity,
    invariant, safeguard, or scope does not touch `spec.md`.
-3. **Delegate the edits.** Apply `spec.md` changes through `spec-kit-generate-spec`'s "Updating an
-   Existing Specification", `plan.md` changes through `spec-kit-generate-plan`'s "Updating an
-   Existing Plan", and `tasks.md` changes through `spec-kit-generate-tasks`'s "Updating an Existing
-   Task List" — read each procedure and follow it inline. Never reimplement their rules here.
+3. **Delegate the edits.** Apply each layer through its owner's update procedure —
+   `spec-kit-generate-spec/references/updating.md`, `spec-kit-generate-plan/references/updating.md`,
+   `spec-kit-generate-tasks/references/updating.md` — reading only that file (and the checklist
+   template it validates against), not the whole skill, and following it inline. Never
+   reimplement their rules here.
 4. **Never edit a closed task.** Rework follows the Task Lifecycle in `artifact-conventions.md`:
    `[ENMIENDA T0XX]` tasks, a `Superada por:` line only when a task is replaced, and a new
    `[CIERRE]` only when the story's `R-AC` set changes.
@@ -227,15 +228,15 @@ For each layer the change touches, highest first. Each owning procedure refreshe
 `state.json` entry after it validates — the update procedures already do so, and this skill never
 writes `state.json` itself (`artifact-conventions.md` § Write Ownership):
 
-1. **`spec.md`** — follow `spec-kit-generate-spec` § Updating an Existing Specification. Record the
+1. **`spec.md`** — follow `spec-kit-generate-spec/references/updating.md`. Record the
    decision as `R-D##` and add an Evidence Catalog row for the decision text (fingerprint: SHA-256 of
    the exact text, per the convention). Validate with that skill's scoped validation for
    amendments.
-2. **`plan.md`** — follow `spec-kit-generate-plan` § Updating an Existing Plan. Record a technical
+2. **`plan.md`** — follow `spec-kit-generate-plan/references/updating.md`. Record a technical
    decision as a `PL-D##` with its evidence level (Rule 7). If the spec changed but the plan needs
    no edit, say so explicitly ("plan reviewed for AM-NN: no change") — the plan's
    `based_on_spec_hash` is refreshed only after that review. Validate with the scoped validation.
-3. **`tasks.md`** — follow `spec-kit-generate-tasks` § Updating an Existing Task List and the Task
+3. **`tasks.md`** — follow `spec-kit-generate-tasks/references/updating.md` and the Task
    Lifecycle (Rule 4). Every new task carries `Enmienda: AM-NN`. Validate with the scoped
    validation.
 

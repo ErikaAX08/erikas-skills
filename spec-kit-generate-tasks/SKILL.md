@@ -306,89 +306,15 @@ Before validating the checklist:
 
 ## Validate and Iterate
 
-Create `checklists/tasks-quality.md`:
-
-```markdown
-# Tasks Quality Checklist: [Feature Name]
-
-**Purpose**: Validate internal consistency and traceability of tasks.md before execution
-**Tasks**: [Relative link to tasks.md]
-**Status**: [READY / DRAFT — NEEDS CLARIFICATION]
-
-## Structure
-
-- [ ] Phases follow Setup → Foundational → one phase per R-US## (Priority order) → Polish
-- [ ] No task sits outside this structure (no ad hoc "misc" phase)
-- [ ] Task IDs are sequential and unique
-- [ ] An empty Setup/Foundational phase states a reason instead of a filler task
-
-## Task Quality
-
-- [ ] Every task has Traza a / Archivo(s) / Depende de / Validación
-- [ ] No task uses a vague description without a concrete action and file
-- [ ] Every file path is verified, or explicitly marked "nuevo: <proposed path>"
-- [ ] Every Validación is observable behavior — no parameter/variable names, hunk or line counts, or "file X unchanged" (Rule 15)
-- [ ] Every `assumption` runtime premise in plan.md has a `[SONDA]` placed before its dependent tasks
-
-## Closure Rule
-
-- [ ] Every user-story phase has exactly one active [CIERRE] task (superseded ones carry `Superada por:`)
-- [ ] Every [CIERRE] task's Verifica block covers dangling references, half-wired paths, and R-AC coverage
-- [ ] Foundational's checkpoint is present if it gates all stories
-
-## Safe Deferral Consistency
-
-- [ ] No earlier-story task invokes a later story's Dormant-deferred operation
-- [ ] Deferred operations from plan.md's Safe Deferral table are each covered by exactly one later task/story
-
-## Traceability
-
-- [ ] Every PL-O## from plan.md appears in at least one task
-- [ ] Every task's R-FR##/R-AC## citation exists in spec.md
-
-## Governance
-
-- [ ] tasks.md contains no TODOs, placeholders, or unresolved template labels
-- [ ] state.json was created/updated with `fingerprint.mjs --record <feature-dir> tasks` (content hash, based_on_plan_hash, sections)
-- [ ] `lint-artifacts.mjs <feature-dir>` reports no BLOCKING finding (fields, dependencies, closures, probes, amendment links)
-
-## Agent Portability
-
-- [ ] If a task-decomposer (or other agent) was generated, both Kiro and Claude definitions exist and validated per spec-kit-shared/agent-portability.md, or AGENTS: none is reported
-
-## Notes
-
-[Specific failures, evidence, and remaining decisions]
-```
+Create `checklists/tasks-quality.md` from the template in `references/tasks-quality-checklist.md`.
 
 Validate item by item, fix non-blocking failures, re-run up to three iterations. If a blocking gap
 remains, set `STATUS` to `DRAFT — NEEDS CLARIFICATION`. Set `READY` only when every item passes.
 
 ## Updating an Existing Task List
 
-When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected drift):
-
-1. Identify affected `PL-O##`/story IDs from the diff.
-2. Propagate only through the story phases those IDs touch — add/modify/remove tasks within the
-   affected story phase(s); do not regenerate unrelated stories.
-3. **Never silently modify a task already marked `[x]`.** If a completed task is affected by the
-   change, flag it explicitly as "closed task affected by plan change — needs review" rather than
-   editing or unmarking it automatically. This is the same non-negotiable `spec-kit-sync-artifacts` carries
-   in the design doc: work already done on an assumption that just changed is a risk to surface,
-   not silently paper over. Once the rework is decided, apply the Task Lifecycle (Rule 17): add an
-   `[ENMIENDA T0XX]` task under the story's `#### Enmiendas`, append `Superada por:` to `T0XX` only
-   if the new task replaces it, and create a new `[CIERRE]` only if the story's `R-AC` set
-   changed — otherwise the amendment's `Validación` re-walks the active one.
-4. Preserve task IDs where semantics are unchanged; append new IDs (continuing the sequence) for
-   new tasks — never renumber existing tasks.
-5. Re-verify the affected story's `[CIERRE]` task still covers the right `R-AC##` set.
-6. Update `state.json`'s `artifacts.tasks.content_hash` and `based_on_plan_hash` only after the
-   targeted regeneration validates. Write it with `node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> tasks`, which applies `artifact-conventions.md` § Schema Versions and Migrations — it refuses a state newer than the contract (exit 3: stop) and migrates a version-1 file, reporting `SCHEMA_MIGRATED: 1→2`.
-7. Re-run the full `tasks-quality.md` checklist regardless of how small the change was — except
-   when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
-   the items that touch the changed tasks and stories plus Traceability and Governance, and record
-   `Scoped validation (AM-##)` in the checklist Notes.
-8. Summarize exactly which task phases changed and why.
+When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected drift), or a
+tasks-layer change was decided, follow `references/updating.md` completely.
 
 ## Pre-Execution Extension Hooks
 
