@@ -158,7 +158,7 @@ exceptions:
 {
   "schema_version": 2,
   "artifacts": {
-    "spec": { "path": "spec.md", "content_hash": "sha256:...", "updated_at": "2026-07-10T10:00:00Z" },
+    "spec": { "path": "spec.md", "content_hash": "sha256:...", "sections": { "R-AC01": "sha256:...", "...": "..." }, "updated_at": "2026-07-10T10:00:00Z" },
     "plan": { "path": "plan.md", "content_hash": "sha256:...", "based_on_spec_hash": "sha256:...", "updated_at": "2026-07-11T09:00:00Z" },
     "tasks": { "path": "tasks.md", "content_hash": "sha256:...", "based_on_plan_hash": "sha256:...", "updated_at": "2026-07-11T15:00:00Z" }
   },
@@ -175,6 +175,10 @@ exceptions:
   artifact" rule below — never a commit SHA, to stay stable regardless of git status). For
   `tasks.md` the hash is **progress-insensitive**: checkbox state is normalized before hashing, so
   `spec-kit-execute-tasks` marking `[x]` never changes it and never needs to rewrite it.
+- `artifacts.<name>.sections` — optional per-ID hashes: one SHA-256 per ID definition block
+  (§ Artifact Grammar), so drift is localized to the IDs that changed instead of "the file
+  changed". Absent (older entries) → localization falls back to a manual diff. Adding it does not
+  change the meaning of existing data, so it needs no schema version bump.
 - `artifacts.plan.based_on_spec_hash` — the `spec.content_hash` value at the moment `plan.md` was
   generated from it. `artifacts.tasks.based_on_plan_hash` is the equivalent for `tasks.md`
   against `plan.md`.
@@ -233,9 +237,16 @@ should. Execution progress is the one edit that is not a content change.
 Compute fingerprints mechanically, never by estimation:
 
 ```bash
-node spec-kit-shared/scripts/fingerprint.mjs <file>...          # sha256:<hex>  <file>
-node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>  # artifact-chain comparison
+node spec-kit-shared/scripts/fingerprint.mjs <file>...                    # sha256:<hex>  <file>
+node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>        # chain comparison, localized by ID
+node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> <spec|plan|tasks>
+                                         # writes that artifact's state.json entry — owner only
 ```
+
+`--record` is how an owning skill writes its own `state.json` entry (§ Write Ownership): it
+computes `content_hash`, the matching `based_on_*` from the current upstream file, and
+`sections`, sets `schema_version` (migrating a version-1 file), and leaves every other entry and
+`source_documents` untouched. A skill never types a hash into `state.json` by hand.
 
 (`spec-kit-shared/` resolves the same way as every other reference to it.) The script applies the `tasks.md` normalization automatically (by basename; `--tasks`/`--raw`
 override). Without Node, the equivalent is
@@ -338,8 +349,8 @@ Lifecycle) that runs before any task depending on it.
 ## Artifact Grammar
 
 What makes text in an artifact a definition, a citation, or a task — the rules
-`spec-kit-shared/scripts/lint-artifacts.mjs` parses. Write artifacts so they hold; anything
-else is prose the script ignores.
+`spec-kit-shared/scripts/lint-artifacts.mjs` and `fingerprint.mjs --sections` parse. Write
+artifacts so they hold; anything else is prose the scripts ignore.
 
 **IDs** match one of the families in § Stable ID Namespaces exactly (`R-AC03`, `E-I01`, `PL-O02`,
 `RS-01`, `AM-04`, `T012`, `[S1]`/`[P2]` in brackets). Template placeholders such as `R-FR0#` are not
