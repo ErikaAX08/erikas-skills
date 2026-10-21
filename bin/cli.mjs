@@ -22,7 +22,7 @@ Commands:
 Install options:
   --skills <list>    Skills to install (comma-separated). Default: all
                      Eg: --skills frontend-architecture,backend-api-standards
-                     Eg: --skills spec-kit (installs the 7 kit skills + spec-kit-shared)
+                     Eg: --skills spec-kit (installs the 8 kit skills + spec-kit-shared)
                      Note: spec-kit is atomic — requesting spec-kit-generate-spec installs the full kit
   --target <t>       Destination: claude | opencode | cursor | windsurf | codex | antigravity | all | dir
                      Default: claude
@@ -36,7 +36,7 @@ Examples:
   pnpm add -D erikas-skills
   npx erikas-skills install
   npx erikas-skills install --skills frontend-architecture,frontend-design --target claude
-  npx erikas-skills install --skills spec-kit --target claude   # full kit (7 skills)
+  npx erikas-skills install --skills spec-kit --target claude   # full kit (8 skills)
   npx erikas-skills install --target opencode --global
   npx erikas-skills install --target dir --dir ./my-skills
   pnpm add @erikaax/frontend-architecture   # single skill

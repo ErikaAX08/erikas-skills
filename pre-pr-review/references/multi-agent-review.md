@@ -88,6 +88,11 @@ The packet contains:
 5. The IDs and text of the invariants from Phase 4 of `SKILL.md` that apply to this diff.
 6. Path to a base-branch worktree, if one was created.
 
+Write the packet fresh for every review from its sources (the diff, Phase 1's intent sources, and
+the current spec artifacts when the change is spec-driven); never append to a packet from an
+earlier review of the same branch — a packet that accumulates sections across reviews hides
+which items still apply.
+
 Store the packet in the scratchpad or temp directory, never in the repository. If the host offers
 no shared filesystem with sub-agents, inline the packet in every brief verbatim.
 Redact secrets, tokens, and PII from the packet even when the diff contains them: cite
@@ -115,7 +120,9 @@ Every candidate a reviewer proposes as `🔴` or `🟡` goes to a verifier befor
 `⚪` candidates are checked by the lead directly.
 
 1. Fill `assets/verifier-brief.md` with the candidate's claim, location, and activating condition
-   only, plus the packet path, SHAs, and language. Do **not** pass the reviewer's reasoning or confidence; the verifier must reconstruct the
+   only, plus the packet path, SHAs, language, and a scratch dir for probes. When the claim depends
+   on runtime behavior of an installed library (SKILL.md Phase 5), say so in the claim so the
+   verifier reproduces it instead of deciding by reading. Do **not** pass the reviewer's reasoning or confidence; the verifier must reconstruct the
    path independently.
 2. Batch related candidates (same file or same flow, same root cause) into one verifier when that keeps each brief small — at most 3 candidates per verifier; never put candidates from different root causes in one verifier only to save agents.
 3. A verifier returns exactly one status per candidate:

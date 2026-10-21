@@ -45,7 +45,7 @@ passed — not when the code looks right. A story is done when its checkpoint ho
 1. **Do not invent facts.** Never write a field, endpoint, signature, config key, or library call
    without reading its actual definition first — apply `verify-before-implement`'s matching §6
    template for the category of change (contract, model, type, endpoint integration, state/enum,
-   config, library API, CLI) before writing the corresponding code.
+   config, library API, CLI, runtime behavior) before writing the corresponding code.
 2. **Preserve task and plan intent.** Implement exactly what a task describes. If the real code
    makes the task's description stop making sense, surface the conflict (§ Handling Unplanned
    Scope) — do not quietly reinterpret the task to fit what's convenient.
@@ -64,7 +64,8 @@ passed — not when the code looks right. A story is done when its checkpoint ho
    before the story's checkpoint is considered held.
 7. **No new scope.** If execution reveals a gap `tasks.md` doesn't cover, stop and report it — do
    not silently add a task, an endpoint, or a field to "make it work." (§ Handling Unplanned
-   Scope.)
+   Scope.) Once the user has decided the change, it enters through `spec-kit-amend-artifacts`,
+   never as an edit made here.
 8. **Respect the project's active architecture/convention skills as binding constraints**, not
    suggestions — `frontend-architecture`, `backend-api-standards`, or an equivalent project-
    specific skill, when active, governs how code is written; this skill does not override them.
@@ -72,7 +73,8 @@ passed — not when the code looks right. A story is done when its checkpoint ho
    skip that skill's conventions because "it's just a small change."
 10. **`pre-pr-review` runs at the end over the accumulated diff, always** — not skipped even when
     every individual task's validation passed. It is the last safety net, not the first place a
-    gap should be discovered (§ Final Gate).
+    gap should be discovered (§ Final Gate). A per-story review (§ Story Review Gate) is allowed
+    in addition, never instead.
 11. **Parallelism is a capability, applied only when genuinely safe** — independent stories or
     `[P]` tasks with no shared file/state. Default to sequential execution; do not force
     parallelism where dependencies or shared files make it unsafe.
@@ -111,7 +113,8 @@ pattern `spec-kit-generate-spec` uses for its Extension Hooks):
 | Project architecture/conventions | `frontend-architecture` / `backend-api-standards` / project-specific equivalent | Whenever the project has one active |
 | Commit messages | `git-commits` | After closing a cohesive group of tasks |
 | Documentation for new code | `code-documentation` | When a task or the project's own convention requires it |
-| Final safety-net review | `pre-pr-review` | Once, at the end, over the accumulated diff (§ Final Gate) |
+| Final safety-net review | `pre-pr-review` | Always at the end over the accumulated diff (§ Final Gate); optionally per story (§ Story Review Gate) |
+| Applying a decided change to spec/plan/tasks | `spec-kit-amend-artifacts` | A review finding, refuted `[SONDA]`, or unplanned scope the user has decided |
 
 ## Input Contract
 
@@ -149,7 +152,13 @@ chain: source documents → `spec.md` → `plan.md` → `tasks.md`. If it report
 2. If `spec-kit-sync-artifacts` flagged any task as "closed work potentially affected," treat that exactly
    as Rule 4 requires — it does not get silently re-executed just because this run touches nearby
    work.
-3. Only proceed once the chain is confirmed consistent (or the user explicitly accepts executing
+3. `tasks.md`'s own hash is progress-insensitive (`spec-kit-shared/artifact-conventions.md`), so
+   the `[x]` marks of previous runs are never drift and need no explanation. A mismatch on
+   `artifacts.tasks.content_hash` means `tasks.md` was edited by hand: stop and recommend
+   `spec-kit-generate-tasks` (update mode) or `spec-kit-amend-artifacts` (if the edit was a decided
+   change) so the edit is validated and recorded. A legacy raw hash that differs only in checkbox
+   state is upgraded per the convention, not treated as drift.
+4. Only proceed once the chain is confirmed consistent (or the user explicitly accepts executing
    against a known, described gap — same discipline as the Readiness Gate above).
 
 ## Workflow
@@ -166,11 +175,12 @@ prerequisites were never done.
 
 For each task, in order:
 
-1. Read its `Traza a` / `Archivo(s)` / `Depende de` / `Validación` line completely.
+1. Read its `Traza a` / `Archivo(s)` / `Depende de` / `Validación` line completely. Skip tasks
+   carrying a `Superada por:` line — they are history, not open work.
 2. **Verify before implementing**: identify which `verify-before-implement` §6 category this task
    falls into (contract, model/schema, type/interface, endpoint integration, state/enum, config,
-   library API, CLI) and complete that category's verification checklist against the actual
-   codebase — not from memory, not from the task description alone.
+   library API, CLI, runtime behavior) and complete that category's verification checklist
+   against the actual codebase — not from memory, not from the task description alone.
 3. If the project has an active architecture/convention skill relevant to this file, follow it as
    a binding constraint (Rule 8).
 4. Implement the change.
@@ -179,6 +189,19 @@ For each task, in order:
 6. Mark the task `[x]` only after step 5 actually passed. If it didn't, do not mark it done — fix
    the implementation and re-run, or stop and report the specific failure if it can't be resolved
    within this task's own scope.
+
+**`[SONDA]` tasks** (probes for a runtime premise recorded as `assumption`): run the probe, cite the
+command and its observed output, and compare it to the premise the plan states.
+
+- Premise confirmed → mark `[x]`; the dependent tasks proceed.
+- Premise refuted → do not mark it `[x]` and do not start any task that depends on it. Stop and
+  report the observed behavior; the change goes to `spec-kit-amend-artifacts` at the `plan` layer.
+  Implementing around a refuted premise is exactly the rework this probe exists to prevent.
+
+**Runtime facts while implementing**: if a task's code depends on *when/in what order/how often* a
+library or framework does something, and neither the plan nor a `[SONDA]` gives `executed`
+evidence for it, run a scratch probe before writing the code (`verify-before-implement` §6.9).
+Never record "verified" for a behavior that was only read.
 
 ### Phase 3 — Parallel Execution (two levels)
 
@@ -197,9 +220,16 @@ Applied only where Rule 11's safety condition genuinely holds:
 
 ### Phase 4 — Story Closure
 
-When all of a story's implementation tasks are `[x]`, execute its `[CIERRE]` task for real (Rule
-6): walk each condition in its `Verifica` block against the actual current state of the code —
-not the task list — and only then mark `[CIERRE]` `[x]` and treat the story's checkpoint as held.
+When all of a story's implementation tasks are `[x]`, execute its **active** `[CIERRE]` task (the
+one without `Superada por:`) for real (Rule 6): walk each condition in its `Verifica` block against
+the actual current state of the code — not the task list — and only then mark `[CIERRE]` `[x]` and
+treat the story's checkpoint as held.
+
+**Amendment tasks after a closed `[CIERRE]`** (`[ENMIENDA T0XX]` under `#### Enmiendas`): after the
+story's last open amendment task passes, re-walk the active `[CIERRE]`'s `Verifica` block against
+the current code. Do not edit or un-check the closed `[CIERRE]`; record the re-walk result in the
+amendment's `Closure re-walk` field in `amendments.md` and set its `Status` to `executed`. A
+failing re-walk means the story's checkpoint no longer holds — stop and report it.
 
 ### Phase 5 — Commit
 
@@ -207,17 +237,60 @@ When a cohesive group of tasks closes (typically: one story, or a clearly self-c
 use `git-commits` for the commit message — this skill never invents its own commit message
 format or convention.
 
+### Phase 6 — Story Review Gate (optional, per story)
+
+A story is a deployable increment, so it may get its own `pre-pr-review` right after its
+`[CIERRE]` holds, over the diff since the previous review gate (or since the merge base for the
+first one). It is optional — run it when the user asks for it or when the story touches auth,
+PII, money, migrations, or an external integration — and it never replaces the Final Gate. Its
+verdict is handled exactly like the Final Gate's (§ Review Verdict Handling).
+
+## Review Context (every `pre-pr-review` this skill runs)
+
+Build the review's objective from the artifacts, freshly, at every gate — never by appending to
+a previous gate's packet or notes:
+
+- **Objective and acceptance criteria**: the reviewed stories' `R-US##` and `R-AC##` from
+  `spec.md`, cited by ID.
+- **Invariants and boundaries**: every `S-SG##` and `E-I##` the reviewed stories touch, plus the
+  spec's sensitive-data-per-channel table rows for them.
+- **Technical decisions under test**: the current `PL-D##` entries those stories rely on, each
+  with its evidence level (`executed`/`read`/`assumption`). Flag every `read` or `assumption`
+  runtime premise so the reviewers and verifiers know it needs an executed probe.
+- **Out of scope**: `spec.md` Out of Scope, plus later stories not yet implemented.
+- **Already decided**: `amendments.md` entries with `Layer: none`, so an accepted risk is not
+  re-raised as new.
+
+Pass this to `pre-pr-review` as the declared objective (it is a governing spec in that skill's
+Phase 1 intent precedence). Regenerating it each time keeps it as long as the stories under review
+need, not as long as the history of previous gates.
+
+## Review Verdict Handling
+
+`pre-pr-review` emits exactly one of these verdict keys, byte-identical in every language (only
+`X` varies) — match them literally:
+
+| Verdict | What this skill does |
+| --- | --- |
+| `approve` | The gate passes. |
+| `approve with conditions` | Each `🟡` needs a recorded decision before the gate counts as passed. Present the `🟡` items together; for each, the user either accepts it as-is (→ `spec-kit-amend-artifacts` records it with `Layer: none`) or decides a change (→ `spec-kit-amend-artifacts` applies it). Never leave a `🟡` decided only in chat. |
+| `do not approve until X is verified` | Obtain the named verification (a probe, a test, an authorized read). If it settles the item, re-run the gate; if it reveals a defect, treat it as `request changes`. |
+| `request changes` | Each `🔴` is a change to decide and apply through `spec-kit-amend-artifacts`, then execute the resulting tasks and re-run the gate. |
+
+Feedback upstream, in every case: if a finding shows a feature is incomplete or a deferral is
+unsafe, report it as a Safe Deferral misclassification toward `spec-kit-generate-plan` (an
+operation that looked `Dormant`/`Flagged`/`Additive` turned out not to be, in practice). If a
+finding refutes a premise the plan recorded as verified, report which `PL-D##` it was and its
+evidence level — a `read` runtime premise refuted by execution is feedback that the plan's
+evidence rule was not applied.
+
 ## Final Gate (before reporting done — always, in this order)
 
-1. **Closure re-verification**: for every story completed in this run, re-confirm its `[CIERRE]`
-   task's conditions still hold against the final code state (Rule 6).
+1. **Closure re-verification**: for every story completed in this run, re-confirm its active
+   `[CIERRE]` task's conditions still hold against the final code state (Rule 6).
 2. **`pre-pr-review`** over the accumulated diff — the last safety net, run unconditionally (Rule
-   10). If it returns `pedir cambios` or `no aprobar hasta verificar X` because a feature is incomplete
-   or a deferral is unsafe or materially unverified, that is not just an immediate finding to resolve
-   — it is a signal that `spec-kit-generate-plan`'s Safe Deferral classification for the relevant
-   operation was applied incorrectly (an operation that looked `Dormant`/`Flagged`/`Additive` turned
-   out not to be, in practice). Resolve the finding or required verification before reporting done,
-   and report the misclassification explicitly as feedback toward `spec-kit-generate-plan`.
+   10), with the § Review Context above. Handle its verdict per § Review Verdict Handling; the
+   feature is not done while a `🔴`, an unverified `X`, or an undecided `🟡` remains.
 
 ## Handling Unplanned Scope Discovered Mid-Execution
 
@@ -226,9 +299,10 @@ If implementing a task reveals a real requirement `tasks.md` doesn't cover (Rule
 1. Stop implementing that specific thread — do not improvise a fix for scope that was never
    planned.
 2. Report exactly what was found and why it wasn't anticipated.
-3. Recommend the correct upstream response: `spec-kit-generate-tasks` (if `plan.md` already covers it and
-   only the task decomposition missed it) or `spec-kit-analyze-consistency` (if it's unclear whether
-   `plan.md`/`spec.md` cover it at all).
+3. Recommend the correct upstream response: `spec-kit-amend-artifacts` once the user has decided
+   what to do about it (it picks the lowest affected layer), `spec-kit-generate-tasks` (if
+   `plan.md` already covers it and only the task decomposition missed it), or
+   `spec-kit-analyze-consistency` (if it's unclear whether `plan.md`/`spec.md` cover it at all).
 4. Continue with other, unaffected tasks in the meantime if they don't depend on resolving this.
 
 ## Re-invocation and Idempotency
@@ -264,8 +338,11 @@ Report:
 - `STORIES_CLOSED`: which story checkpoints were confirmed held this run.
 - `PARALLELISM_USED`: `none` / `between-stories` / `within-story`, with which stories/tasks.
 - `COMMITS`: list of commits made, each with its `git-commits`-formatted message.
-- `PRE_PR_REVIEW`: summary of `pre-pr-review`'s findings, and whether any indicated a Safe
-  Deferral misclassification to report upstream.
+- `PRE_PR_REVIEW`: every gate run (story or final), its verdict key, how each `🔴`/`🟡`/`X` was
+  routed (amendment ID or `Layer: none`), and any Safe Deferral misclassification or refuted
+  `PL-D##` premise reported upstream.
+- `PROBES`: `[SONDA]` tasks run, each confirmed or refuted, or "none".
+- `AMENDMENTS`: amendment entries executed this run with their closure re-walk result, or "none".
 - `UNPLANNED_SCOPE_FOUND`: any gaps reported per § Handling Unplanned Scope, or "none".
 - `AGENTS`: `none`, or every generated Kiro/Claude path with validation and parity status.
 - `NEXT`: remaining stories/tasks if any, or "feature complete — ready for PR" if all closed and
@@ -283,7 +360,11 @@ Report:
 - [ ] Every closed story's `[CIERRE]` task was executed for real, not inferred.
 - [ ] Any unplanned scope discovered mid-execution was reported, not silently implemented.
 - [ ] Commit messages came from `git-commits`, not an invented format.
-- [ ] `pre-pr-review` ran once over the full accumulated diff, unconditionally.
+- [ ] `pre-pr-review` ran over the full accumulated diff, unconditionally, with a review context
+      regenerated from the current artifacts, and its verdict was matched literally and routed.
+- [ ] Every `[SONDA]` ran before its dependent tasks; no task was built on a refuted premise.
+- [ ] Every amendment task's story had its active `[CIERRE]` re-walked and recorded in
+      `amendments.md`.
 - [ ] Any `pre-pr-review` finding suggesting a Safe Deferral misclassification was reported as
       feedback toward `spec-kit-generate-plan`, not just silently fixed.
 - [ ] Every generated support agent has a validated Kiro/Claude pair, or `AGENTS: none` is

@@ -11,6 +11,7 @@ const SKILLS = [
   "spec-kit-analyze-consistency",
   "spec-kit-sync-artifacts",
   "spec-kit-execute-tasks",
+  "spec-kit-amend-artifacts",
   "spec-kit-shared",
 ];
 for (const s of SKILLS) {

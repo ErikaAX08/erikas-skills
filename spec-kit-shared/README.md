@@ -37,6 +37,11 @@ spec-kit-execute-tasks ────────────────► real 
 spec-kit-sync-artifacts: not a step in the chain — a drift detector every other skill's own
 "Fase 0" calls internally, and that you can also invoke directly after editing a
 source document, spec.md, or plan.md by hand.
+
+spec-kit-amend-artifacts: the way back into the chain for an already-decided change (a
+pre-pr-review finding, a refuted [SONDA] premise, resolved unplanned scope). It edits the
+lowest artifact that owns the change and only what is downstream of it, in one confirmed
+pass, records the decision in amendments.md, then hands off to spec-kit-execute-tasks.
 ```
 
 | Skill | Use when |
@@ -48,6 +53,7 @@ source document, spec.md, or plan.md by hand.
 | `spec-kit-analyze-consistency` | Before executing, you want a read-only cross-check of `spec.md`/`plan.md`/`tasks.md` for coverage gaps, orphan tasks, unsafe deferrals, and incomplete story checkpoints — with a `READY_FOR_EXECUTION` verdict. |
 | `spec-kit-sync-artifacts` | A source document, `spec.md`, or `plan.md` changed, and you want to know exactly what's now stale downstream — before or without re-running the skill that would normally check this itself. |
 | `spec-kit-execute-tasks` | You have a `READY` `tasks.md` and are ready to write real code — sequentially, or in parallel across genuinely independent user stories. |
+| `spec-kit-amend-artifacts` | A change is already decided — a review finding, a refuted runtime premise, resolved unplanned scope — and you want it applied from the lowest affected artifact downward in one pass, instead of re-running the whole chain hop by hop. |
 
 ## Design Principles
 
@@ -57,6 +63,12 @@ source document, spec.md, or plan.md by hand.
 - **No hallucination.** Every skill that names a real file, dependency, or existing pattern
   verifies it first (`verify-before-implement`'s discipline), and marks anything unverified
   `NEEDS CLARIFICATION` rather than inventing it.
+- **Lowest layer that owns the change.** `spec.md` owns behavior, `plan.md` owns technical
+  decisions, `tasks.md` owns execution — a purely technical fix never forces a spec version
+  (`artifact-conventions.md` § Layer Ownership).
+- **Executed evidence for runtime premises.** A claim about *when*, *in what order*, or *how often*
+  a library does something is verified by running a probe, not by reading its code
+  (`artifact-conventions.md` § Evidence Levels).
 - **Cierre de ciclos.** No phase, story, or task list is "done" while it leaves the system in a
   broken or inconsistent state — enforced structurally through `spec-kit-generate-tasks`'s per-story
   `[CIERRE]` checkpoint and `spec-kit-generate-plan`'s Safe Deferral rule (`Dormant`/`Flagged`/`Additive` —
@@ -77,10 +89,13 @@ Not invocable skills — documents every skill above reads and follows:
 - **`agent-portability.md`** — the Kiro CLI + Claude Code agent contract: naming, tool mapping,
   templates, validation procedure. Defines every standard role used across this kit
   (`spec-clarifier`, `spec-planner`, `plan-reviewer`, `task-decomposer`, `spec-analyzer`,
-  `drift-watcher`, `task-executor`, `pattern-miner`).
+  `drift-watcher`, `task-executor`, `pattern-miner`, `artifact-amender`).
 - **`artifact-conventions.md`** — the `.speckit/` file layout (including `.speckit/specs/<feature-dir>/`),
-  `feature.json`/`state.json`/`extensions.yml` schemas, and the Content Fingerprint Convention
-  every hash/drift check in this kit uses.
+  `feature.json`/`state.json`/`extensions.yml`/`amendments.md` schemas, the Content Fingerprint
+  Convention every hash/drift check in this kit uses, Stable ID Namespaces, Layer Ownership,
+  Evidence Levels, and the Task Lifecycle (`[CIERRE]`, `[SONDA]`, `[ENMIENDA]`, `Superada por:`).
+- **`scripts/fingerprint.mjs`** — computes fingerprints per the convention (progress-insensitive
+  for `tasks.md`) and compares a feature's artifact chain against its `state.json`.
 - **`templates/plan-template.md`** / **`templates/tasks-template.md`** — the fill-in-the-blank
   shapes `spec-kit-generate-plan`/`spec-kit-generate-tasks` produce (Technical Context, Constitution Check,
   Complexity Tracking, Safe Deferral for plans; Setup/Foundational/per-story/Polish with mandatory
@@ -96,7 +111,8 @@ Not invocable skills — documents every skill above reads and follows:
 | `spec-kit-execute-tasks` | `verify-before-implement` | Per-task implementation discipline |
 | `spec-kit-execute-tasks` | `git-commits` | Commit messages |
 | `spec-kit-execute-tasks` | `code-documentation` | Documenting new code when required |
-| `spec-kit-execute-tasks` | `pre-pr-review` | Final safety-net review over the accumulated diff |
+| `spec-kit-execute-tasks` | `pre-pr-review` | Per-story (optional) and final safety-net review |
+| `spec-kit-amend-artifacts` | `verify-before-implement` | Probing a runtime premise before it enters `plan.md` |
 
 No skill in `spec-kit` reimplements what one of these already does.
 
@@ -113,6 +129,7 @@ No skill in `spec-kit` reimplements what one of these already does.
     ├── plan.md                  # spec-kit-generate-plan
     ├── research.md / data-model.md / quickstart.md / contracts/
     ├── tasks.md                 # spec-kit-generate-tasks
+    ├── amendments.md            # spec-kit-amend-artifacts
     ├── state.json               # drift-detection state (spec-kit-sync-artifacts, artifact-conventions.md)
     └── checklists/
         ├── requirements.md          # spec-kit-generate-spec

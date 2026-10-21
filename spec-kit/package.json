@@ -1,7 +1,7 @@
 {
   "name": "@erikaax/spec-kit",
   "version": "0.1.0",
-  "description": "Complete Spec Kit bundle — spec-driven development chain: constitution, spec, plan, tasks, consistency, sync and execute. Includes spec-kit-shared as a shared contract. Atomic installation: all kit skills are installed together.",
+  "description": "Complete Spec Kit bundle — spec-driven development chain: constitution, spec, plan, tasks, consistency, sync, execute and amend. Includes spec-kit-shared as a shared contract. Atomic installation: all kit skills are installed together.",
   "keywords": [
     "claude-code",
     "opencode",
@@ -32,6 +32,7 @@
     "spec-kit-analyze-consistency/**/*",
     "spec-kit-sync-artifacts/**/*",
     "spec-kit-execute-tasks/**/*",
+    "spec-kit-amend-artifacts/**/*",
     "spec-kit-shared/**/*",
     "README.md"
   ],
