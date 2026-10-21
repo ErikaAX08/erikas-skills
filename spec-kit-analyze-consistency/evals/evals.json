@@ -1,0 +1,47 @@
+{
+  "skill_name": "spec-kit-analyze-consistency",
+  "evals": [
+    {
+      "id": 0,
+      "name": "ac-contradicts-invariant",
+      "prompt": "Run the consistency check on the active feature before I start executing it.",
+      "expected_output": "A consistency report that blocks execution because R-AC03 leaves a timed-out entry `failed` and never retried, while E-I01 requires every number at the provider to be removed by its `expires_at` and R-AC04 only sweeps `active` entries — a timeout does not prove the provider rejected the number. The lint run is reported with no mechanical findings, and no artifact is modified.",
+      "files": ["evals/files/ac-contradicts-invariant"],
+      "assertions": [
+        "Runs `spec-kit-shared/scripts/lint-artifacts.mjs` on the feature and reports its result (no BLOCKING findings) in the report, e.g. a `LINT` line or header note.",
+        "Reports a BLOCKING finding in the 'acceptance criterion contradicts invariant' category that cites both R-AC03 and E-I01.",
+        "Explains that a timeout is an ambiguous outcome: the provider may have accepted the number, so a `failed` entry that is never retried or swept can leave the number allowed past its `expires_at`; it also cites R-AC04 sweeping only `active` entries as part of the contradiction.",
+        "`READY_FOR_EXECUTION` is `NO`, and the recommended fix names `spec-kit-generate-spec` or `spec-kit-amend-artifacts` (spec layer), not a code change.",
+        "Writes `checklists/consistency-report.md` and does not modify spec.md, plan.md, tasks.md, or state.json (git shows only the report as changed)."
+      ]
+    },
+    {
+      "id": 1,
+      "name": "open-task-contradicts-plan",
+      "prompt": "Check the active feature for consistency; I want to run US1 next.",
+      "expected_output": "A report that blocks execution because open task T004 still says to mask in the route handler with `src/app.js` unchanged, while the current PL-D02 and PL-O03 register the masking serializer in `src/app.js` before the routes; T004's validation is also tied to implementation shape (an unchanged file, a parameter name).",
+      "files": ["evals/files/open-task-contradicts-plan"],
+      "assertions": [
+        "Reports a BLOCKING finding that open task T004 contradicts the current plan decision, citing T004 and PL-D02 and/or PL-O03, and noting that the plan changes `src/app.js` while T004 requires it unchanged.",
+        "States that T004 could not be closed honestly as written (its validation cannot pass under the current plan).",
+        "Reports an ADVISORY 'validation tied to implementation shape' finding for T004 (file that must stay unchanged and/or the `maskPhone(now)` call), without duplicating the BLOCKING finding.",
+        "`READY_FOR_EXECUTION` is `NO`, with the fix routed to `spec-kit-generate-tasks` or `spec-kit-amend-artifacts` at the tasks layer — not to a spec change.",
+        "Does not modify spec.md, plan.md, tasks.md, or state.json."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "superseded-closures-quiet",
+      "prompt": "Re-run the consistency check on the active feature after the last two amendments.",
+      "expected_output": "A clean report: superseded tasks and the superseded [CIERRE] T005 are history and produce no finding, T011 is the single active closure for US1 and covers R-AC05, the unchanged terminology advisory from the previous report is listed once under Previously Reported, and the verdict is YES.",
+      "files": ["evals/files/superseded-closures-quiet"],
+      "assertions": [
+        "Reports no finding about T005, T002, multiple closures, or historical [CIERRE] tasks — not even as ADVISORY.",
+        "Treats T011 as US1's active [CIERRE] and confirms it covers R-AC05 (or reports no coverage gap for R-AC05).",
+        "Lists the earlier terminology advisory ('allow list' vs 'allow-list') in a Previously Reported table with its first-reported context, instead of rewriting it in full as a new finding — or, if it judges it no longer reproduces, omits it rather than carrying it forward from memory.",
+        "`READY_FOR_EXECUTION` is `YES`.",
+        "Does not modify spec.md, plan.md, tasks.md, amendments.md, or state.json."
+      ]
+    }
+  ]
+}

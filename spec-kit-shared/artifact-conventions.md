@@ -425,6 +425,9 @@ Checks a script cannot decide — whether an acceptance criterion contradicts an
 a `Dormant` operation is actually invoked, terminology drift — stay with
 `spec-kit-analyze-consistency`'s semantic phases. Legacy plans skip L13–L17 and say so.
 
+The scripts are covered by `node --test spec-kit-shared/scripts/test/scripts.test.mjs`, which runs
+every check against `spec-kit-shared/evals/base-feature/` and mutations of it.
+
 ## Grammar Tokens
 
 The artifacts use a small set of fixed tokens. They are **language-independent keys**: written

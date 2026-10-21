@@ -100,6 +100,9 @@ Not invocable skills — documents every skill above reads and follows:
 - **`scripts/lint-artifacts.mjs`** — runs every mechanical check of the Artifact Grammar (broken
   or duplicate IDs, task fields, closures, probes, amendment links, sensitive-data channels) with
   stable codes `L01`–`L21`; `spec-kit-analyze-consistency` and the generating skills use it.
+- **`evals/`** — the `base-feature/` fixture, the fixture builder, and the guide to the script
+  tests and the per-skill evals (`spec-kit-analyze-consistency`, `spec-kit-amend-artifacts`,
+  `spec-kit-execute-tasks`).
 - **`templates/plan-template.md`** / **`templates/tasks-template.md`** — the fill-in-the-blank
   shapes `spec-kit-generate-plan`/`spec-kit-generate-tasks` produce (Technical Context, Constitution Check,
   Complexity Tracking, Safe Deferral for plans; Setup/Foundational/per-story/Polish with mandatory

@@ -59,6 +59,7 @@
     "install:skills": "node ./scripts/install.mjs",
     "validate": "node ./scripts/validate.mjs",
     "sync:versions": "node ./scripts/sync-versions.mjs",
-    "test": "node ./scripts/validate.mjs"
+    "test": "node ./scripts/validate.mjs && node --test spec-kit-shared/scripts/test/scripts.test.mjs",
+    "test:spec-kit": "node --test spec-kit-shared/scripts/test/scripts.test.mjs"
   }
 }
