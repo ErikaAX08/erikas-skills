@@ -15,9 +15,8 @@ When `spec.md` changed since the last `plan.md` (Fase 0 detected material drift)
 5. Update `state.json`'s `artifacts.plan.content_hash` and `based_on_spec_hash` only after the
    targeted regeneration validates. Write it with `node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> plan`, which applies `artifact-conventions.md` § Schema Versions and Migrations — it refuses a state newer than the contract (exit 3: stop) and migrates a version-1 file, reporting `SCHEMA_MIGRATED: 1→2`.
 6. Re-run the full `plan-quality.md` checklist regardless of how small the change was — except
-   when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
-   the checklist items that touch the changed IDs plus the Evidence, Traceability, and Governance
-   sections, and record `Scoped validation (AM-##)` in the checklist Notes.
+   when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then validate the
+   scope `spec-kit-shared/artifact-conventions.md` § Scoped Validation defines for `plan.md`.
 7. Summarize exactly which `plan.md` sections changed and why.
 
 A plan can also change **without** a spec change — a technical decision, a refuted runtime

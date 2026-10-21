@@ -43,7 +43,7 @@ passed — not when the code looks right. A story is done when its checkpoint ho
 ## Non-Negotiable Rules
 
 1. **Do not invent facts.** Never write a field, endpoint, signature, config key, or library call
-   without reading its actual definition first — apply `verify-before-implement`'s matching §6
+   without reading its actual definition first — apply the matching `verify-before-implement` §6
    template for the category of change (contract, model, type, endpoint integration, state/enum,
    config, library API, CLI, runtime behavior) before writing the corresponding code.
 2. **Preserve task and plan intent.** Implement exactly what a task describes. If the real code

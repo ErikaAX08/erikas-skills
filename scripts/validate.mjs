@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkReferences } from "./check-references.mjs";
 import { SPEC_KIT_MANIFEST, SPEC_KIT_SKILLS } from "./spec-kit-manifest.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -104,8 +105,14 @@ export async function validate() {
     if (ok) console.log(`  ✓ ${skill}`);
   }
 
+  // Spec Kit cross-references: cited paths exist and every § Section has a matching heading.
+  const refProblems = checkReferences();
+  for (const p of refProblems) console.error(`  ✗ spec-kit references: ${p}`);
+  if (refProblems.length) ok = false;
+  else console.log("  ✓ spec-kit references resolve");
+
   // check bin and scripts
-  for (const f of ["bin/cli.mjs", "scripts/install.mjs", "scripts/validate.mjs", "scripts/sync-versions.mjs"]) {
+  for (const f of ["bin/cli.mjs", "scripts/install.mjs", "scripts/validate.mjs", "scripts/sync-versions.mjs", "scripts/check-references.mjs"]) {
     if (!fs.existsSync(path.join(ROOT, f))) { console.error(`  ✗ missing ${f}`); ok = false; }
   }
   if (ok) console.log("\n✓ Validation passed");

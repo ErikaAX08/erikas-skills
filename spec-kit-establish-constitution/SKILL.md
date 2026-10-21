@@ -219,7 +219,7 @@ When explicitly invoked to check code against an existing constitution, without 
    feature, not this skill), or the constitution itself needs updating because the project's
    real direction changed. Present both options; let the user decide.
 5. This is a read-only mode with one exception: if the user explicitly asks to update the
-   constitution as a result of this check, that becomes an Update-mode invocation (§ above), not
+   constitution as a result of this check, that becomes an Update-mode invocation (§ Updating an Existing Constitution), not
    an automatic side effect of the drift check itself.
 
 ## Pre-Execution Extension Hooks

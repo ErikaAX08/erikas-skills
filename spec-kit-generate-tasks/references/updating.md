@@ -21,7 +21,6 @@ When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected dri
 6. Update `state.json`'s `artifacts.tasks.content_hash` and `based_on_plan_hash` only after the
    targeted regeneration validates. Write it with `node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> tasks`, which applies `artifact-conventions.md` § Schema Versions and Migrations — it refuses a state newer than the contract (exit 3: stop) and migrates a version-1 file, reporting `SCHEMA_MIGRATED: 1→2`.
 7. Re-run the full `tasks-quality.md` checklist regardless of how small the change was — except
-   when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
-   the items that touch the changed tasks and stories plus Traceability and Governance, and record
-   `Scoped validation (AM-##)` in the checklist Notes.
+   when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then validate the
+   scope `spec-kit-shared/artifact-conventions.md` § Scoped Validation defines for `tasks.md`.
 8. Summarize exactly which task phases changed and why.

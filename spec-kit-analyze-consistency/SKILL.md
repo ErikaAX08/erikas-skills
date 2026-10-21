@@ -136,7 +136,7 @@ and 4); the phases below still run, but only for what the script cannot decide, 
 the same defect twice. Exit 3 (state newer than the contract) stops the analysis.
 
 If Node is unavailable, say so in the report header (`LINT: not run — <reason>`) and perform those
-checks by hand following § Artifact Grammar.
+checks by hand following `artifact-conventions.md` § Artifact Grammar.
 
 ### Phase 2 — Build the Traceability Index
 

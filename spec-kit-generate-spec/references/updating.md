@@ -11,7 +11,7 @@ When the user supplies an existing REASONS specification:
 5. Preserve stable IDs where semantics remain the same; add new IDs for new semantics; never silently reuse an ID for a different requirement.
 6. Update the persisted Evidence Catalog for new, removed, or superseded evidence, recomputing the source fingerprint for every row whose underlying source was re-read as part of this update — a stale fingerprint left over from a prior version defeats the purpose of recording one. If `.speckit/specs/<feature-dir>/state.json` exists (see `spec-kit-shared/artifact-conventions.md`), refresh its `source_documents.<ID>.fingerprint`/`read_at` entries to match at the same time — the Evidence Catalog table inside `spec.md` and `state.json`'s copy must never be left pointing at two different fingerprints for the same source, or the next `spec-kit-sync-artifacts` check will report a already-resolved drift as if it were still open.
 7. Record superseded decisions and migration/compatibility consequences where relevant.
-8. Re-run the complete checklist — except when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate the items touching the changed IDs plus Traceability, the terminal-state check, and the channel check, and record `Scoped validation (AM-##)` in the checklist Notes.
+8. Re-run the complete checklist — except when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then validate the scope `spec-kit-shared/artifact-conventions.md` § Scoped Validation defines for `spec.md`.
 9. Summarize exactly which REASONS sections changed and why.
 
 Follow the SPDD direction rule:

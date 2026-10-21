@@ -168,7 +168,7 @@ not cause.
 
 ### Phase 1 — Classify Each Change
 
-For each `AM-##`, using § Layer Ownership:
+For each `AM-##`, using `artifact-conventions.md` § Layer Ownership:
 
 | Layer | When | Touches |
 | --- | --- | --- |
@@ -230,15 +230,15 @@ writes `state.json` itself (`artifact-conventions.md` § Write Ownership):
 
 1. **`spec.md`** — follow `spec-kit-generate-spec/references/updating.md`. Record the
    decision as `R-D##` and add an Evidence Catalog row for the decision text (fingerprint: SHA-256 of
-   the exact text, per the convention). Validate with that skill's scoped validation for
-   amendments.
+   the exact text, per the convention). Validate with the `spec.md` scope of
+   `artifact-conventions.md` § Scoped Validation.
 2. **`plan.md`** — follow `spec-kit-generate-plan/references/updating.md`. Record a technical
    decision as a `PL-D##` with its evidence level (Rule 7). If the spec changed but the plan needs
    no edit, say so explicitly ("plan reviewed for AM-NN: no change") — the plan's
-   `based_on_spec_hash` is refreshed only after that review. Validate with the scoped validation.
+   `based_on_spec_hash` is refreshed only after that review. Validate with the `plan.md` scope of `artifact-conventions.md` § Scoped Validation.
 3. **`tasks.md`** — follow `spec-kit-generate-tasks/references/updating.md` and the Task
-   Lifecycle (Rule 4). Every new task carries `Enmienda: AM-NN`. Validate with the scoped
-   validation.
+   Lifecycle (Rule 4). Every new task carries `Enmienda: AM-NN`. Validate with the `tasks.md`
+   scope of `artifact-conventions.md` § Scoped Validation.
 
 After each layer validates, add it to the entry's `Layers done`. At the first failed validation,
 set `Status: stopped` and `Stopped at: <layer> — <failed item>`, and stop (Rule 6).
