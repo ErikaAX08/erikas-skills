@@ -245,7 +245,8 @@ set `Status: stopped` and `Stopped at: <layer> — <failed item>`, and stop (Rul
 ### Phase 5 — Confirm State and Close the Entry
 
 1. Confirm the chain: `node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>` must
-   report `ARTIFACT_DRIFT: NO`. Drift here means an owning procedure did not refresh its entry —
+   report `ARTIFACT_DRIFT: NO`, and `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` must report no `BLOCKING` finding other than
+   L19 for this entry itself (still `planned` until step 2). Drift here means an owning procedure did not refresh its entry —
    stop with `Status: stopped` and `Stopped at: state — <artifact>` rather than writing the hash
    on its behalf.
 2. Set the entry's `Status: applied`.

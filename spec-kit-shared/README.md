@@ -96,6 +96,9 @@ Not invocable skills — documents every skill above reads and follows:
   Evidence Levels, and the Task Lifecycle (`[CIERRE]`, `[SONDA]`, `[ENMIENDA]`, `Superada por:`).
 - **`scripts/fingerprint.mjs`** — computes fingerprints per the convention (progress-insensitive
   for `tasks.md`) and compares a feature's artifact chain against its `state.json`.
+- **`scripts/lint-artifacts.mjs`** — runs every mechanical check of the Artifact Grammar (broken
+  or duplicate IDs, task fields, closures, probes, amendment links, sensitive-data channels) with
+  stable codes `L01`–`L21`; `spec-kit-analyze-consistency` and the generating skills use it.
 - **`templates/plan-template.md`** / **`templates/tasks-template.md`** — the fill-in-the-blank
   shapes `spec-kit-generate-plan`/`spec-kit-generate-tasks` produce (Technical Context, Constitution Check,
   Complexity Tracking, Safe Deferral for plans; Setup/Foundational/per-story/Polish with mandatory

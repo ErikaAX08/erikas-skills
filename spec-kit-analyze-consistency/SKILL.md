@@ -126,6 +126,18 @@ each artifact's own reported `STATUS` — this skill does not re-derive readines
 what the generating skill already concluded and checks *consistency*, not re-litigate each
 artifact's own internal validation.
 
+### Phase 1.5 — Mechanical Checks
+
+Run `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` `--json` (`artifact-conventions.md` § Mechanical Checks). Every finding it returns
+goes into the report with its code (`L02`, `L08`, …), file, line, and the severity the script
+assigned — they are already classified per this skill's rules, so do not re-derive or re-grade
+them. The script covers the mechanical part of Phases 2, 3 (operation links), 6, and 9 (checks 3
+and 4); the phases below still run, but only for what the script cannot decide, and never report
+the same defect twice. Exit 3 (state newer than the contract) stops the analysis.
+
+If Node is unavailable, say so in the report header (`LINT: not run — <reason>`) and perform those
+checks by hand following § Artifact Grammar.
+
 ### Phase 2 — Build the Traceability Index
 
 Extract every stable ID from each artifact into one index:
@@ -347,6 +359,7 @@ Report:
 - `ARTIFACTS_FOUND`: which of spec.md/plan.md/tasks.md existed.
 - `CHECKS_SKIPPED`: list with reasons, or "none".
 - `REPORT_FILE`: `checklists/consistency-report.md` path.
+- `LINT`: `lint-artifacts.mjs` exit code and its BLOCKING/ADVISORY counts, or `not run — <reason>`.
 - `BLOCKING_COUNT` / `ADVISORY_COUNT`: totals (new or changed / previously reported).
 - `SEMANTIC_CHECKS`: Phase 9 checks run, each with its finding count, or skipped with a reason.
 - `READY_FOR_EXECUTION`: `YES` / `NO`.
@@ -361,6 +374,8 @@ Report:
       its reason, not silently omitted.
 - [ ] The traceability index covers every stable ID from every present artifact, including
       `R-D`, `E-I`, `E-DL`, `PL-*`, `RS-##`, and `AM-##`.
+- [ ] `lint-artifacts.mjs` ran (Phase 1.5) and its findings are in the report with their codes,
+      not re-derived by hand — or the report says why it could not run.
 - [ ] Phase 9's targeted semantic checks ran (or are listed as skipped with a reason).
 - [ ] Findings unchanged since the previous report are in the Previously Reported table, not
       rewritten — and still counted in the verdict.

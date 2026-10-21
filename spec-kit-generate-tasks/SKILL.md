@@ -350,6 +350,7 @@ Create `checklists/tasks-quality.md`:
 
 - [ ] tasks.md contains no TODOs, placeholders, or unresolved template labels
 - [ ] state.json was created/updated with this task list's content hash and based_on_plan_hash
+- [ ] `lint-artifacts.mjs <feature-dir>` reports no BLOCKING finding (fields, dependencies, closures, probes, amendment links)
 
 ## Agent Portability
 

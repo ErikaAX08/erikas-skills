@@ -650,6 +650,8 @@ Create `<feature-directory>/checklists/requirements.md` with this structure:
 [Specific failures, evidence, and remaining decisions]
 ```
 
+Before validating item by item, run `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>`: a `BLOCKING` finding in `spec.md` (duplicate or broken ID, an unenumerated sensitive-data channel) is a failed checklist item.
+
 Validate the specification item by item:
 
 1. Mark each checklist item passed or failed.

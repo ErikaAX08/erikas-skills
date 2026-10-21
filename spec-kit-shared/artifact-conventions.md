@@ -335,6 +335,85 @@ contains, what a library actually sends over the wire. Reading the code of such 
 during planning is recorded as `assumption` and gets a probe task (`[SONDA]`, see § Task
 Lifecycle) that runs before any task depending on it.
 
+## Artifact Grammar
+
+What makes text in an artifact a definition, a citation, or a task — the rules
+`spec-kit-shared/scripts/lint-artifacts.mjs` parses. Write artifacts so they hold; anything
+else is prose the script ignores.
+
+**IDs** match one of the families in § Stable ID Namespaces exactly (`R-AC03`, `E-I01`, `PL-O02`,
+`RS-01`, `AM-04`, `T012`, `[S1]`/`[P2]` in brackets). Template placeholders such as `R-FR0#` are not
+IDs. Text inside fenced code blocks is never parsed.
+
+**Definitions** — an ID is defined where it appears as:
+
+- the first bold token of a list item: `- **R-FR01**: …` or `1. **A-01 — Strategy**: …` — the block
+  is that item plus its indented continuation lines;
+- the first token of a heading: `### O-01 — …`, `### RS-01 — …`, `## AM-01 — …` — the block runs to
+  the next heading of the same or higher level;
+- the first cell of a row in a table whose first column is headed `ID` — the block is the row.
+  Rows of tables with any other first column (Safe Deferral, Convention Enforcement, Sensitive
+  Data by Channel) cite IDs; they never define them;
+- a task line in `tasks.md` (below).
+
+Every other occurrence of an ID is a **citation**, and must resolve to a definition. Each ID is
+defined once per artifact.
+
+**Tasks** (`tasks.md`):
+
+```text
+- [ ] T012 [P] [US2] [SONDA] Description          ← checkbox, ID, zero or more [tags], description
+      Traza a: R-AC03, PL-O02                      ← fields as indented sub-lines…
+      Archivo(s): src/x.js — Depende de: T010      ← …or as ` — `-separated segments on one line
+      Validación: …                                 ← a field's continuation lines are indented
+```
+
+Required fields: regular tasks `Traza a`, `Archivo(s)`, `Depende de`, `Validación`; `[CIERRE]`
+`Verifica`, `Validación`; `[ENMIENDA T0XX]` `Enmienda`, `Traza a`, `Validación`; `[SONDA]` `Traza a`,
+`Validación`. A task's story is its `[USn]` tag, or the `USn` in its phase heading
+(`## Phase 3: US1 — Title (Priority: P1)`). Amendment tasks sit under a `#### Enmiendas` heading
+inside their story's phase.
+
+**Amendment entries** (`amendments.md`): one `## AM-NN — title` heading per entry, with fields as
+`- **Field**: value` items (`- **Status**: applied`).
+
+**Evidence levels and runtime premises** are read from the `Evidence level` / `Runtime premise`
+columns of the `ID` tables in `plan.md` and `research.md`, or from `- **Evidence level**:` /
+`- **Runtime premise**:` items under an `RS-##` heading.
+
+### Mechanical Checks
+
+`node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir> [--json]` runs every check that can
+be decided from the text alone. Codes are stable; severities follow
+`spec-kit-analyze-consistency`. Exit 0 = no `BLOCKING`, 1 = `BLOCKING` found, 2 = not a feature
+directory, 3 = `state.json` newer than this contract.
+
+| Code | Check | Severity |
+| --- | --- | --- |
+| L01 | ID defined twice in one artifact | BLOCKING |
+| L02 | Cited ID defined nowhere (task and amendment references: L07, L11, L12) | BLOCKING |
+| L03 | ID defined in both `spec.md` and a plan file (expected only for legacy plans) | ADVISORY |
+| L06 | Missing required task field (`Validación` → BLOCKING; others ADVISORY) | BLOCKING / ADVISORY |
+| L07 | `Depende de` names a task that does not exist | BLOCKING |
+| L08 | Story without exactly one active `[CIERRE]` | BLOCKING |
+| L09 | Non-`[ENMIENDA]` task after the story's active `[CIERRE]` | BLOCKING |
+| L10 | Active `[CIERRE]` lists R-AC IDs that miss some the story claims (lists none → ADVISORY, not checkable) | BLOCKING / ADVISORY |
+| L11 | `Superada por:` on an open task, or naming a task that does not exist | BLOCKING |
+| L12 | `[ENMIENDA]` / `Superada por:` citing a task or `AM-##` that does not exist | BLOCKING |
+| L13 | `PL-D##` at `assumption` with no `[SONDA]` citing it | BLOCKING |
+| L14 | Task built on an `assumption` decision (directly or via the `PL-O##` that applies it) not depending on its `[SONDA]` | BLOCKING |
+| L15 | Runtime premise at `read`, or a decision resting on one without being marked `assumption` | BLOCKING |
+| L16 | `PL-D##` / `RS-##` without an evidence level | ADVISORY |
+| L17 | `PL-O##` citing no spec `O-##`, or spec `O-##` realized by no `PL-O##` | ADVISORY |
+| L18 | Sensitive Data by Channel row without a safeguard or `N/A` reason | BLOCKING |
+| L19 | Open amendment (`planned` / `stopped`) | BLOCKING |
+| L20 | Amendment status outside the defined set | ADVISORY |
+| L21 | Non-canonical grammar token (e.g. `Validacion:`) | ADVISORY |
+
+Checks a script cannot decide — whether an acceptance criterion contradicts an invariant, whether
+a `Dormant` operation is actually invoked, terminology drift — stay with
+`spec-kit-analyze-consistency`'s semantic phases. Legacy plans skip L13–L17 and say so.
+
 ## Grammar Tokens
 
 The artifacts use a small set of fixed tokens. They are **language-independent keys**: written

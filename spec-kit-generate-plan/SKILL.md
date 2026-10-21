@@ -436,6 +436,7 @@ Create `checklists/plan-quality.md`:
 
 - [ ] The plan contains no TODOs, placeholders, or unresolved template labels
 - [ ] `state.json` was created/updated with this plan's content hash and `based_on_spec_hash`
+- [ ] `lint-artifacts.mjs` reports no `BLOCKING` finding in `plan.md` or `research.md` (IDs, runtime premises, evidence levels)
 
 ## Agent Portability
 
