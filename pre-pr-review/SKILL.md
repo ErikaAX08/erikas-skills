@@ -322,12 +322,20 @@ behavior, look for a test that covers the path; (5) classify per Phase 7.
 Refutation is mandatory for every candidate proposed as 🔴 or 🟡. In multi-agent mode an
 independent verifier does it per `references/multi-agent-review.md` §6. In single-agent
 mode, after all lens passes finish, re-open each cited location at its cited SHA and
-repeat steps 1–5 of the Method in `assets/verifier-brief.md` without relying on the
+repeat steps 1–6 of the Method in `assets/verifier-brief.md` without relying on the
 first-pass conclusion; record `Refutation attempt: <what was checked>` inside the finding.
 Never promote a generic possibility (`what if X?` with no named activating condition in
 this flow) into a candidate.
 
 Operational data (DB, CloudWatch, any external system): apply
+Runtime-behavior claims — *when*, *in what order*, *how many times*, or *with what side effect* an
+installed library or framework does something (retries, timeouts, `retry-after`, when a logger
+or serializer captures its input, middleware order, error object contents) — are settled by a
+reproduction, not by reading: run a scratch probe against the installed dependency under §10's
+limits and cite the command and output. This applies both to confirming a candidate and to
+refuting one, and to any premise the declared objective records as verified only by reading.
+When no probe is possible, the claim stays `Inference` at most and the reason is recorded.
+
 `references/operational-data-protocol.md` in full — reduce need, open the authorization
 gate with `assets/authorization-request.md`, verify identity/destination, record without
 leaking. Authorization written in the user's request covers only the resources,
@@ -511,7 +519,9 @@ and every production or shared system.
   refs, and `FETCH_HEAD`); the lead's temporary worktree (`git worktree add --detach
   <path> <sha>`, outside the repo when possible, recorded in Scope, removed with `git
   worktree remove` before emitting); test runners and frozen-lockfile installs under the
-  Phase 6 conditions; approved read-only queries under the operational data protocol.
+  Phase 6 conditions; scratch probe scripts (Phase 5) written and run in the scratchpad or temp
+  directory against already-installed dependencies, with no network access, no external
+  systems, and no writes inside the repo; approved read-only queries under the operational data protocol.
 - Forbidden for every agent: `git checkout/switch/stash/reset/clean/restore`,
   `push/commit/merge/rebase`, any other ref or index mutation, dependency installs that
   modify tracked files, production writes of any kind, CloudWatch mutations, `unmask`,

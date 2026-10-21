@@ -115,7 +115,9 @@ Every candidate a reviewer proposes as `🔴` or `🟡` goes to a verifier befor
 `⚪` candidates are checked by the lead directly.
 
 1. Fill `assets/verifier-brief.md` with the candidate's claim, location, and activating condition
-   only, plus the packet path, SHAs, and language. Do **not** pass the reviewer's reasoning or confidence; the verifier must reconstruct the
+   only, plus the packet path, SHAs, language, and a scratch dir for probes. When the claim depends
+   on runtime behavior of an installed library (SKILL.md Phase 5), say so in the claim so the
+   verifier reproduces it instead of deciding by reading. Do **not** pass the reviewer's reasoning or confidence; the verifier must reconstruct the
    path independently.
 2. Batch related candidates (same file or same flow, same root cause) into one verifier when that keeps each brief small — at most 3 candidates per verifier; never put candidates from different root causes in one verifier only to save agents.
 3. A verifier returns exactly one status per candidate:
