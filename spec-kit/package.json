@@ -25,17 +25,21 @@
   },
   "type": "module",
   "files": [
-    "spec-kit-establish-constitution/**/*",
-    "spec-kit-generate-spec/**/*",
-    "spec-kit-generate-plan/**/*",
-    "spec-kit-generate-tasks/**/*",
-    "spec-kit-analyze-consistency/**/*",
-    "spec-kit-sync-artifacts/**/*",
-    "spec-kit-execute-tasks/**/*",
-    "spec-kit-amend-artifacts/**/*",
-    "spec-kit-shared/**/*",
+    "spec-kit-*/**/*",
     "README.md"
   ],
+  "speckit": {
+    "skills": [
+      "spec-kit-establish-constitution",
+      "spec-kit-generate-spec",
+      "spec-kit-generate-plan",
+      "spec-kit-generate-tasks",
+      "spec-kit-analyze-consistency",
+      "spec-kit-sync-artifacts",
+      "spec-kit-execute-tasks",
+      "spec-kit-amend-artifacts"
+    ]
+  },
   "scripts": {
     "prepack": "node ./scripts/prepare.mjs",
     "postpack": "node ./scripts/clean.mjs"
