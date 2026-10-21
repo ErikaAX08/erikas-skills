@@ -27,7 +27,10 @@ script tests mutate it; every skill eval starts from it.
 2. Run the case's `prompt` with the built repository as the working directory and the whole kit
    installed (`npx erikas-skills install --skills spec-kit`).
 
-3. Grade the final answer and the transcript against `assertions`. Several assertions concern the
+3. Grade the final answer and the transcript against `assertions`. The run leaves
+   `.speckit/specs/001-sms-allow-list/runs.jsonl`: its `decision` events (with rationales) and the
+   scripts' own `check` events are the most direct evidence for assertions about what the skill
+   decided and in what order, and `run-report.mjs` summarizes them. Several assertions concern the
    order of actions (a probe before a task, an amendment entry before an edit) or files that must
    stay unchanged, so the grader needs the transcript and `git status`, not only the final answer.
 

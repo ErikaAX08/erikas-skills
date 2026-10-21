@@ -106,6 +106,20 @@ The `.speckit/` layout, `state.json`, the Content Fingerprint Convention, Stable
 Layer Ownership, Evidence Levels, Task Lifecycle, and the `amendments.md` format all live in
 `spec-kit-shared/artifact-conventions.md`. Read it before Fase 0 below.
 
+## Run Log
+
+Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
+`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-amend-artifacts mode=<mode>` and pass the printed `RUN_ID` to every
+later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
+Pass `--log <RUN_ID> --skill spec-kit-amend-artifacts` to `fingerprint.mjs --record` (through the owning procedures), `fingerprint.mjs --state`, and `lint-artifacts.mjs` so they record their own results.
+Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
+
+- `layer` — the layer chosen for each `AM-##` and why, citing the IDs it changes
+- `escalation` — when a change goes to the regular chain instead, and which rule triggered it
+- `user` — the single amendment-plan confirmation
+
+If logging is off (`RUN_LOG: off`), continue normally.
+
 ## Input Contract
 
 ### Resolving the Target Feature
@@ -274,6 +288,7 @@ other `spec-kit` skills use.
 
 Report:
 
+- `RUN_ID`: this run's log ID, or `off`.
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
 - `AMENDMENTS`: each `AM-##` with origin, layer, and status (`applied` / `accepted` / `escalated` /
   `stopped` with `Stopped at` / `abandoned`), and any open entry resumed or undone this run.
@@ -289,6 +304,7 @@ Report:
 
 ## Done When
 
+- [ ] The run was logged from `run.start` to `run.end` (or logging is off).
 - [ ] Every applied change had a recorded decision and decider; none was decided here.
 - [ ] Fase 0 confirmed the chain consistent before any edit (or the drift was part of this change).
 - [ ] Each change was classified to its lowest owning layer; escalation conditions were checked.

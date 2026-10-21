@@ -115,6 +115,20 @@ The `.speckit/` layout (including `.speckit/specs/<feature-dir>/`), `feature.jso
 Fingerprint Convention all live in `spec-kit-shared/artifact-conventions.md`. Read it before Fase 0
 below and follow it exactly.
 
+## Run Log
+
+Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
+`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-generate-tasks mode=<mode>` and pass the printed `RUN_ID` to every
+later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
+Pass `--log <RUN_ID> --skill spec-kit-generate-tasks` to `fingerprint.mjs --record … tasks` and `lint-artifacts.mjs` so they record their own results.
+Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
+
+- `drift` — in update mode, each changed plan ID classified material or non-material
+- `closure` — for rework of a closed story: a new `[CIERRE]` (R-AC set changed) or a re-walk of the active one
+- `readiness` — `READY` or `DRAFT`, citing the failed checklist items
+
+If logging is off (`RUN_LOG: off`), continue normally.
+
 ## Input Contract
 
 ### Resolving the Target Plan
@@ -332,6 +346,7 @@ emit-then-execute format the other `spec-kit` skills use.
 
 Report:
 
+- `RUN_ID`: this run's log ID, or `off`.
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
 - `TASKS_FILE`: `tasks.md` path.
 - `CHECKLIST_FILE`: `checklists/tasks-quality.md` path.
@@ -349,6 +364,7 @@ Report:
 
 ## Done When
 
+- [ ] The run was logged from `run.start` to `run.end` (or logging is off).
 - [ ] `plan.md` was resolved, read, and confirmed `READY` (or draft decomposition was explicitly
       confirmed by the user).
 - [ ] Fase 0 Staleness Check ran and any material drift was reported before proceeding.
