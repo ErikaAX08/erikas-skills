@@ -51,8 +51,7 @@ Propagation is one hop at a time, and never silent.**
    value recorded in `state.json`. Report match or mismatch — do not judge whether a mismatch is
    "important" beyond the best-effort structural localization in Phase 3.
 2. **Read-only on `spec.md`/`plan.md`/`tasks.md`.** This skill never edits any of them. Its only
-   possible write is refreshing `state.json`'s own bookkeeping, and only for entries a generating
-   skill hasn't already updated itself (§ Writing state.json).
+   possible writes are the two `state.json` bookkeeping exceptions in § Writing state.json.
 3. **Use the Content Fingerprint Convention exactly as defined** in
    `spec-kit-shared/artifact-conventions.md` — never invent a different hashing rule or apply it
    inconsistently between a first check and a later one.
@@ -126,7 +125,9 @@ exist) and `source_documents`.
 ### Phase 2 — Recompute Fingerprints and Compare
 
 For every entry in `state.json`, recompute its current fingerprint using the Content Fingerprint
-Convention and compare:
+Convention and compare. Compute artifact hashes with
+`node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>` (or its documented shell
+equivalent) — never by estimating, and never with a hashing rule of your own:
 
 - **Each `source_documents.<ID>`**: recompute per its recorded type (versioned file → current
   commit SHA touching that path; non-versioned file/pasted text/URL/attachment → current content
@@ -139,6 +140,11 @@ Convention and compare:
   spec→plan staleness check `spec-kit-generate-plan`'s own Fase 0 relies on.
 - **`artifacts.tasks.based_on_plan_hash`** vs. `artifacts.plan.content_hash` (current): the direct
   plan→tasks staleness check `spec-kit-generate-tasks`'s own Fase 0 relies on.
+- **`artifacts.tasks.content_hash`**: recompute `tasks.md`'s current **progress-insensitive** hash
+  (checkboxes normalized, per the convention). Marking tasks `[x]` never produces a mismatch here;
+  a mismatch means `tasks.md` was edited outside `spec-kit-generate-tasks`/`spec-kit-amend-artifacts`.
+  Before reporting it, apply the convention's **Legacy `tasks.md` hashes** rule — a hash recorded
+  before normalization existed is not drift when the only difference is checkbox state.
 
 Every comparison is reported, matched or not — a full "everything matches" result is a valid
 report (Rule 6).
@@ -154,7 +160,8 @@ For every mismatch found in Phase 2, attempt to localize which stable IDs are in
   content implied by `plan.md`'s own traceability citations), identify which `R-FR##`/`R-AC##`/
   `E-##`/`R-QR##` IDs' surrounding text differs; otherwise, report "spec.md changed, could not
   localize which sections — recommend `spec-kit-generate-plan` review the full spec diff."
-- **Plan→tasks drift**: same approach against `O-0#`/`A-D0#`/Safe Deferral entries.
+- **Plan→tasks drift**: same approach against `PL-O##`/`PL-D##`/`RS-##`/Safe Deferral entries
+  (or a legacy plan's `O-0#`/`A-D0#`, per the convention's Stable ID Namespaces).
 
 State plainly when localization isn't possible (Rule 9) rather than asserting an ID list you
 aren't confident in.
@@ -168,9 +175,13 @@ For each mismatch, in dependency order (source → spec → plan → tasks):
    recommends `spec-kit-generate-spec` (update mode) first, not `spec-kit-generate-plan` directly, even if `plan.md`
    also looks stale — that staleness is a *consequence* to re-check after the spec is actually
    updated, not a parallel action to take now.
-2. If any task in an affected story is already `[x]`, flag it explicitly per Rule 10.
-3. Ask for confirmation before recommending more than one hop, unless the user already asked for
+3. If any task in an affected story is already `[x]`, flag it explicitly per Rule 10.
+4. Ask for confirmation before recommending more than one hop, unless the user already asked for
    the full cascade.
+5. If the user explains that the edit is an already-decided change (a review finding, a decision
+   they made), recommend `spec-kit-amend-artifacts` instead: it applies a decided change from its
+   lowest affected layer downward in one confirmed pass, which is the multi-hop path this skill
+   deliberately does not take on its own.
 
 ## Writing `state.json`
 
@@ -182,6 +193,11 @@ the spec right now") — in that case, and only with explicit confirmation, it m
 `source_documents.<ID>.fingerprint` and `read_at` to the current value, so the next check doesn't
 re-report an already-acknowledged change as new. State plainly when this happens, since it means
 the spec is now knowingly stale against its own source until someone regenerates it.
+
+A second, mechanical exception: a **legacy `tasks.md` hash** (recorded before checkbox
+normalization) that the convention's Legacy rule shows to differ only in checkbox state may be
+rewritten to the normalized hash, with no confirmation needed because no content changed. Report
+it as `LEGACY_HASH_UPGRADED: tasks`.
 
 ## Drift Report
 
@@ -239,6 +255,7 @@ Report:
 - `CLOSED_WORK_FLAGGED`: task IDs already `[x]` potentially affected, or "none".
 - `DRIFT_DETECTED`: `YES`/`NO`.
 - `RECOMMENDED_NEXT_HOP`: the single nearest skill to re-invoke, or "none".
+- `LEGACY_HASH_UPGRADED`: `tasks` if a legacy raw `tasks.md` hash was rewritten, otherwise omitted.
 - `AGENTS`: `none`, or every generated Kiro/Claude path with validation and parity status.
 
 ## Done When

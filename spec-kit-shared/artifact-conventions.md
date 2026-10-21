@@ -7,7 +7,7 @@
 > inventing its own layout or hashing scheme.
 >
 > **Used by**: `spec-kit-generate-spec`, `spec-kit-establish-constitution`, `spec-kit-generate-plan`, `spec-kit-generate-tasks`,
-> `spec-kit-analyze-consistency`, `spec-kit-sync-artifacts`, `spec-kit-execute-tasks`.
+> `spec-kit-analyze-consistency`, `spec-kit-sync-artifacts`, `spec-kit-execute-tasks`, `spec-kit-amend-artifacts`.
 
 ## `.speckit/` — everything this kit generates
 
@@ -73,6 +73,8 @@ hooks:
   after_execute: [] # spec-kit-execute-tasks, after the closure check + pre-pr-review
   before_constitution: [] # spec-kit-establish-constitution, before inspecting the project
   after_constitution: [] # spec-kit-establish-constitution, after constitution.md is written/updated
+  before_amend: [] # spec-kit-amend-artifacts, before its staleness check
+  after_amend: [] # spec-kit-amend-artifacts, after the consistency check and hand-off
 ```
 
 Each entry in a hook list:
@@ -104,11 +106,13 @@ stays the responsibility of the skill that owns this invocation.
 ├── data-model.md            # spec-kit-generate-plan, Phase 1
 ├── quickstart.md            # spec-kit-generate-plan, Phase 1
 ├── contracts/                # spec-kit-generate-plan, Phase 1
-├── tasks.md                 # spec-kit-generate-tasks
+├── tasks.md                 # spec-kit-generate-tasks (checkboxes: spec-kit-execute-tasks)
+├── amendments.md            # spec-kit-amend-artifacts — see § amendments.md
 ├── state.json                # spec-kit-sync-artifacts — see below
 └── checklists/
     ├── requirements.md      # spec-kit-generate-spec
     ├── plan-quality.md      # spec-kit-generate-plan
+    ├── tasks-quality.md     # spec-kit-generate-tasks
     └── consistency-report.md # spec-kit-analyze-consistency
 ```
 
@@ -137,7 +141,9 @@ Written and updated by `spec-kit-sync-artifacts` (read by `spec-kit-generate-pla
 
 - `artifacts.<name>.content_hash` — the current content hash of that artifact itself (always a
   SHA-256 over its content, computed per the Content Fingerprint Convention's "kit-internal
-  artifact" rule below — never a commit SHA, to stay stable regardless of git status).
+  artifact" rule below — never a commit SHA, to stay stable regardless of git status). For
+  `tasks.md` the hash is **progress-insensitive**: checkbox state is normalized before hashing, so
+  `spec-kit-execute-tasks` marking `[x]` never changes it and never needs to rewrite it.
 - `artifacts.plan.based_on_spec_hash` — the `spec.content_hash` value at the moment `plan.md` was
   generated from it. `artifacts.tasks.based_on_plan_hash` is the equivalent for `tasks.md`
   against `plan.md`.
@@ -165,6 +171,30 @@ Never a commit SHA for these — an internal artifact is frequently compared bef
 committed, and tying its fingerprint to git history would make staleness detection silently stop
 working on uncommitted work.
 
+**`tasks.md` normalization**: before hashing `tasks.md`, rewrite every checkbox to the open state —
+each line matching `^(\s*[-*]\s+)\[[xX]\]` becomes `$1[ ]`. Nothing else is normalized: a changed
+description, a new task, or an appended `Superada por:` line still changes the hash, as it
+should. Execution progress is the one edit that is not a content change.
+
+Compute fingerprints mechanically, never by estimation:
+
+```bash
+node spec-kit-shared/scripts/fingerprint.mjs <file>...          # sha256:<hex>  <file>
+node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>  # artifact-chain comparison
+```
+
+(`spec-kit-shared/` resolves the same way as every other reference to it.) The script applies the `tasks.md` normalization automatically (by basename; `--tasks`/`--raw`
+override). Without Node, the equivalent is
+`sed -E 's/^([[:space:]]*[-*][[:space:]]+)\[[xX]\]/\1[ ]/' tasks.md | shasum -a 256` for
+`tasks.md` and `shasum -a 256 <file>` for the others.
+
+**Legacy `tasks.md` hashes**: a `state.json` written before this normalization existed may hold a
+raw hash. If the normalized hash mismatches but the raw hash matches, it is not drift. If neither
+matches, check whether the only differences against the last committed or recorded version are
+checkbox states (e.g. `git diff` of `tasks.md` with both sides normalized); if so, it is not drift
+either. In both cases the next skill that writes `state.json` stores the normalized hash and says
+so in its report.
+
 **External sources** (anything cited as `[S#]`/`[P#]` in an Evidence Catalog — PRDs, contracts,
 existing code inspected as evidence, pasted text, URLs):
 
@@ -184,3 +214,116 @@ Never leave a fingerprint field blank or as an unexplained "N/A" when a real one
 — a missing fingerprint makes drift detection silently impossible for that artifact or source. If a
 fingerprint genuinely cannot be computed (e.g. a requirement described only verbally, with no
 artifact behind it), state that explicitly instead of leaving the field empty.
+
+## Stable ID Namespaces
+
+Each artifact owns its own ID prefixes. An ID is defined in exactly one artifact; every other
+artifact only cites it.
+
+| Artifact | Owns | Level |
+| --- | --- | --- |
+| `spec.md` | `R-G`, `R-US`, `R-FR`, `R-QR`, `R-AC`, `R-AS`, `R-D`, `R-DEP`, `R-RISK`, `E-##`, `E-I`, `E-DL`, `A-##`, `A-D`, `A-E`, `A-C`, `S-C`, `S-CS`, `O-##`, `N-##`, `S-SG`, `[S#]`/`[P#]` | Observable behavior, business rules, capability-level approach and operations |
+| `plan.md` / `research.md` | `PL-D##` (technical decisions), `PL-O##` (technical operations), `RS-##` (research entries) | Libraries, files, mount points, concrete values, runtime premises |
+| `tasks.md` | `T###` | Execution units |
+| `amendments.md` | `AM-##` | Decided changes applied after generation |
+
+`spec.md`'s `A-D##` and `O-##` are capability-level; `plan.md` never reuses those prefixes for its
+own entries. `tasks.md` traces to `PL-O##` (and to the `R-FR`/`R-AC` it satisfies), never directly
+to a spec `O-##`.
+
+**Legacy plans**: a `plan.md` generated before this convention defines its decisions and
+operations as `A-D0#`/`O-0#`. A skill reading such a plan resolves those IDs in `plan.md` first and
+only then in `spec.md`, and reports the ambiguity when both define the same ID. Updating a legacy
+plan keeps its existing IDs (stable IDs are never renumbered) and gives new entries `PL-` IDs.
+
+## Layer Ownership (the lowest-affected-layer rule)
+
+A change is written in the **lowest** artifact that owns everything it changes, and propagates
+only downward from there:
+
+| A change to… | Belongs to | Touches `spec.md`? |
+| --- | --- | --- |
+| Scope, actors, observable behavior, business rules, acceptance criteria, entities, invariants, safeguards (including sensitive data per channel), a user-visible error or status | `spec.md` → `plan.md` → `tasks.md` | Yes |
+| Library, file, mount point, wiring order, concrete timeout/retry value that still satisfies the same `R-QR`/`S-SG`, a runtime premise, a technical decision | `plan.md` → `tasks.md` | No |
+| Task wording, a `Validación` criterion, a file within an existing `PL-O`, an extra task inside an existing `PL-O`, rework of a closed task without new `R-AC` | `tasks.md` | No |
+
+Consequences every skill follows:
+
+- `spec.md` never states a file-level fact as a binding constraint ("`main.js` does not change"). A
+  safeguard protects a behavior or a contract; which files may change is `plan.md`'s call.
+- When in doubt between two layers, use the higher one — the rule exists to skip unnecessary
+  cascades, never to hide a behavior change from the spec.
+- A behavior change still goes spec-first (SPDD direction rule); this table only stops purely
+  technical changes from forcing a spec version.
+
+## Evidence Levels
+
+Every `Verified` claim about the real project carries one of these levels — in `research.md`,
+in `plan.md`'s decision Evidence column, and in any task or review that relies on it:
+
+| Level | Meaning | Sufficient for |
+| --- | --- | --- |
+| `executed` | Observed by running something: a scratch probe against the installed dependency, an existing test, a local request. The command and its observed output are cited. | Any claim, including runtime behavior |
+| `read` | Established by reading source, types, contracts, or docs of the installed version. | Shapes: names, signatures, fields, enum values, config keys, file paths |
+| `assumption` | Neither of the above. | Nothing binding — it must be recorded as an assumption with a task that confirms it |
+
+**Runtime-behavior claims require `executed`.** A claim is about runtime behavior when it states
+*when*, *in what order*, *how many times*, *how long*, or *with what side effect* something happens:
+retries and their delays, timeouts, `retry-after` handling, when a logger/serializer captures
+its input, middleware ordering, transaction or connection lifecycles, what an error object
+contains, what a library actually sends over the wire. Reading the code of such behavior is
+`read`, not `executed`, however carefully it was read. A runtime premise that cannot be executed
+during planning is recorded as `assumption` and gets a probe task (`[SONDA]`, see § Task
+Lifecycle) that runs before any task depending on it.
+
+## Task Lifecycle
+
+`tasks.md` states, and who may write each one:
+
+- `- [ ]` open — written by `spec-kit-generate-tasks` / `spec-kit-amend-artifacts`.
+- `- [x]` closed — written only by `spec-kit-execute-tasks`, only after the task's `Validación`
+  actually ran and passed.
+- A closed task is immutable. The single permitted edit is appending one line,
+  `Superada por: T0NN (AM-##)`, written by `spec-kit-generate-tasks` or `spec-kit-amend-artifacts`
+  when later work replaces it. A superseded task stays `[x]`; it records history, not current
+  intent.
+
+Tags:
+
+- `[CIERRE]` — a story's closure checkpoint. Each story has **exactly one active `[CIERRE]`**: the
+  one without a `Superada por:` line. A new `[CIERRE]` is created only when the story's `R-AC` set
+  changes; the previous one then gets `Superada por:`.
+- `[ENMIENDA T0XX]` — rework of closed task `T0XX` (or new work inside the story) applied through
+  an amendment, carrying an `Enmienda: AM-##` line. Amendment tasks that do not change the story's
+  `R-AC` set do **not** get a new `[CIERRE]`: they go under an `#### Enmiendas` subsection after the
+  active `[CIERRE]`, and their `Validación` ends with "re-recorrer el `Verifica` de T0XX (cierre
+  activo)". `spec-kit-execute-tasks` re-walks that block after the story's last amendment task and
+  records the result in `amendments.md`, without editing the closed `[CIERRE]`.
+- `[SONDA]` — a probe that turns an `assumption` runtime premise into `executed` evidence
+  (§ Evidence Levels). It runs before every task that depends on the premise; if the probe refutes
+  the premise, execution stops and the change goes to `spec-kit-amend-artifacts` at the `plan`
+  layer.
+
+## `amendments.md`
+
+Written by `spec-kit-amend-artifacts` (entries) and `spec-kit-execute-tasks` (status and closure
+re-walk results only). One entry per decided change applied after the artifacts were generated —
+so no decision lives only in chat, and so every amendment task cites a reason.
+
+```markdown
+# Amendments: [Feature Name]
+
+## AM-01 — [short title]
+
+- **Origin**: [pre-pr-review F-2 @ <head-sha> | user request | execute-tasks unplanned scope | SONDA T0NN refuted premise]
+- **Decision**: [the decided change] — Decided by: [user | reviewer + user]
+- **Recorded in**: [spec.md R-D## + [S#] | plan.md PL-D## | amendments.md only]
+- **Layer**: spec | plan | tasks | none (accepted as-is, no artifact change)
+- **IDs changed**: [R-AC06, PL-D07, T046 …]
+- **Closed tasks affected**: [T018 → Superada por T050 | T009 re-walked | none]
+- **Closure re-walk**: [T052 [CIERRE] re-walked <date>: holds | fails: …]
+- **Status**: applied | executed | verified
+```
+
+`Layer: none` is how a `🟡` accepted without changing anything is recorded: the decision and its
+owner are written down, and no artifact or hash changes.
