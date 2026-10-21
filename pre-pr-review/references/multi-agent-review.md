@@ -88,6 +88,11 @@ The packet contains:
 5. The IDs and text of the invariants from Phase 4 of `SKILL.md` that apply to this diff.
 6. Path to a base-branch worktree, if one was created.
 
+Write the packet fresh for every review from its sources (the diff, Phase 1's intent sources, and
+the current spec artifacts when the change is spec-driven); never append to a packet from an
+earlier review of the same branch — a packet that accumulates sections across reviews hides
+which items still apply.
+
 Store the packet in the scratchpad or temp directory, never in the repository. If the host offers
 no shared filesystem with sub-agents, inline the packet in every brief verbatim.
 Redact secrets, tokens, and PII from the packet even when the diff contains them: cite
