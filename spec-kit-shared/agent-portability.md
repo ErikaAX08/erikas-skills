@@ -70,6 +70,7 @@ Rules:
 - In Claude, omit permissive `permissionMode` values unless the user explicitly requires and approves them.
 - Do not add Kiro-only `code`, `resources`, `toolsSettings`, or MCP fields to the Claude file.
 - Do not add Claude-only `Agent`, `skills`, `disallowedTools`, `permissionMode`, `memory`, `background`, `effort`, or `isolation` fields to the Kiro file.
+- Workspace isolation for parallel executors is done by the orchestrating skill with plain `git worktree` commands (see `spec-kit-execute-tasks` § Isolated Story Worktrees), so it is portable; do not rely on Claude's `isolation` field for it, and never put that field in the Kiro file.
 - Nested-agent orchestration is not part of the portable baseline. Add it only as an explicitly platform-specific capability and validate that variant independently.
 - Omit model selection by default so Kiro uses its configured default and Claude inherits the parent model. If the Claude file includes a model, prefer `model: inherit`; never assume the same model identifier is valid in Kiro.
 
