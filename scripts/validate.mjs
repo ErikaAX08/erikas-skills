@@ -13,6 +13,7 @@ const SPEC_KIT_SKILLS = [
   "spec-kit-analyze-consistency",
   "spec-kit-sync-artifacts",
   "spec-kit-execute-tasks",
+  "spec-kit-amend-artifacts",
 ];
 
 export async function validate() {

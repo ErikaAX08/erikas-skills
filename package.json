@@ -46,6 +46,7 @@
     "project-intelligence/**/*",
     "project-setup/**/*",
     "spec-kit/**/*",
+    "spec-kit-amend-artifacts/**/*",
     "spec-kit-analyze-consistency/**/*",
     "spec-kit-establish-constitution/**/*",
     "spec-kit-execute-tasks/**/*",

@@ -13,6 +13,7 @@ export const SPEC_KIT_SKILLS = [
   "spec-kit-analyze-consistency",
   "spec-kit-sync-artifacts",
   "spec-kit-execute-tasks",
+  "spec-kit-amend-artifacts",
 ];
 
 // Installable skills = entries in pnpm-workspace.yaml (with fallback for installed package)
@@ -33,7 +34,7 @@ const FALLBACK_SKILLS = [
   "verify-before-implement",
 ];
 
-// spec-kit is an atomic kit: a single entry that expands to 7 skills + spec-kit-shared
+// spec-kit is an atomic kit: a single entry that expands to 8 skills + spec-kit-shared
 export function listSkills() {
   const wsPath = path.join(ROOT, "pnpm-workspace.yaml");
   if (fs.existsSync(wsPath)) {

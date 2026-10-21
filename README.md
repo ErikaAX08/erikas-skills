@@ -59,7 +59,9 @@ A chain for spec-driven development. Run the steps in order; each needs the `REA
 5. spec-kit-analyze-consistency      (optional) consistency check
 6. spec-kit-execute-tasks            tasks.md → code
 
-spec-kit-sync-artifacts — run anytime after editing a source, spec or plan to see what's stale.
+spec-kit-sync-artifacts  — run anytime after editing a source, spec or plan to see what's stale.
+spec-kit-amend-artifacts — apply an already-decided change (e.g. a review finding) in one pass,
+                           starting at the lowest artifact it affects.
 ```
 
 See [`spec-kit-shared/README.md`](./spec-kit-shared/README.md) for details.

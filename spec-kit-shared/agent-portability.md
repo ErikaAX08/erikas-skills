@@ -8,7 +8,7 @@
 > **Used by**: `spec-kit-generate-spec` (`spec-clarifier`, `spec-planner`), `spec-kit-generate-plan`
 > (`plan-reviewer`), `spec-kit-generate-tasks` (`task-decomposer`), `spec-kit-analyze-consistency`
 > (`spec-analyzer`), `spec-kit-sync-artifacts` (`drift-watcher`), `spec-kit-execute-tasks` (`task-executor`),
-> `spec-kit-establish-constitution` (`pattern-miner`).
+> `spec-kit-establish-constitution` (`pattern-miner`), `spec-kit-amend-artifacts` (`artifact-amender`).
 >
 > **How to use this file**: before generating, validating, or reporting on any support agent, read
 > this file completely and follow it as if it were inline in the calling skill. Do not paraphrase
@@ -32,7 +32,7 @@ Do not use custom `handoffs` metadata in a calling skill's YAML frontmatter. It 
 ## Portable Naming Rules
 
 - Use only lowercase letters and hyphens.
-- Prefer action-role names such as `spec-clarifier`, `spec-planner`, `plan-reviewer`, `task-decomposer`, `spec-analyzer`, `drift-watcher`, `task-executor`, or `pattern-miner`.
+- Prefer action-role names such as `spec-clarifier`, `spec-planner`, `plan-reviewer`, `task-decomposer`, `spec-analyzer`, `drift-watcher`, `task-executor`, `pattern-miner`, or `artifact-amender`.
 - Do not use dots, spaces, underscores, path separators, or platform-specific prefixes in the shared name.
 - Keep the filename stem and declared `name` identical on both platforms, even though Claude Code identifies the agent from frontmatter.
 - Ensure the name is unique within both agent directories.
@@ -46,6 +46,7 @@ Standard roles already assigned across `spec-kit` (do not redefine these names f
 - `spec-analyzer` — running the spec/plan/tasks consistency check in isolation, read-only (`spec-kit-analyze-consistency`).
 - `drift-watcher` — running a standalone drift/staleness check in isolation, read-only (`spec-kit-sync-artifacts`).
 - `task-executor` — executing one independent task or user story in parallel with others (`spec-kit-execute-tasks`).
+- `artifact-amender` — applying one confirmed amendment plan across spec/plan/tasks in isolation, without product code (`spec-kit-amend-artifacts`).
 - `pattern-miner` — sampling every instance of one component category (e.g. all repositories, all controllers) to determine its dominant pattern, in parallel with mining of other categories (`spec-kit-establish-constitution`).
 
 ## Capability and Tool Mapping
