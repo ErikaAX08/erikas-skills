@@ -117,6 +117,23 @@ pattern `spec-kit-generate-spec` uses for its Extension Hooks):
 | Final safety-net review | `pre-pr-review` | Always at the end over the accumulated diff (§ Final Gate); optionally per story (§ Story Review Gate) |
 | Applying a decided change to spec/plan/tasks | `spec-kit-amend-artifacts` | A review finding, refuted `[SONDA]`, or unplanned scope the user has decided |
 
+## Run Log
+
+Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
+`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-execute-tasks mode=<mode>` and pass the printed `RUN_ID` to every
+later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
+Pass `--log <RUN_ID> --skill spec-kit-execute-tasks` to `lint-artifacts.mjs` and `fingerprint.mjs --state` (readiness and Fase 0) so they record their own results.
+Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
+
+- `readiness` — proceed, stop, or execute against a draft (the last one also as a `deviation`)
+- `parallelism` — sequential or parallel, and which stories, with the independence evidence
+- `probe` — each `[SONDA]`: `value` confirmed / refuted, `ids` the task and `PL-D##`/`RS-##`
+- `closure` — each active `[CIERRE]` walk or re-walk: held / failed
+- `verdict-route` — each review gate: `value` the literal verdict key, `rationale` how each item was routed; plus a `finding` per `🔴`/`🟡`
+- a `check` with `tool: validation` for every `Validación` that failed (passes are already recorded as `[x]`)
+
+If logging is off (`RUN_LOG: off`), continue normally.
+
 ## Input Contract
 
 ### Resolving the Target Tasks
@@ -327,6 +344,10 @@ evidence rule was not applied.
 2. **`pre-pr-review`** over the accumulated diff — the last safety net, run unconditionally (Rule
    10), with the § Review Context above. Handle its verdict per § Review Verdict Handling; the
    feature is not done while a `🔴`, an unverified `X`, or an undecided `🟡` remains.
+3. **Run report**: when the feature is complete, run
+   `node spec-kit-shared/scripts/run-report.mjs <feature-dir>` and carry its Signals into the
+   Completion Report. They are feedback about the kit's behavior on this feature — which skill or
+   rule to improve — not new work for the feature itself.
 
 ## Handling Unplanned Scope Discovered Mid-Execution
 
@@ -367,6 +388,9 @@ format the other `spec-kit` skills use.
 
 Report:
 
+- `RUN_ID`: this run's log ID, or `off`.
+- `RUN_SIGNALS`: the run report's signals when the feature completed (`none`, or each signal ID with
+  its evidence), or `not run — feature not complete`.
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
 - `EXECUTED_FROM_DRAFT_TASKS`: `true` if `tasks.md` was not `READY` when execution started.
 - `TASKS_COMPLETED` / `TASKS_SKIPPED` (already closed) / `TASKS_FAILED`: counts, with IDs for the
@@ -388,6 +412,7 @@ Report:
 
 ## Done When
 
+- [ ] The run was logged from `run.start` to `run.end` (or logging is off).
 - [ ] `tasks.md` was resolved, read, and confirmed `READY` (or draft execution was explicitly
       confirmed, with affected tasks skipped and reported).
 - [ ] `lint-artifacts.mjs` reported no BLOCKING finding before any code was written.

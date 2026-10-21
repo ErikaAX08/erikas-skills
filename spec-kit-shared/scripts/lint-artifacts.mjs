@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Mechanical checks over a spec-kit feature directory (spec-kit-shared/artifact-conventions.md).
 //
-//   node lint-artifacts.mjs <feature-dir> [--json]
+//   node lint-artifacts.mjs <feature-dir> [--json] [--log <run-id> --skill <name>]
 //     exit 0 = no BLOCKING finding, 1 = BLOCKING findings, 2 = not a feature directory,
 //     3 = state.json newer than this contract
 //
@@ -12,6 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONTRACT_VERSION, loadFeature, idsIn } from "./lib/artifacts.mjs";
+import { appendEvent, logOption } from "./lib/runlog.mjs";
 
 const AMENDMENT_STATUSES = ["planned", "applied", "stopped", "escalated", "accepted", "abandoned", "executed", "verified"];
 const SPEC_FILES = ["spec.md"];
@@ -271,6 +272,14 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     process.exit(64);
   }
   const result = lint(dir);
+  const log = logOption(args);
+  if (log && result.status !== 2) {
+    const blocking = result.findings.filter((f) => f.severity === "BLOCKING").length;
+    appendEvent(dir, { ...log, event: "check", data: {
+      tool: "lint", exit: result.status, blocking, advisory: result.findings.length - blocking,
+      codes: [...new Set(result.findings.map((f) => f.code))].sort(),
+    } });
+  }
   if (args.includes("--json")) console.log(JSON.stringify(result, null, 2));
   else printReport(dir, result);
   process.exit(result.status);

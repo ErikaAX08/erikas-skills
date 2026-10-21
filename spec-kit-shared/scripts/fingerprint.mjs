@@ -8,6 +8,8 @@
 //   node fingerprint.mjs --record <feature-dir> <spec|plan|tasks>
 //                                                         write that artifact's state.json entry
 //     run only by the artifact's owning skill (§ Write Ownership); exit 3 = state.json too new
+//   --state and --record also accept --log <run-id> --skill <name> to record their result in the
+//   feature's run log (§ Run Log)
 //
 // tasks.md is hashed progress-insensitively (checkboxes normalized to "[ ]"); --tasks forces that
 // normalization on any file and --raw disables it.
@@ -16,6 +18,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONTRACT_VERSION, sectionBlocks } from "./lib/artifacts.mjs";
+import { appendEvent, logOption } from "./lib/runlog.mjs";
 
 const CHECKBOX = /^(\s*[-*]\s+)\[[xX]\]/gm;
 const UPSTREAM = { plan: ["based_on_spec_hash", "spec"], tasks: ["based_on_plan_hash", "plan"] };
@@ -149,12 +152,24 @@ if (isMain) {
     for (const l of result.lines) console.log(l);
     process.exit(result.status);
   };
+  const log = logOption(args);
   if (args[0] === "--state") {
     if (!args[1]) { console.error(usage); process.exit(64); }
-    run(compareState(args[1]));
+    const result = compareState(args[1]);
+    if (log && result.status !== 2) {
+      const localized = Object.entries(result.localized ?? {}).map(([name, d]) => `${name}: changed=${d.changed.join("|") || "-"} added=${d.added.join("|") || "-"} removed=${d.removed.join("|") || "-"}`);
+      appendEvent(args[1], { ...log, event: "check", data: { tool: "fingerprint", mode: "state", exit: result.status, drift: result.status === 1, localized } });
+    }
+    run(result);
   } else if (args[0] === "--record") {
     if (!args[1] || !args[2]) { console.error(usage); process.exit(64); }
-    try { run(recordEntry(args[1], args[2])); } catch (err) { console.error(`ERROR: ${err.message}`); process.exit(64); }
+    let result;
+    try { result = recordEntry(args[1], args[2]); } catch (err) { console.error(`ERROR: ${err.message}`); process.exit(64); }
+    if (log && result.status === 0) {
+      const hash = (result.lines.find((l) => l.startsWith("RECORDED:")) ?? "").match(/content_hash=(\S+)/)?.[1];
+      appendEvent(args[1], { ...log, event: "artifact", data: { path: `${args[2]}.md`, action: "record", hash_after: hash, migrated: result.lines.some((l) => l.startsWith("SCHEMA_MIGRATED")) } });
+    }
+    run(result);
   } else if (args[0] === "--sections") {
     if (!args[1]) { console.error(usage); process.exit(64); }
     console.log(JSON.stringify(sections(args[1]), null, 2));

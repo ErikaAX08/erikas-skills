@@ -122,6 +122,20 @@ Fingerprint Convention used for staleness detection all live in the shared, cano
 `spec-kit-shared/artifact-conventions.md`. Read it before Phase 0 below and follow it exactly —
 this skill does not redefine its own file layout or hashing scheme.
 
+## Run Log
+
+Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
+`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-generate-plan mode=<mode>` and pass the printed `RUN_ID` to every
+later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
+Pass `--log <RUN_ID> --skill spec-kit-generate-plan` to `fingerprint.mjs --record … plan` and `lint-artifacts.mjs` so they record their own results.
+Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
+
+- `drift` — in update mode, each changed spec ID classified material or non-material
+- `evidence` — one per runtime premise: `value` executed / read / assumption, `ids` the `RS-##`/`PL-D##`
+- `readiness` — `READY` or `DRAFT`, citing blocking items or failed gates
+
+If logging is off (`RUN_LOG: off`), continue normally.
+
 ## Input Contract
 
 ### Resolving the Target Specification
@@ -410,6 +424,7 @@ format `spec-kit-generate-spec` uses for its own post-hooks.
 
 Report:
 
+- `RUN_ID`: this run's log ID, or `off`.
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
 - `PLAN_FILE`, `RESEARCH_FILE`, `DATA_MODEL_FILE`, `CONTRACTS_DIR`, `QUICKSTART_FILE`: paths
   written.
@@ -430,6 +445,7 @@ Report:
 
 ## Done When
 
+- [ ] The run was logged from `run.start` to `run.end` (or logging is off).
 - [ ] `spec.md` was resolved, read, and confirmed `READY` (or draft planning was explicitly
       confirmed by the user).
 - [ ] Fase 0 Staleness Check ran and any material drift was reported before proceeding.

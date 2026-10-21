@@ -78,6 +78,9 @@ pass, records the decision in amendments.md, then hands off to spec-kit-execute-
   Enforcement) — never re-guessed from scratch each time.
 - **Cross-platform by construction.** Any support agent a skill materializes gets a validated Kiro
   CLI **and** Claude Code definition — see `spec-kit-shared/agent-portability.md`.
+- **Observable.** Every run logs what it decided and why (`artifact-conventions.md` § Run Log), and
+  `run-report.mjs` turns those logs into signals — so improving the kit starts from measured
+  behavior, not from memory of what went wrong.
 - **Load on demand.** Each skill's `SKILL.md` holds its workflow and rules; templates and the
   update procedures live in its `references/` folder and are read only when that step runs —
   so `spec-kit-amend-artifacts` reads three short update procedures, not three whole skills.
@@ -103,6 +106,9 @@ Not invocable skills — documents every skill above reads and follows:
 - **`scripts/lint-artifacts.mjs`** — runs every mechanical check of the Artifact Grammar (broken
   or duplicate IDs, task fields, closures, probes, amendment links, sensitive-data channels) with
   stable codes `L01`–`L21`; `spec-kit-analyze-consistency` and the generating skills use it.
+- **`scripts/log-event.mjs`** / **`scripts/run-report.mjs`** — write the append-only run log
+  every skill keeps (`runs.jsonl`: decisions with their rationale, checks, findings, deviations) and
+  summarize it into a retrospective-ready report with signals pointing at what to improve.
 - **`evals/`** — the `base-feature/` fixture, the fixture builder, and the guide to the script
   tests and the per-skill evals (`spec-kit-analyze-consistency`, `spec-kit-amend-artifacts`,
   `spec-kit-execute-tasks`).

@@ -100,6 +100,19 @@ invent a different name or redefine it for another purpose.
 (`before_constitution`/`after_constitution`) live in `spec-kit-shared/artifact-conventions.md`.
 Read it before Phase 1 below.
 
+## Run Log
+
+Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (project-wide, so `<dir>` is `.speckit`): start with
+`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-establish-constitution mode=<mode>` and pass the printed `RUN_ID` to every
+later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
+Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
+
+- `decision` kind `other` for each candidate principle: `value` confirmed / rejected / mixed pattern, with its evidence
+- `user` events for the confirmation gate
+- `readiness` — the constitution written, updated, or left unchanged
+
+If logging is off (`RUN_LOG: off`), continue normally.
+
 ## Input Contract
 
 ### New vs. Update vs. Drift-Check Mode
@@ -236,6 +249,7 @@ After writing/updating `constitution.md`, process `hooks.after_constitution` the
 
 Report:
 
+- `RUN_ID`: this run's log ID, or `off`.
 - `MODE`: New / Update / Drift-Check.
 - `CONSTITUTION_FILE`: `.speckit/memory/constitution.md` path.
 - `VERSION`: current version after this run.
@@ -249,6 +263,7 @@ Report:
 
 ## Done When
 
+- [ ] The run was logged from `run.start` to `run.end` (or logging is off).
 - [ ] The mode (New/Update/Drift-Check) was determined, explicitly if ambiguous.
 - [ ] Explicit sources were read and cited, not paraphrased.
 - [ ] Mining scope was determined deliberately, not applied blindly to the whole codebase.

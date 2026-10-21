@@ -91,6 +91,19 @@ The `.speckit/` layout (including `.speckit/specs/<feature-dir>/`) and `state.js
 `state.json` for context (e.g. whether `tasks.md` is stale relative to `plan.md`) but never writes
 to it — that remains `spec-kit-sync-artifacts`'/the generating skill's responsibility.
 
+## Run Log
+
+Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
+`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-analyze-consistency mode=<mode>` and pass the printed `RUN_ID` to every
+later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
+Pass `--log <RUN_ID> --skill spec-kit-analyze-consistency` to `lint-artifacts.mjs` (Phase 1.5) so they record their own results.
+Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
+
+- `severity` — one per semantic (Phase 9) finding: `value` BLOCKING / ADVISORY, `ids` both sides of the contradiction
+- `readiness` — the `READY_FOR_EXECUTION` verdict, citing the BLOCKING findings
+
+If logging is off (`RUN_LOG: off`), continue normally.
+
 ## Input Contract
 
 ### Resolving the Target Feature
@@ -355,6 +368,7 @@ the schema stays centrally defined rather than invented ad hoc here.
 
 Report:
 
+- `RUN_ID`: this run's log ID, or `off`.
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
 - `ARTIFACTS_FOUND`: which of spec.md/plan.md/tasks.md existed.
 - `CHECKS_SKIPPED`: list with reasons, or "none".
@@ -369,6 +383,7 @@ Report:
 
 ## Done When
 
+- [ ] The run was logged from `run.start` to `run.end` (or logging is off).
 - [ ] The target feature directory was resolved and every existing artifact was read completely.
 - [ ] Every check applicable to the artifacts present was run; every skipped check is listed with
       its reason, not silently omitted.

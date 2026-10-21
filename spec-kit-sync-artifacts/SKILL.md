@@ -95,6 +95,18 @@ The `.speckit/` layout (including `.speckit/specs/<feature-dir>/`), `state.json`
 Convention live in `spec-kit-shared/artifact-conventions.md`. Read it before Phase 1 below — this
 skill's entire mechanism is built directly on that document's schema.
 
+## Run Log
+
+Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
+`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-sync-artifacts mode=<mode>` and pass the printed `RUN_ID` to every
+later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
+Pass `--log <RUN_ID> --skill spec-kit-sync-artifacts` to `fingerprint.mjs --state` so they record their own results.
+Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
+
+- `drift` — one per drifted artifact or source: what changed (localized IDs) and the recommended next hop
+
+If logging is off (`RUN_LOG: off`), continue normally.
+
 ## Input Contract
 
 ### Resolving the Target Feature
@@ -256,6 +268,7 @@ skill's job ends at the report and recommendation.
 
 Report:
 
+- `RUN_ID`: this run's log ID, or `off`.
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
 - `STATE_FOUND`: `true`/`false`.
 - `SCHEMA_VERSION`: the version found, and whether it migrates on the next write.
@@ -269,6 +282,7 @@ Report:
 
 ## Done When
 
+- [ ] The run was logged from `run.start` to `run.end` (or logging is off).
 - [ ] The target feature's `state.json` was located, or its absence was reported and the skill
       stopped there.
 - [ ] Every `source_documents` entry and every artifact hash was recomputed and compared.

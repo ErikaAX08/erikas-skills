@@ -72,6 +72,20 @@ out-of-date recollection of it. If the active host cannot resolve that file refe
 "Fallback for hosts that cannot follow a file reference" section at the end of that same document
 — do not silently skip agent generation or invent the contract.
 
+## Run Log
+
+Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
+`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-generate-spec mode=<mode>` and pass the printed `RUN_ID` to every
+later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
+Pass `--log <RUN_ID> --skill spec-kit-generate-spec` to `fingerprint.mjs --record … spec` so they record their own results.
+Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
+
+- `readiness` — `READY` or `DRAFT — NEEDS CLARIFICATION`, citing the blocking items
+- `scope` — the bounded scope, or the decomposition proposed when the input held several features
+- `user` events for every clarification round (`question`) and answer (`decision`)
+
+If logging is off (`RUN_LOG: off`), continue normally.
+
 ## Input Contract
 
 ### Accepted Input Forms
@@ -387,6 +401,7 @@ Wait for each mandatory hook to finish. Present optional hooks without executing
 
 Report:
 
+- `RUN_ID`: this run's log ID, or `off`.
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
 - `SPEC_FILE`: generated or updated specification path.
 - `CHECKLIST_FILE`: quality checklist path.
@@ -414,6 +429,7 @@ Next: Review the REASONS Canvas, then proceed to technical planning.
 
 ## Done When
 
+- [ ] The run was logged from `run.start` to `run.end` (or logging is off).
 - [ ] All provided text and relevant documents were ingested or access failures were disclosed.
 - [ ] The request was bounded to one coherent specification.
 - [ ] Relevant project reality and governing standards were inspected.
