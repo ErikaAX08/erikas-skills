@@ -155,7 +155,11 @@ report (Rule 6).
 
 ### Phase 3 — Structural Localization (best-effort)
 
-For every mismatch found in Phase 2, attempt to localize which stable IDs are involved:
+For every mismatch found in Phase 2, attempt to localize which stable IDs are involved. When the
+recorded entry has `sections`, localization is mechanical: `fingerprint.mjs --state` prints the
+changed, added, and removed IDs for each drifted artifact — report those and stop there for that
+artifact (an edit outside every ID block is reported as such). The best-effort rules below apply
+only to entries without `sections`:
 
 - **Source drift**: which `[S#]`/`[P#]` row in `spec.md`'s Evidence Catalog cites this source, and
   which `R-G##`/`R-FR##`/`R-AC##`/etc. cite that same ID in turn (a simple citation-graph lookup,

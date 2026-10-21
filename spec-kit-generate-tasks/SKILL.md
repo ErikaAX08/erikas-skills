@@ -349,7 +349,8 @@ Create `checklists/tasks-quality.md`:
 ## Governance
 
 - [ ] tasks.md contains no TODOs, placeholders, or unresolved template labels
-- [ ] state.json was created/updated with this task list's content hash and based_on_plan_hash
+- [ ] state.json was created/updated with `fingerprint.mjs --record <feature-dir> tasks` (content hash, based_on_plan_hash, sections)
+- [ ] `lint-artifacts.mjs <feature-dir>` reports no BLOCKING finding (fields, dependencies, closures, probes, amendment links)
 
 ## Agent Portability
 
@@ -382,7 +383,7 @@ When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected dri
    new tasks — never renumber existing tasks.
 5. Re-verify the affected story's `[CIERRE]` task still covers the right `R-AC##` set.
 6. Update `state.json`'s `artifacts.tasks.content_hash` and `based_on_plan_hash` only after the
-   targeted regeneration validates. Before writing, apply `artifact-conventions.md` § Schema Versions and Migrations: stop if `schema_version` is newer than the contract; migrate a version-1 file (and report `SCHEMA_MIGRATED: 1→2`).
+   targeted regeneration validates. Write it with `node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> tasks`, which applies `artifact-conventions.md` § Schema Versions and Migrations — it refuses a state newer than the contract (exit 3: stop) and migrates a version-1 file, reporting `SCHEMA_MIGRATED: 1→2`.
 7. Re-run the full `tasks-quality.md` checklist regardless of how small the change was — except
    when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
    the items that touch the changed tasks and stories plus Traceability and Governance, and record

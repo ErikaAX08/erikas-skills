@@ -435,7 +435,8 @@ Create `checklists/plan-quality.md`:
 ## Governance
 
 - [ ] The plan contains no TODOs, placeholders, or unresolved template labels
-- [ ] `state.json` was created/updated with this plan's content hash and `based_on_spec_hash`
+- [ ] `state.json` was created/updated with `fingerprint.mjs --record <feature-dir> plan` (content hash, `based_on_spec_hash`, `sections`)
+- [ ] `lint-artifacts.mjs` reports no `BLOCKING` finding in `plan.md` or `research.md` (IDs, runtime premises, evidence levels)
 
 ## Agent Portability
 
@@ -464,7 +465,7 @@ When `spec.md` changed since the last `plan.md` (Fase 0 detected material drift)
 4. Preserve stable IDs (`PL-D##`, `PL-O##`, `RS-##`, or a legacy plan's `A-D0#`/`O-0#`) where
    semantics are unchanged; add new `PL-` IDs for new semantics.
 5. Update `state.json`'s `artifacts.plan.content_hash` and `based_on_spec_hash` only after the
-   targeted regeneration validates. Before writing, apply `artifact-conventions.md` § Schema Versions and Migrations: stop if `schema_version` is newer than the contract; migrate a version-1 file (and report `SCHEMA_MIGRATED: 1→2`).
+   targeted regeneration validates. Write it with `node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> plan`, which applies `artifact-conventions.md` § Schema Versions and Migrations — it refuses a state newer than the contract (exit 3: stop) and migrates a version-1 file, reporting `SCHEMA_MIGRATED: 1→2`.
 6. Re-run the full `plan-quality.md` checklist regardless of how small the change was — except
    when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
    the checklist items that touch the changed IDs plus the Evidence, Traceability, and Governance

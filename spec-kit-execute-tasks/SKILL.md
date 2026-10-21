@@ -131,6 +131,9 @@ pattern `spec-kit-generate-spec` uses for its Extension Hooks):
 
 ### Readiness Gate
 
+- Run `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` first. A `BLOCKING` finding — an open amendment (L19), a story without one
+  active closure (L08), a task built on an unprobed assumption (L14), a task with no
+  `Validación` (L06) — stops execution until the owning skill fixes it, whatever `STATUS` says.
 - If `tasks-quality.md`'s `STATUS` is `READY`, proceed.
 - If it is `DRAFT — NEEDS CLARIFICATION`, stop and ask the user to either resolve the blocking
   items upstream first, or explicitly confirm executing against a draft. Writing real code against
@@ -356,6 +359,7 @@ Report:
 
 - [ ] `tasks.md` was resolved, read, and confirmed `READY` (or draft execution was explicitly
       confirmed, with affected tasks skipped and reported).
+- [ ] `lint-artifacts.mjs` reported no BLOCKING finding before any code was written.
 - [ ] Fase 0's staleness check ran across the full chain before any code was written.
 - [ ] Every executed task's implementation was verified against real project facts
       (`verify-before-implement`), not invented.

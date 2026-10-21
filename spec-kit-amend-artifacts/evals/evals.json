@@ -1,0 +1,47 @@
+{
+  "skill_name": "spec-kit-amend-artifacts",
+  "evals": [
+    {
+      "id": 0,
+      "name": "plan-layer-premise",
+      "prompt": "The final pre-pr-review on the active feature returned F-1 🔴 (Fact, reproduced): the request log still contains the full phone number, because the request logger captures the request at request start — `node probe-logger.js` in the repo root shows it. I decided: register the masking serializer on the request logger in `src/app.js` before the routes are mounted. Apply this amendment. You have my confirmation for the amendment plan: show it, then proceed without asking again.",
+      "expected_output": "An amendment classified at the plan layer: spec.md untouched, RS-02 corrected with executed evidence from running the probe, PL-D02 rewritten, an [ENMIENDA T004] task under US1's Enmiendas without a new [CIERRE], the AM-01 entry written as planned with base hashes before any edit and closed as applied, state.json refreshed with fingerprint.mjs --record for plan and tasks only, and a hand-off to spec-kit-execute-tasks.",
+      "files": ["evals/files/plan-layer-premise"],
+      "assertions": [
+        "Classifies the change as the `plan` layer and does not modify spec.md (its content hash in state.json is unchanged).",
+        "Runs `node probe-logger.js` itself and cites its output (`captured=start`) as executed evidence in RS-02 and/or PL-D02, replacing the read-only claim about `onResFinished`.",
+        "Writes the `AM-01` entry in amendments.md with `Status: planned` and the base hashes before editing plan.md or tasks.md (visible in the transcript order), then updates `Layers done` and ends with `Status: applied`.",
+        "Adds a new task tagged `[ENMIENDA T004]` with an `Enmienda: AM-01` line under a `#### Enmiendas` heading in US1, does not edit closed task T004 beyond an optional `Superada por:` line, and does not create a new [CIERRE] (US1's R-AC set is unchanged).",
+        "The new task's `Validación` describes observable behavior (for example the request log containing only the masked number) and does not require `src/app.js` to stay unchanged.",
+        "Refreshes state.json with `fingerprint.mjs --record <feature-dir> plan` and `... tasks` (not by typing hashes), and `fingerprint.mjs --state` reports `ARTIFACT_DRIFT: NO` afterwards.",
+        "Runs `lint-artifacts.mjs` (no BLOCKING finding) and hands off to or recommends `spec-kit-execute-tasks` scoped to the amendment task; writes no product code (src/ unchanged)."
+      ]
+    },
+    {
+      "id": 1,
+      "name": "accepted-yellow",
+      "prompt": "pre-pr-review on the active feature returned `approve with conditions` with one 🟡, F-3 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s. I accept it as-is — the sweep runs from the scheduler, never over HTTP. Record that decision.",
+      "expected_output": "An amendments.md entry with Layer none and Status accepted, naming the decision and the decider, and no change to spec.md, plan.md, tasks.md, or state.json.",
+      "files": ["evals/files/accepted-yellow"],
+      "assertions": [
+        "Writes an `AM-01` entry in amendments.md with `Layer: none` and `Status: accepted`, the origin (pre-pr-review F-3), the decision, and the user as decider.",
+        "Does not modify spec.md, plan.md, tasks.md, or state.json, and adds no task.",
+        "Does not ask for an amendment-plan confirmation for artifact edits that do not exist, and does not escalate the change to another skill.",
+        "States that nothing needs to be executed for this entry."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "structural-escalation",
+      "prompt": "Decided with the product owner: agents must also be able to extend an active allow-list entry by another 24 hours from the admin panel. Amend the active feature with this.",
+      "expected_output": "The change is recognized as a new user story (a new capability with its own actor goal), so it is escalated to the regular chain: an amendments.md entry with Status escalated records the decision, no artifact is edited, and the next step is spec-kit-generate-spec in update mode.",
+      "files": ["evals/files/structural-escalation"],
+      "assertions": [
+        "Identifies the change as structural (a new user story / capability) under the skill's escalation rules, rather than classifying it as a spec-, plan-, or tasks-layer amendment.",
+        "Writes an amendments.md entry with `Status: escalated` that records the decision and its decider.",
+        "Does not modify spec.md, plan.md, tasks.md, or state.json.",
+        "Recommends `spec-kit-generate-spec` (update mode) as the next step."
+      ]
+    }
+  ]
+}

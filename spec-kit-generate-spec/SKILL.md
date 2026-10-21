@@ -650,6 +650,8 @@ Create `<feature-directory>/checklists/requirements.md` with this structure:
 [Specific failures, evidence, and remaining decisions]
 ```
 
+Before validating item by item, run `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>`: a `BLOCKING` finding in `spec.md` (duplicate or broken ID, an unenumerated sensitive-data channel) is a failed checklist item.
+
 Validate the specification item by item:
 
 1. Mark each checklist item passed or failed.
@@ -677,14 +679,15 @@ Also perform these consistency checks:
 ### Initialize or Refresh `state.json`
 
 Per `spec-kit-shared/artifact-conventions.md`'s schema, write or update
-`.speckit/specs/<feature-dir>/state.json`'s `artifacts.spec` entry (content hash of the final `spec.md`)
-and its `source_documents` map (mirroring the Evidence Catalog's fingerprints exactly) — in both
+`.speckit/specs/<feature-dir>/state.json`'s `artifacts.spec` entry — always with
+`node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> spec`, which computes the content
+hash and per-ID `sections` of the final `spec.md` — and its `source_documents` map (mirroring the Evidence Catalog's fingerprints exactly) — in both
 new mode and update mode, whether or not a `plan.md` exists yet. This is what lets
 `spec-kit-sync-artifacts` check a fresh specification against its sources standalone, before anyone has run
 `spec-kit-generate-plan` — the mechanism this whole kit exists to support must work from the very first
 spec, not only once a plan exists to have created `state.json` first.
 
-A new `state.json` is created with `"schema_version": 2`. Before writing, apply `artifact-conventions.md` § Schema Versions and Migrations: stop if `schema_version` is newer than the contract; migrate a version-1 file (and report `SCHEMA_MIGRATED: 1→2`).
+`--record` creates a new `state.json` with `"schema_version": 2`, migrates a version-1 file (reporting `SCHEMA_MIGRATED: 1→2`), and refuses a state newer than the contract (exit 3: stop). The `source_documents` map is the one part written by hand, from the Evidence Catalog.
 
 ## Updating an Existing Specification
 

@@ -158,7 +158,7 @@ exceptions:
 {
   "schema_version": 2,
   "artifacts": {
-    "spec": { "path": "spec.md", "content_hash": "sha256:...", "updated_at": "2026-07-10T10:00:00Z" },
+    "spec": { "path": "spec.md", "content_hash": "sha256:...", "sections": { "R-AC01": "sha256:...", "...": "..." }, "updated_at": "2026-07-10T10:00:00Z" },
     "plan": { "path": "plan.md", "content_hash": "sha256:...", "based_on_spec_hash": "sha256:...", "updated_at": "2026-07-11T09:00:00Z" },
     "tasks": { "path": "tasks.md", "content_hash": "sha256:...", "based_on_plan_hash": "sha256:...", "updated_at": "2026-07-11T15:00:00Z" }
   },
@@ -175,6 +175,10 @@ exceptions:
   artifact" rule below — never a commit SHA, to stay stable regardless of git status). For
   `tasks.md` the hash is **progress-insensitive**: checkbox state is normalized before hashing, so
   `spec-kit-execute-tasks` marking `[x]` never changes it and never needs to rewrite it.
+- `artifacts.<name>.sections` — optional per-ID hashes: one SHA-256 per ID definition block
+  (§ Artifact Grammar), so drift is localized to the IDs that changed instead of "the file
+  changed". Absent (older entries) → localization falls back to a manual diff. Adding it does not
+  change the meaning of existing data, so it needs no schema version bump.
 - `artifacts.plan.based_on_spec_hash` — the `spec.content_hash` value at the moment `plan.md` was
   generated from it. `artifacts.tasks.based_on_plan_hash` is the equivalent for `tasks.md`
   against `plan.md`.
@@ -233,9 +237,16 @@ should. Execution progress is the one edit that is not a content change.
 Compute fingerprints mechanically, never by estimation:
 
 ```bash
-node spec-kit-shared/scripts/fingerprint.mjs <file>...          # sha256:<hex>  <file>
-node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>  # artifact-chain comparison
+node spec-kit-shared/scripts/fingerprint.mjs <file>...                    # sha256:<hex>  <file>
+node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>        # chain comparison, localized by ID
+node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> <spec|plan|tasks>
+                                         # writes that artifact's state.json entry — owner only
 ```
+
+`--record` is how an owning skill writes its own `state.json` entry (§ Write Ownership): it
+computes `content_hash`, the matching `based_on_*` from the current upstream file, and
+`sections`, sets `schema_version` (migrating a version-1 file), and leaves every other entry and
+`source_documents` untouched. A skill never types a hash into `state.json` by hand.
 
 (`spec-kit-shared/` resolves the same way as every other reference to it.) The script applies the `tasks.md` normalization automatically (by basename; `--tasks`/`--raw`
 override). Without Node, the equivalent is
@@ -334,6 +345,88 @@ contains, what a library actually sends over the wire. Reading the code of such 
 `read`, not `executed`, however carefully it was read. A runtime premise that cannot be executed
 during planning is recorded as `assumption` and gets a probe task (`[SONDA]`, see § Task
 Lifecycle) that runs before any task depending on it.
+
+## Artifact Grammar
+
+What makes text in an artifact a definition, a citation, or a task — the rules
+`spec-kit-shared/scripts/lint-artifacts.mjs` and `fingerprint.mjs --sections` parse. Write
+artifacts so they hold; anything else is prose the scripts ignore.
+
+**IDs** match one of the families in § Stable ID Namespaces exactly (`R-AC03`, `E-I01`, `PL-O02`,
+`RS-01`, `AM-04`, `T012`, `[S1]`/`[P2]` in brackets). Template placeholders such as `R-FR0#` are not
+IDs. Text inside fenced code blocks is never parsed.
+
+**Definitions** — an ID is defined where it appears as:
+
+- the first bold token of a list item: `- **R-FR01**: …` or `1. **A-01 — Strategy**: …` — the block
+  is that item plus its indented continuation lines;
+- the first token of a heading: `### O-01 — …`, `### RS-01 — …`, `## AM-01 — …` — the block runs to
+  the next heading of the same or higher level;
+- the first cell of a row in a table whose first column is headed `ID` — the block is the row.
+  Rows of tables with any other first column (Safe Deferral, Convention Enforcement, Sensitive
+  Data by Channel) cite IDs; they never define them;
+- a task line in `tasks.md` (below).
+
+Every other occurrence of an ID is a **citation**, and must resolve to a definition. Each ID is
+defined once per artifact.
+
+**Tasks** (`tasks.md`):
+
+```text
+- [ ] T012 [P] [US2] [SONDA] Description          ← checkbox, ID, zero or more [tags], description
+      Traza a: R-AC03, PL-O02                      ← fields as indented sub-lines…
+      Archivo(s): src/x.js — Depende de: T010      ← …or as ` — `-separated segments on one line
+      Validación: …                                 ← a field's continuation lines are indented
+```
+
+Required fields: regular tasks `Traza a`, `Archivo(s)`, `Depende de`, `Validación`; `[CIERRE]`
+`Verifica`, `Validación`; `[ENMIENDA T0XX]` `Enmienda`, `Traza a`, `Validación`; `[SONDA]` `Traza a`,
+`Validación`. A task's story is its `[USn]` tag, or the `USn` in its phase heading
+(`## Phase 3: US1 — Title (Priority: P1)`). Amendment tasks sit under a `#### Enmiendas` heading
+inside their story's phase.
+
+**Amendment entries** (`amendments.md`): one `## AM-NN — title` heading per entry, with fields as
+`- **Field**: value` items (`- **Status**: applied`).
+
+**Evidence levels and runtime premises** are read from the `Evidence level` / `Runtime premise`
+columns of the `ID` tables in `plan.md` and `research.md`, or from `- **Evidence level**:` /
+`- **Runtime premise**:` items under an `RS-##` heading.
+
+### Mechanical Checks
+
+`node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir> [--json]` runs every check that can
+be decided from the text alone. Codes are stable; severities follow
+`spec-kit-analyze-consistency`. Exit 0 = no `BLOCKING`, 1 = `BLOCKING` found, 2 = not a feature
+directory, 3 = `state.json` newer than this contract.
+
+| Code | Check | Severity |
+| --- | --- | --- |
+| L01 | ID defined twice in one artifact | BLOCKING |
+| L02 | Cited ID defined nowhere (task and amendment references: L07, L11, L12) | BLOCKING |
+| L03 | ID defined in both `spec.md` and a plan file (expected only for legacy plans) | ADVISORY |
+| L06 | Missing required task field (`Validación` → BLOCKING; others ADVISORY) | BLOCKING / ADVISORY |
+| L07 | `Depende de` names a task that does not exist | BLOCKING |
+| L08 | Story without exactly one active `[CIERRE]` | BLOCKING |
+| L09 | Non-`[ENMIENDA]` task after the story's active `[CIERRE]` | BLOCKING |
+| L10 | Active `[CIERRE]` lists R-AC IDs that miss some the story claims (lists none → ADVISORY, not checkable) | BLOCKING / ADVISORY |
+| L11 | `Superada por:` on an open task, or naming a task that does not exist | BLOCKING |
+| L12 | `[ENMIENDA]` / `Superada por:` citing a task or `AM-##` that does not exist | BLOCKING |
+| L13 | `PL-D##` at `assumption` with no `[SONDA]` citing it | BLOCKING |
+| L14 | Task built on an `assumption` decision (directly or via the `PL-O##` that applies it) not depending on its `[SONDA]` | BLOCKING |
+| L15 | Runtime premise at `read`, or a decision resting on one without being marked `assumption` | BLOCKING |
+| L16 | `PL-D##` / `RS-##` without an evidence level | ADVISORY |
+| L17 | `PL-O##` citing no spec `O-##`, or spec `O-##` realized by no `PL-O##` | ADVISORY |
+| L18 | Sensitive Data by Channel row without a safeguard or `N/A` reason | BLOCKING |
+| L19 | Open amendment (`planned` / `stopped`) | BLOCKING |
+| L20 | Amendment status outside the defined set | ADVISORY |
+| L21 | Non-canonical grammar token (e.g. `Validacion:`) | ADVISORY |
+
+Checks a script cannot decide — whether an acceptance criterion contradicts an invariant, whether
+a `Dormant` operation is actually invoked, terminology drift — stay with
+`spec-kit-analyze-consistency`'s semantic phases. Legacy plans skip L13–L17 and say so.
+
+The scripts are covered by `node --test spec-kit-shared/scripts/test/scripts.test.mjs`, which runs
+every check against `spec-kit-shared/evals/base-feature/` and mutations of it.
 
 ## Grammar Tokens
 
