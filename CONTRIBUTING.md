@@ -17,7 +17,7 @@ npx erikas-skills install --dry-run --target claude
 ## Rules
 
 - One skill = one top-level folder with `SKILL.md` (frontmatter `name`/`description`) + `package.json` (`@erikaax/<folder>`).
-- Spec Kit is atomic: do not publish a single skill from the kit. Use `@erikaax/spec-kit` (includes 8 skills + `spec-kit-shared`).
+- Spec Kit is atomic: do not publish a single skill from the kit. Use `@erikaax/spec-kit` (includes every kit skill + `spec-kit-shared`). The kit's skill list lives only in `speckit.skills` of `spec-kit/package.json`; installer, validator, and packaging scripts read it from there.
 - If you change `version` in the root `package.json`, run `pnpm run sync:versions` to propagate it to all 14 workspaces.
 - Commits and PR titles must follow [Conventional Commits](https://www.conventionalcommits.org/).
 - Do not list file paths as "changes" in a PR — describe behavior instead.

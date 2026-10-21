@@ -684,6 +684,8 @@ new mode and update mode, whether or not a `plan.md` exists yet. This is what le
 `spec-kit-generate-plan` — the mechanism this whole kit exists to support must work from the very first
 spec, not only once a plan exists to have created `state.json` first.
 
+A new `state.json` is created with `"schema_version": 2`. Before writing, apply `artifact-conventions.md` § Schema Versions and Migrations: stop if `schema_version` is newer than the contract; migrate a version-1 file (and report `SCHEMA_MIGRATED: 1→2`).
+
 ## Updating an Existing Specification
 
 When the user supplies an existing REASONS specification:

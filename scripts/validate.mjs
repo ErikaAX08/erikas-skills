@@ -1,20 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { SPEC_KIT_MANIFEST, SPEC_KIT_SKILLS } from "./spec-kit-manifest.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
-const SPEC_KIT_SKILLS = [
-  "spec-kit-establish-constitution",
-  "spec-kit-generate-spec",
-  "spec-kit-generate-plan",
-  "spec-kit-generate-tasks",
-  "spec-kit-analyze-consistency",
-  "spec-kit-sync-artifacts",
-  "spec-kit-execute-tasks",
-  "spec-kit-amend-artifacts",
-];
 
 export async function validate() {
   const ws = fs.readFileSync(path.join(ROOT, "pnpm-workspace.yaml"), "utf8");
@@ -26,7 +17,18 @@ export async function validate() {
 
   for (const skill of skills) {
     if (skill === "spec-kit") {
-      // Validate atomic kit: 7 SKILL.md + kit package + spec-kit-shared
+      // Validate atomic kit: every manifest skill has a SKILL.md, and every spec-kit-* folder is in the manifest
+      if (SPEC_KIT_SKILLS.length === 0) {
+        console.error(`  ✗ spec-kit: ${path.relative(ROOT, SPEC_KIT_MANIFEST)} has no speckit.skills list`);
+        ok = false;
+      }
+      const kitDirs = fs.readdirSync(ROOT, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && e.name.startsWith("spec-kit-") && e.name !== "spec-kit-shared")
+        .map((e) => e.name);
+      for (const d of kitDirs.filter((d) => !SPEC_KIT_SKILLS.includes(d))) {
+        console.error(`  ✗ spec-kit: ${d}/ is not listed in speckit.skills of ${path.relative(ROOT, SPEC_KIT_MANIFEST)}`);
+        ok = false;
+      }
       const pkgPath = path.join(ROOT, "spec-kit", "package.json");
       if (!fs.existsSync(pkgPath)) {
         console.error(`  ✗ spec-kit: missing spec-kit/package.json`);

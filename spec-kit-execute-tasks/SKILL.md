@@ -217,6 +217,10 @@ Applied only where Rule 11's safety condition genuinely holds:
    the same thread — parallelism is never forced onto a boundary that isn't actually independent.
 4. After parallel branches complete, verify there is no cross-branch conflict (e.g. two branches
    editing overlapping code unexpectedly) before treating the batch as done.
+5. A `task-executor` implements and runs its tasks' validations, then reports results; it never
+   writes `tasks.md`, `amendments.md`, or a commit. This orchestrating run is the only writer of
+   checkbox state, amendment status, and commits (`artifact-conventions.md` § Write Ownership), and
+   marks `[x]` only from a reported, observed pass.
 
 ### Phase 4 — Story Closure
 
@@ -272,8 +276,8 @@ need, not as long as the history of previous gates.
 
 | Verdict | What this skill does |
 | --- | --- |
-| `approve` | The gate passes. |
-| `approve with conditions` | Each `🟡` needs a recorded decision before the gate counts as passed. Present the `🟡` items together; for each, the user either accepts it as-is (→ `spec-kit-amend-artifacts` records it with `Layer: none`) or decides a change (→ `spec-kit-amend-artifacts` applies it). Never leave a `🟡` decided only in chat. |
+| `approve` | The gate passes. Every `amendments.md` entry in `executed` status whose tasks this gate covered becomes `verified`. |
+| `approve with conditions` | Each `🟡` needs a recorded decision before the gate counts as passed. Present the `🟡` items together; for each, the user either accepts it as-is (→ `spec-kit-amend-artifacts` records it with `Layer: none`, `Status: accepted`) or decides a change (→ `spec-kit-amend-artifacts` applies it). Never leave a `🟡` decided only in chat. Once every `🟡` is decided, covered `executed` entries become `verified`, as for `approve`. |
 | `do not approve until X is verified` | Obtain the named verification (a probe, a test, an authorized read). If it settles the item, re-run the gate; if it reveals a defect, treat it as `request changes`. |
 | `request changes` | Each `🔴` is a change to decide and apply through `spec-kit-amend-artifacts`, then execute the resulting tasks and re-run the gate. |
 

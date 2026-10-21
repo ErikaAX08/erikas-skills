@@ -158,7 +158,8 @@ this skill does not redefine its own file layout or hashing scheme.
    (see its own "Initialize or Refresh `state.json`" step), so it should already exist. If it
    genuinely does not — an older `spec.md` predating that step, or it was manually removed — skip
    straight to Phase 1 and create it (with a fresh `artifacts.spec` entry too) at the end of
-   Phase 5, alongside this skill's own `artifacts.plan` entry.
+   Phase 5, alongside this skill's own `artifacts.plan` entry (with `schema_version`, per
+   `artifact-conventions.md` § Schema Versions and Migrations).
 2. Otherwise, read `spec-kit-sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
    detection procedure against `artifacts.plan.based_on_spec_hash` vs. `spec.md`'s current content
    hash — do not re-derive the hashing/comparison mechanism independently; that definition lives
@@ -463,7 +464,7 @@ When `spec.md` changed since the last `plan.md` (Fase 0 detected material drift)
 4. Preserve stable IDs (`PL-D##`, `PL-O##`, `RS-##`, or a legacy plan's `A-D0#`/`O-0#`) where
    semantics are unchanged; add new `PL-` IDs for new semantics.
 5. Update `state.json`'s `artifacts.plan.content_hash` and `based_on_spec_hash` only after the
-   targeted regeneration validates.
+   targeted regeneration validates. Before writing, apply `artifact-conventions.md` § Schema Versions and Migrations: stop if `schema_version` is newer than the contract; migrate a version-1 file (and report `SCHEMA_MIGRATED: 1→2`).
 6. Re-run the full `plan-quality.md` checklist regardless of how small the change was — except
    when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
    the checklist items that touch the changed IDs plus the Evidence, Traceability, and Governance

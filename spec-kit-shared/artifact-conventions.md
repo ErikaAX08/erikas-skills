@@ -8,6 +8,9 @@
 >
 > **Used by**: `spec-kit-generate-spec`, `spec-kit-establish-constitution`, `spec-kit-generate-plan`, `spec-kit-generate-tasks`,
 > `spec-kit-analyze-consistency`, `spec-kit-sync-artifacts`, `spec-kit-execute-tasks`, `spec-kit-amend-artifacts`.
+>
+> **Contract version**: 2 — the value `state.json` records as `schema_version` (§ Schema Versions
+> and Migrations).
 
 ## `.speckit/` — everything this kit generates
 
@@ -108,7 +111,7 @@ stays the responsibility of the skill that owns this invocation.
 ├── contracts/                # spec-kit-generate-plan, Phase 1
 ├── tasks.md                 # spec-kit-generate-tasks (checkboxes: spec-kit-execute-tasks)
 ├── amendments.md            # spec-kit-amend-artifacts — see § amendments.md
-├── state.json                # spec-kit-sync-artifacts — see below
+├── state.json                # one entry per generating skill — see § Write Ownership
 └── checklists/
     ├── requirements.md      # spec-kit-generate-spec
     ├── plan-quality.md      # spec-kit-generate-plan
@@ -121,13 +124,39 @@ project-wide files at `.speckit/`'s top level (`memory/`, `feature.json`, etc.) 
 one feature's artifacts, and a project can have multiple feature directories with independent state
 at once. `feature.json` only tracks which one is "active"; it is not where per-feature state lives.
 
+### Write Ownership
+
+Every file, and every field that more than one skill touches, has exactly one writer. A skill
+that runs another skill's procedure inline (as `spec-kit-amend-artifacts` does) writes through that
+procedure, as that owner — it never gains write access of its own.
+
+| Artifact / field | Written by | Notes |
+| --- | --- | --- |
+| `memory/constitution.md` | `spec-kit-establish-constitution` | |
+| `feature.json` | `spec-kit-generate-spec` | |
+| `spec.md`, `checklists/requirements.md` | `spec-kit-generate-spec` | |
+| `plan.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md`, `checklists/plan-quality.md` | `spec-kit-generate-plan` | |
+| `tasks.md` content, `checklists/tasks-quality.md` | `spec-kit-generate-tasks` | Includes appending `Superada por:` to a closed task |
+| `tasks.md` checkbox state (`[ ]` → `[x]`) | `spec-kit-execute-tasks` | Only the orchestrating run, never a parallel `task-executor` |
+| `checklists/consistency-report.md` | `spec-kit-analyze-consistency` | Its only write |
+| `amendments.md` entries | `spec-kit-amend-artifacts` | |
+| `amendments.md` `Status: executed`/`verified` and `Closure re-walk` | `spec-kit-execute-tasks` | Only these fields of an existing entry |
+| `state.json` `schema_version` | Whichever skill writes `state.json` first, or migrates it | § Schema Versions and Migrations |
+| `state.json` `artifacts.spec`, `source_documents` | `spec-kit-generate-spec` | |
+| `state.json` `artifacts.plan` | `spec-kit-generate-plan` | |
+| `state.json` `artifacts.tasks` | `spec-kit-generate-tasks` | Never rewritten for checkbox changes (the hash ignores them) |
+| `state.json` acknowledgment / legacy-hash exceptions | `spec-kit-sync-artifacts` | Only the two exceptions in its § Writing `state.json` |
+
 ### `state.json`
 
-Written and updated by `spec-kit-sync-artifacts` (read by `spec-kit-generate-plan`, `spec-kit-generate-tasks`,
-`spec-kit-execute-tasks` as their Fase 0 staleness check):
+Each generating skill writes its own entry (§ Write Ownership). `spec-kit-sync-artifacts` compares
+it — the Fase 0 staleness check of `spec-kit-generate-plan`, `spec-kit-generate-tasks`,
+`spec-kit-execute-tasks`, and `spec-kit-amend-artifacts` — and writes only its two bookkeeping
+exceptions:
 
 ```json
 {
+  "schema_version": 2,
   "artifacts": {
     "spec": { "path": "spec.md", "content_hash": "sha256:...", "updated_at": "2026-07-10T10:00:00Z" },
     "plan": { "path": "plan.md", "content_hash": "sha256:...", "based_on_spec_hash": "sha256:...", "updated_at": "2026-07-11T09:00:00Z" },
@@ -139,6 +168,8 @@ Written and updated by `spec-kit-sync-artifacts` (read by `spec-kit-generate-pla
 }
 ```
 
+- `schema_version` — the contract version these entries follow; absent means version 1 (§ Schema
+  Versions and Migrations).
 - `artifacts.<name>.content_hash` — the current content hash of that artifact itself (always a
   SHA-256 over its content, computed per the Content Fingerprint Convention's "kit-internal
   artifact" rule below — never a commit SHA, to stay stable regardless of git status). For
@@ -158,6 +189,29 @@ stale if `plan.content_hash` ≠ `tasks.based_on_plan_hash`; a source is potenti
 current fingerprint ≠ the recorded one. Whether a detected difference is *semantically material*
 (a real requirement change) versus cosmetic is a judgment the consuming skill makes — this file
 only defines the data, not that classification logic.
+
+### Schema Versions and Migrations
+
+| Version | Identified by | What it means |
+| --- | --- | --- |
+| 1 | `state.json` without `schema_version` | Raw `tasks.md` hash; plans may use `A-D0#`/`O-0#` for their own entries; no `amendments.md` |
+| 2 | `"schema_version": 2` | Everything in this document as written |
+
+Rules every skill follows when it reads `state.json`:
+
+- **Newer than this contract** (`schema_version` greater than the Contract version above): stop
+  and report that the installed kit is older than the feature's artifacts. Never write to it —
+  an older reader would silently drop rules it does not know.
+- **Older** (absent or 1): read it with the version-1 meaning — the Legacy `tasks.md` hashes rule
+  and the legacy plan ID rule (§ Stable ID Namespaces) are exactly the 1 → 2 migration. The next
+  skill that writes `state.json` for its own entry applies the migration: it upgrades a legacy
+  `tasks.md` hash per that rule, sets `schema_version` to 2, and reports `SCHEMA_MIGRATED: 1→2`. A
+  read-only skill reports the version it found and never migrates.
+- Plans keep their legacy IDs after migration — stable IDs are never renumbered; the migration
+  only changes how they are read.
+
+A future contract change that alters the meaning of existing data adds a row here and a migration
+rule, and bumps the Contract version — never a silent reinterpretation.
 
 ## Content Fingerprint Convention
 
@@ -231,6 +285,11 @@ artifact only cites it.
 own entries. `tasks.md` traces to `PL-O##` (and to the `R-FR`/`R-AC` it satisfies), never directly
 to a spec `O-##`.
 
+The two operation layers stay linked in both directions: every `PL-O##` cites the spec `O-##` it
+realizes, and every spec `O-##` is realized by at least one `PL-O##` (or covered by a Safe
+Deferral entry). The spec's `O-##` list stays mandatory — it is the REASONS canvas's capability
+view — but never holds file-level steps, so a technical change touches only `PL-O##`.
+
 **Legacy plans**: a `plan.md` generated before this convention defines its decisions and
 operations as `A-D0#`/`O-0#`. A skill reading such a plan resolves those IDs in `plan.md` first and
 only then in `spec.md`, and reports the ambiguity when both define the same ID. Updating a legacy
@@ -276,6 +335,29 @@ contains, what a library actually sends over the wire. Reading the code of such 
 during planning is recorded as `assumption` and gets a probe task (`[SONDA]`, see § Task
 Lifecycle) that runs before any task depending on it.
 
+## Grammar Tokens
+
+The artifacts use a small set of fixed tokens. They are **language-independent keys**: written
+exactly as below whatever language the surrounding prose uses, never translated, and matched
+literally by every skill (and by any script that parses the artifacts). They are in Spanish for
+historical reasons; changing them would break existing artifacts, so they are part of the contract
+instead.
+
+| Token | Where | Meaning |
+| --- | --- | --- |
+| `Traza a:` | task sub-line | Requirement and operation IDs the task satisfies |
+| `Archivo(s):` | task sub-line | Expected files; `nuevo: <path>` for a proposed one, `ninguno` for none |
+| `Depende de:` | task sub-line | Task IDs, or `ninguna` |
+| `Validación:` | task sub-line | Observable criterion that must pass before `[x]` |
+| `Verifica:` | `[CIERRE]` task | Conditions the closure walks |
+| `Enmienda:` | `[ENMIENDA]` task | The `AM-##` the task comes from |
+| `Superada por:` | appended to a closed task | The task (and `AM-##`) that replaced it |
+| `[P]`, `[USn]` | task tags | Parallelizable; owning user story |
+| `[CIERRE]`, `[SONDA]`, `[ENMIENDA T0XX]` | task tags | § Task Lifecycle |
+| `#### Enmiendas` | story phase subsection | Where amendment tasks go after the active `[CIERRE]` |
+| `READY`, `DRAFT — NEEDS CLARIFICATION` | checklist `Status` | Artifact readiness |
+| `N/A — sin constitución` | Constitution Check gates | No constitution exists |
+
 ## Task Lifecycle
 
 `tasks.md` states, and who may write each one:
@@ -310,6 +392,11 @@ Written by `spec-kit-amend-artifacts` (entries) and `spec-kit-execute-tasks` (st
 re-walk results only). One entry per decided change applied after the artifacts were generated —
 so no decision lives only in chat, and so every amendment task cites a reason.
 
+The entry is a **write-ahead record**: it is written with `Status: planned` right after the
+amendment plan is confirmed and **before** any artifact is edited, then updated after each layer
+validates. If an amendment stops halfway, the entry says what was decided, which layers are done,
+and which artifact hashes it started from — enough to resume it or to undo it without guessing.
+
 ```markdown
 # Amendments: [Feature Name]
 
@@ -321,9 +408,23 @@ so no decision lives only in chat, and so every amendment task cites a reason.
 - **Layer**: spec | plan | tasks | none (accepted as-is, no artifact change)
 - **IDs changed**: [R-AC06, PL-D07, T046 …]
 - **Closed tasks affected**: [T018 → Superada por T050 | T009 re-walked | none]
+- **Base hashes**: spec [sha256:…] · plan [sha256:…] · tasks [sha256:…] — `state.json` values when the entry was written
+- **Layers done**: [spec, plan | none yet]
+- **Stopped at**: [only when Status is stopped: layer — failed validation item]
 - **Closure re-walk**: [T052 [CIERRE] re-walked <date>: holds | fails: …]
-- **Status**: applied | executed | verified
+- **Status**: planned | applied | stopped | escalated | accepted | abandoned | executed | verified
 ```
 
+| Status | Set by | Meaning |
+| --- | --- | --- |
+| `planned` | `spec-kit-amend-artifacts` | Confirmed; no layer applied yet (write-ahead) |
+| `stopped` | `spec-kit-amend-artifacts` | A layer failed validation; `Layers done` and `Stopped at` say where |
+| `applied` | `spec-kit-amend-artifacts` | Every layer validated and `state.json` refreshed by each owner |
+| `escalated` | `spec-kit-amend-artifacts` | Handed to the regular chain (structural change) |
+| `accepted` | `spec-kit-amend-artifacts` | `Layer: none` — a `🟡` accepted as-is; nothing to apply or execute |
+| `abandoned` | `spec-kit-amend-artifacts` | An open entry undone: touched artifacts restored to their base hashes; the decision stays recorded |
+| `executed` | `spec-kit-execute-tasks` | Amendment tasks ran and the closure re-walk was recorded |
+| `verified` | `spec-kit-execute-tasks` | A review gate covering the executed amendment returned `approve` or `approve with conditions` with every `🟡` decided |
+
 `Layer: none` is how a `🟡` accepted without changing anything is recorded: the decision and its
-owner are written down, and no artifact or hash changes.
+owner are written down with `Status: accepted`, and no artifact or hash changes.

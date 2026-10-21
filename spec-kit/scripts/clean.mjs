@@ -3,17 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEST = path.resolve(__dirname, "..");
-const SKILLS = [
-  "spec-kit-establish-constitution",
-  "spec-kit-generate-spec",
-  "spec-kit-generate-plan",
-  "spec-kit-generate-tasks",
-  "spec-kit-analyze-consistency",
-  "spec-kit-sync-artifacts",
-  "spec-kit-execute-tasks",
-  "spec-kit-amend-artifacts",
-  "spec-kit-shared",
-];
+const SKILLS = [...JSON.parse(fs.readFileSync(path.join(DEST, "package.json"), "utf8")).speckit.skills, "spec-kit-shared"];
 for (const s of SKILLS) {
   const p = path.join(DEST, s);
   if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });

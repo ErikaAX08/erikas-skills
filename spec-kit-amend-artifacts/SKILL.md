@@ -1,6 +1,6 @@
 ---
 name: spec-kit-amend-artifacts
-description: Apply an already-decided change — a pre-pr-review finding, a refuted [SONDA] premise, or unplanned scope the user resolved — to spec.md/plan.md/tasks.md in one confirmed pass, starting at the lowest artifact that owns the change and propagating only downward, by running each generating skill's own "Updating an Existing X" procedure with scoped validation. Records every decision in amendments.md, reworks closed tasks only through the Task Lifecycle, refreshes state.json, and hands off to spec-kit-execute-tasks. Never decides a change for the user and never writes product code. When an artifact-amender agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
+description: Apply an already-decided change — a pre-pr-review finding, a refuted [SONDA] premise, or unplanned scope the user resolved — to spec.md/plan.md/tasks.md in one confirmed pass, starting at the lowest artifact that owns the change and propagating only downward, by running each generating skill's own "Updating an Existing X" procedure with scoped validation. Records every decision in amendments.md before editing (write-ahead, so a stopped amendment can be resumed or undone), reworks closed tasks only through the Task Lifecycle, lets each owning procedure refresh its state.json entry, and hands off to spec-kit-execute-tasks. Never decides a change for the user and never writes product code. When an artifact-amender agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
 license: MIT
 ---
 
@@ -66,15 +66,20 @@ or a short description of a change the user already decided.
    `[CIERRE]` only when the story's `R-AC` set changes.
 5. **One confirmation, then one pass.** Present the full amendment plan (§ Phase 3) once. After
    confirmation, apply every layer without asking again, unless a step's validation fails.
-6. **Stop on a failed step, never paper over it.** Each layer is validated before the next one is
-   touched. If a validation fails, stop, report where, and do not refresh `state.json` for any
-   artifact that did not validate — Fase 0 of the next skill must see the inconsistency.
+6. **Write ahead, stop cleanly, resume mechanically.** The `amendments.md` entry is written with
+   `Status: planned` and the base hashes **before** any artifact is edited, and updated after each
+   layer validates. If a validation fails, stop, set `Status: stopped` with `Stopped at`, and do not
+   refresh `state.json` for any artifact that did not validate. A later invocation resumes or undoes
+   that entry from its record (§ Resuming or Undoing an Open Amendment) — never by guessing what
+   was already done.
 7. **No runtime premise at `read`.** If the change rests on runtime behavior of a library or the
    project's wiring, obtain `executed` evidence (a scratch probe, `verify-before-implement` §6.9)
    before writing it into `plan.md`, or record it as `assumption` with a `[SONDA]` task.
 8. **Every decision is written down.** In `spec.md` (`R-D##` plus an Evidence Catalog row for the
    decision text) for a spec-layer change, in `plan.md` (`PL-D##`) for a plan-layer change, and
-   always in `amendments.md` — including `Layer: none` for a `🟡` accepted without changes.
+   always in `amendments.md` — including `Layer: none` (`Status: accepted`) for a `🟡` accepted
+   without changes. Because the entry is written ahead (Rule 6), a decision is recorded even when
+   applying it fails.
 9. **No product code.** This skill changes artifacts only; implementation is
    `spec-kit-execute-tasks`'s job.
 10. **Escalate what does not fit.** Changes listed in § Escalation go through the regular chain,
@@ -113,6 +118,30 @@ Layer Ownership, Evidence Levels, Task Lifecycle, and the `amendments.md` format
 
 4. Read `spec.md`, `plan.md`, `tasks.md` (whichever exist), their checklists, `amendments.md` if
    present, and `state.json`.
+5. If `amendments.md` has an entry with `Status: planned` or `stopped`, handle it first
+   (§ Resuming or Undoing an Open Amendment) — a new amendment never starts on top of a half-applied
+   one.
+
+### Resuming or Undoing an Open Amendment
+
+An open entry (`planned` or `stopped`) records its decision, its plan, the layers already done,
+and the `state.json` hashes it started from. Compare each artifact's current hash
+(`fingerprint.mjs`) with the entry's **Base hashes**:
+
+- Equal → that artifact was not touched by the amendment.
+- Different and listed in `Layers done` → applied and validated by the amendment; keep it.
+- Different and not in `Layers done` → the edit at the stopped layer, or an edit made outside the
+  kit. Show the diff; never assume which.
+
+Then offer exactly two options:
+
+1. **Resume** — after the user fixes or confirms the cause in `Stopped at`, continue Phase 4 from
+   the first layer not in `Layers done`, re-validating the stopped layer from scratch. Fase 0
+   treats drift on artifacts this entry touched as expected; any other drift still stops it.
+2. **Undo** — restore every artifact the entry touched to its base version (for example
+   `git restore` when the base version is committed — only with the user's confirmation, since it
+   discards edits), confirm with `fingerprint.mjs` that each one matches its base hash again, and
+   set `Status: abandoned` with the reason. The decision stays recorded.
 
 ### Resolving the Decision
 
@@ -130,6 +159,8 @@ not cause.
 - Drift exists that the user explains as part of this same decided change (e.g. they already
   hand-edited `plan.md` for it) → include that edit in the amendment plan and validate it like any
   other change.
+- Drift on an artifact touched by the open amendment being resumed → expected (§ Resuming or
+  Undoing an Open Amendment).
 - Any other drift → stop and recommend the one-hop fix `spec-kit-sync-artifacts` names.
 
 ## Workflow
@@ -185,9 +216,16 @@ Present everything before touching any file:
 Run any probe listed under "Evidence still needed" now, before asking — the plan shown for
 confirmation must state the observed result, not an expectation. Then ask once.
 
+On confirmation, write the `AM-NN` entry in `amendments.md` **before editing anything** (Rule 6):
+the confirmed plan's origin, decision, decider, layer, and IDs; **Base hashes** copied from the
+current `state.json`; `Layers done: none yet`; `Status: planned`. For `Layer: none`, write it with
+`Status: accepted` and stop here — there is nothing to apply.
+
 ### Phase 4 — Apply, Top-Down
 
-After confirmation, for each layer the change touches, highest first:
+For each layer the change touches, highest first. Each owning procedure refreshes its own
+`state.json` entry after it validates — the update procedures already do so, and this skill never
+writes `state.json` itself (`artifact-conventions.md` § Write Ownership):
 
 1. **`spec.md`** — follow `spec-kit-generate-spec` § Updating an Existing Specification. Record the
    decision as `R-D##` and add an Evidence Catalog row for the decision text (fingerprint: SHA-256 of
@@ -201,17 +239,16 @@ After confirmation, for each layer the change touches, highest first:
    Lifecycle (Rule 4). Every new task carries `Enmienda: AM-NN`. Validate with the scoped
    validation.
 
-Stop at the first failed validation (Rule 6).
+After each layer validates, add it to the entry's `Layers done`. At the first failed validation,
+set `Status: stopped` and `Stopped at: <layer> — <failed item>`, and stop (Rule 6).
 
-### Phase 5 — Record and Refresh State
+### Phase 5 — Confirm State and Close the Entry
 
-1. Write the `AM-NN` entry in `amendments.md` (format in `artifact-conventions.md`), `Status:
-   applied`.
-2. Refresh `state.json` only for artifacts that changed and validated, in chain order: `spec`
-   `content_hash`; `plan` `content_hash` and `based_on_spec_hash`; `tasks` `content_hash` and
-   `based_on_plan_hash`. Compute every hash with `spec-kit-shared/scripts/fingerprint.mjs`.
-3. Confirm the chain: `node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>` must
-   report `ARTIFACT_DRIFT: NO`.
+1. Confirm the chain: `node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>` must
+   report `ARTIFACT_DRIFT: NO`. Drift here means an owning procedure did not refresh its entry —
+   stop with `Status: stopped` and `Stopped at: state — <artifact>` rather than writing the hash
+   on its behalf.
+2. Set the entry's `Status: applied`.
 
 ### Phase 6 — Consistency and Hand-Off
 
@@ -236,8 +273,8 @@ other `spec-kit` skills use.
 Report:
 
 - `SPECIFY_FEATURE_DIRECTORY`: resolved feature directory.
-- `AMENDMENTS`: each `AM-##` with origin, layer, and status (`applied` / `escalated` / `stopped at
-  <layer>`).
+- `AMENDMENTS`: each `AM-##` with origin, layer, and status (`applied` / `accepted` / `escalated` /
+  `stopped` with `Stopped at` / `abandoned`), and any open entry resumed or undone this run.
 - `ARTIFACTS_CHANGED`: per artifact, the IDs changed, or "unchanged" (with "reviewed, no change"
   where applicable).
 - `CLOSED_TASKS`: superseded tasks and re-walked `[CIERRE]` tasks, or "none".
@@ -256,9 +293,11 @@ Report:
 - [ ] The amendment plan was confirmed once, with any needed probe already run.
 - [ ] Every edit went through the owning skill's update procedure, validated before the next layer.
 - [ ] No closed task was edited beyond an appended `Superada por:` line.
-- [ ] Every decision is recorded in the owning artifact and in `amendments.md`.
-- [ ] `state.json` was refreshed only for validated artifacts, and `fingerprint.mjs --state`
-      reports no drift.
+- [ ] Every decision is recorded in the owning artifact and in `amendments.md`, the entry having
+      been written as `planned` before any edit.
+- [ ] Any open (`planned`/`stopped`) entry was resumed or undone before new work started.
+- [ ] `state.json` was refreshed only by the owning procedures, for validated artifacts, and
+      `fingerprint.mjs --state` reports no drift.
 - [ ] `spec-kit-analyze-consistency` returned `READY_FOR_EXECUTION: YES` before hand-off.
 - [ ] No product code was written.
 - [ ] Every generated support agent has a validated Kiro/Claude pair, or `AGENTS: none` is

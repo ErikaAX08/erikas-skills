@@ -148,7 +148,8 @@ below and follow it exactly.
 
 1. If `.speckit/specs/<feature-dir>/state.json` does not exist, or has no `artifacts.tasks` entry yet, this
    is the first task list for this plan — skip straight to Phase 1, and create/update
-   `state.json` at the end.
+   `state.json` at the end (with `schema_version`, per `artifact-conventions.md` § Schema Versions
+   and Migrations).
 2. Otherwise, read `spec-kit-sync-artifacts/SKILL.md` and follow its Phase 1/2 mechanical
    detection procedure against `artifacts.tasks.based_on_plan_hash` vs. `plan.md`'s current
    content hash — do not re-derive the hashing/comparison mechanism independently.
@@ -228,7 +229,9 @@ For each `R-US##`, in the order from Phase 1:
       Validación: comando o criterio observable
 ```
 
-`Archivo(s)` is where the work is expected to land, not a fence: touching another file the same
+Field labels and tags (`Traza a:`, `Validación:`, `[CIERRE]`, …) are the fixed Grammar Tokens of
+`artifact-conventions.md`: write them exactly as shown, whatever language the task descriptions
+use. `Archivo(s)` is where the work is expected to land, not a fence: touching another file the same
 `PL-O##` needs does not invalidate the task. Write `Validación` per Rule 15 — for example
 "`npm test -- prelude-block` pasa; `GET /allow-list?phone=…` deja en el log de request el teléfono
 enmascarado (`+52…1234`)", never "el parámetro se llama `now`" or "`main.js` sin cambios".
@@ -379,7 +382,7 @@ When `plan.md` changed materially since the last `tasks.md` (Fase 0 detected dri
    new tasks — never renumber existing tasks.
 5. Re-verify the affected story's `[CIERRE]` task still covers the right `R-AC##` set.
 6. Update `state.json`'s `artifacts.tasks.content_hash` and `based_on_plan_hash` only after the
-   targeted regeneration validates.
+   targeted regeneration validates. Before writing, apply `artifact-conventions.md` § Schema Versions and Migrations: stop if `schema_version` is newer than the contract; migrate a version-1 file (and report `SCHEMA_MIGRATED: 1→2`).
 7. Re-run the full `tasks-quality.md` checklist regardless of how small the change was — except
    when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then re-validate
    the items that touch the changed tasks and stories plus Traceability and Governance, and record

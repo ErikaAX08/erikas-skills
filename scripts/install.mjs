@@ -1,20 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { SPEC_KIT_SKILLS } from "./spec-kit-manifest.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
-export const SPEC_KIT_SKILLS = [
-  "spec-kit-establish-constitution",
-  "spec-kit-generate-spec",
-  "spec-kit-generate-plan",
-  "spec-kit-generate-tasks",
-  "spec-kit-analyze-consistency",
-  "spec-kit-sync-artifacts",
-  "spec-kit-execute-tasks",
-  "spec-kit-amend-artifacts",
-];
+export { SPEC_KIT_SKILLS };
 
 // Installable skills = entries in pnpm-workspace.yaml (with fallback for installed package)
 const FALLBACK_SKILLS = [
@@ -34,7 +26,7 @@ const FALLBACK_SKILLS = [
   "verify-before-implement",
 ];
 
-// spec-kit is an atomic kit: a single entry that expands to 8 skills + spec-kit-shared
+// spec-kit is an atomic kit: a single entry that expands to every manifest skill + spec-kit-shared
 export function listSkills() {
   const wsPath = path.join(ROOT, "pnpm-workspace.yaml");
   if (fs.existsSync(wsPath)) {
