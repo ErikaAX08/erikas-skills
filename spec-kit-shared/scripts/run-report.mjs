@@ -111,8 +111,8 @@ function signals(report, decisions, lintChecks, amendments) {
   if (report.runs.open.length) add("open-runs", `${report.runs.open.length} run(s) have no run.end`, "A skill stopped without closing its log: look for failures or interrupted sessions.");
   if (report.malformed.length) add("malformed-log", `${report.malformed.length} malformed log line(s)`, "Events were written by hand instead of with log-event.mjs.");
   const reviewRoutes = decisions.filter((d) => d.data.kind === "verdict-route");
-  const changes = reviewRoutes.filter((d) => /request changes/.test(String(d.data.value))).length;
-  if (changes >= 2) add("review-churn", `${changes} review gates returned request changes`, "Compare the findings' origins: the earlier skill that should have caught them is the one to improve.");
+  const changes = reviewRoutes.filter((d) => /changes required|request changes/.test(String(d.data.value))).length;
+  if (changes >= 2) add("review-churn", `${changes} review gates returned changes required`, "Compare the findings' origins: the earlier skill that should have caught them is the one to improve.");
   return out;
 }
 

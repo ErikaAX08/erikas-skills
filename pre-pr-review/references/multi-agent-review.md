@@ -49,8 +49,10 @@ Hard boundaries:
 
 ## 3. Lenses
 
-Activate exactly the lenses whose `Activated by` column matches at least one hand-reviewed file of
-the inventory (lockfiles, though noise, activate `release-and-ops`). Each lens maps to sections of `references/risk-checklist.md`.
+Activate exactly the lenses listed in the `Activated lenses` section of `scripts/collect-diff.sh`,
+which encodes the `Activated by` column below as path patterns over the source files (lockfiles,
+though noise, activate `release-and-ops`), plus any lens the lead adds for content the path cannot
+show (`SKILL.md` §1, Activated lens). Each lens maps to sections of `references/risk-checklist.md`.
 
 | Lens                     | Activated by                                                                         | Checklist sections                         |
 | ------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------ |
@@ -64,6 +66,8 @@ the inventory (lockfiles, though noise, activate `release-and-ops`). Each lens m
 
 Rules:
 
+- Files listed as `flow-and-state (default)` matched no pattern; for them the lens runs only the
+  behavior-equivalence pass of `SKILL.md` §1 (Activated lens), not the checklist sections.
 - Do not split one flow across lenses so that nobody sees it end to end. If a flow crosses lenses
   (an endpoint that writes a row and enqueues a job), assign the end-to-end trace to `flow-and-state`
   and let the other lenses check their segment.
@@ -118,7 +122,9 @@ their location (`file:line`) without copying their values.
 ## 6. Verification Pass
 
 Every candidate a reviewer proposes as `🔴` or `🟡` goes to a verifier before classification.
-`⚪` candidates are checked by the lead directly.
+`⚪` candidates are checked by the lead directly. Under `R` (`SKILL.md` §4, independent
+verification) this pass also runs in single-agent mode, and each proposed `🔴` goes to two
+verifiers that do not see each other; it stays `🔴` only when neither returns `REFUTED`.
 
 1. Fill `assets/verifier-brief.md` with the candidate's claim, location, and activating condition
    only, plus the packet path, SHAs, language, and a scratch dir for probes. When the claim depends
@@ -132,12 +138,21 @@ Every candidate a reviewer proposes as `🔴` or `🟡` goes to a verifier befor
    - `REFUTED`: evidence shows the condition cannot occur or the impact is prevented (guard, retry,
      constraint, upstream validation, flag value); evidence cited.
    - `UNRESOLVED`: the decisive fact requires data the verifier cannot reach; names that fact.
+
+   Alongside the status, the verifier answers the severity rubric of `SKILL.md` Phase 7
+   (exposure, window, reversibility) when the claim depends on timing, versions, or a new input,
+   and returns `severity_correction` when the proposed severity does not survive it.
 4. The lead decides on disagreement. Re-read the cited code; do not count votes. When the lead's
    reading settles the question with cited evidence, that evidence decides. When it does not, the
    candidate is treated as `UNRESOLVED` and routed by `SKILL.md` Phase 7 rule 6, naming what would
    settle it.
 
 ## 7. Synthesis
+
+Trace as results arrive (`SKILL.md` §12): one `agent` event per sub-agent that returns or fails,
+one `candidate` per reviewer candidate (its `id` stays the reviewer's `<lens>-n`), one `verification`
+per verifier status, and one `classification` per candidate in step 6. Sub-agents never write the
+trace themselves.
 
 1. **Validate citations.** Open every `file:line` cited by a sub-agent. A citation that does not
    show what it claims invalidates that piece of evidence.
@@ -152,9 +167,11 @@ Every candidate a reviewer proposes as `🔴` or `🟡` goes to a verifier befor
    🔴 or 🟡 under an unfavorable answer; discard the rest, and run the kept ones through the
    operational data protocol.
 6. **Classify** using Phase 7 of `SKILL.md`:
-   - `CONFIRMED` → rules 2–5 on impact.
+   - `CONFIRMED` → the severity rubric when it applies, then rules 1 (accepted impact) and 2–5.
    - `REFUTED` → rule 1: `✅ Verified` in **Ruled Out**, citing the refuting evidence.
-   - `UNRESOLVED` → rule 6 (Still Open `[prerequisite]`, conditional 🟡, or conditional ⚪).
+   - `UNRESOLVED` → rule 6 (Still Open `[prerequisite]` only with cited evidence that the
+     unfavorable answer is plausible; otherwise ⚪ with the verification as close-out; conditional
+     🟡 or 🚀 when that is what an unfavorable answer would be).
    - Reviewer `disproved` entries whose citations the lead confirmed → **Ruled Out**.
 7. **Account for gaps.** A lens that failed, timed out, or returned without evidence is a coverage
    gap, not a clean result. Rerun it once; if the rerun also fails, cover the lens yourself as a
@@ -168,4 +185,4 @@ Every candidate a reviewer proposes as `🔴` or `🟡` goes to a verifier befor
 - Dispatching every lens on every diff.
 - Letting a verifier see the reviewer's argument; it anchors instead of testing.
 - Letting a sub-agent query production "just to check".
-- Reporting `approve` while a lens result is missing.
+- Reporting `ready to merge` while a lens result is missing.

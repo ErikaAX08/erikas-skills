@@ -1,0 +1,1 @@
+feat(checkout): send receipts and retry transient failures

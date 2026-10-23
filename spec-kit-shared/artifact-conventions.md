@@ -581,7 +581,7 @@ and which artifact hashes it started from — enough to resume it or to undo it 
 | `accepted` | `spec-kit-amend-artifacts` | `Layer: none` — a `🟡` accepted as-is; nothing to apply or execute |
 | `abandoned` | `spec-kit-amend-artifacts` | An open entry undone: touched artifacts restored to their base hashes; the decision stays recorded |
 | `executed` | `spec-kit-execute-tasks` | Amendment tasks ran and the closure re-walk was recorded |
-| `verified` | `spec-kit-execute-tasks` | A review gate covering the executed amendment returned `approve` or `approve with conditions` with every `🟡` decided |
+| `verified` | `spec-kit-execute-tasks` | A review gate covering the executed amendment returned `ready to merge`, or `decision required` with every `🟡` decided toward `ready to merge` |
 
 `Layer: none` is how a `🟡` accepted without changing anything is recorded: the decision and its
 owner are written down with `Status: accepted`, and no artifact or hash changes.

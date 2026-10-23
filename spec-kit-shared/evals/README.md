@@ -47,5 +47,5 @@ mechanical checks.
 | `spec-kit-amend-artifacts` | `plan-layer-premise` | Lowest-layer rule, executed evidence, write-ahead entry, `[ENMIENDA]` without a new closure, `--record` |
 | `spec-kit-amend-artifacts` | `accepted-yellow` | `Layer: none` / `accepted` with no artifact change |
 | `spec-kit-amend-artifacts` | `structural-escalation` | A new user story is escalated, not amended |
-| `spec-kit-execute-tasks` | `approve-with-conditions` | Literal verdict routing; an undecided `🟡` keeps the feature open |
+| `spec-kit-execute-tasks` | `decision-required` | Literal verdict routing; an undecided `🟡` keeps the feature open |
 | `spec-kit-execute-tasks` | `sonda-refuted` | A `[SONDA]` runs before its dependents and a refuted premise stops execution |

@@ -3,15 +3,19 @@ Scope: repo `<repo path>` · entry point `<A pre-PR | B pre-merge>` · base `<ba
 
 Sources consulted beyond the diff: <issue, logs, production queries, executed tests, base-branch files — or `none`>.
 
-Verdict: **<request changes | approve with conditions | approve | do not approve until X is verified>**
+Verdict: **<changes required | verification required | decision required | ready to merge>**
 
-Reason: <one or two direct sentences>.
+Next: **<author | merger | product | operations | architecture>** — <one imperative action, e.g. `Restore requireAdmin on DELETE /users/:id (F-1) and re-run the review.` | `Merge now.` | `Merge, then deploy following the Deploy Plan in order.`>
 
-Method: size `<S | M | L | docs-only | noise-only>` (`H` = `<n>` hand-reviewed lines, noise `<m>` lines spot-checked) · mode `<single agent | multi-agent>` [override: <reason>] · lenses `<activated lenses>` · candidates `<N>`: confirmed `<K>`, refuted `<J>`, unresolved `<L>` [· narrow-change exception: <test citation>] [· noise promoted: <paths>] [· Untrusted instruction ignored: <citation>].
+Unblocks when: <outcome map: `<result> → <verdict>; …` covering every blocking item | `Merge now.` | `Merge now; deploy with the Deploy Plan (<n> steps).`>
+
+Reason: <one or two direct sentences, third person>.
+
+Method: size `<S | M | L | docs-only | noise-only>` (`H` = `<n>` source lines, `H_test` = `<t>`, noise `<m>` lines spot-checked) · mode `<single agent | multi-agent>` [override: <reason>] · lenses `<activated lenses>` [added: <lens: reason>] · candidates `<N>`: confirmed `<K>`, refuted `<J>`, unresolved `<L>` [· narrow-change exception: <test citation>] [· noise promoted: <paths>] [· Untrusted instruction ignored: <citation>] · trace `<RUN_ID | off>`.
 
 Coverage: lens traces `<lens → F-n | Verified | Still Open, one per activated lens>` · flows fully traced `<list>` · flows sampled `<list | none>` · invariants not applicable `<I-n, … | none>` · base drift `<none | overlapping files checked: outcome>` [· interactions `<pair: outcome, …>` (multi-agent)].
 
-<!-- Always show: Verified, Blockers (or None), Open Decisions (or None), Tests, Still Open, Decision. Omit Non-Blocking and Ruled Out only when empty. Operational Queries: one block per executed query; omit the section when none was executed. -->
+<!-- Always show: Verified, Blockers (or None), Open Decisions (or None), Tests, Still Open. Show Deploy Plan whenever a 🚀 exists. Omit Non-Blocking and Ruled Out only when empty. Verified also holds `Accepted by <source>: <impact>.` bullets (Phase 7 rule 1). Operational Queries: one block per executed query; omit the section when none was executed. -->
 
 ## Verified
 
@@ -67,12 +71,33 @@ Impact:
 Refutation attempt:
 <what was checked to disprove the facts and why they stand>
 
-Decision needed:
-<the options, the decider role (product|operations|architecture), and why this is not a technical bug>
+Options:
+<decider role (product|operations|architecture) — why merging would choose implicitly>
+- A: <option> → <consequence> → verdict `<changes required | ready to merge>`
+- B: <option> → <consequence> → verdict `<changes required | ready to merge>`
+
+## Deploy Plan
+
+<!-- Show whenever a 🚀 exists; omit otherwise. Steps run in ID order. -->
+
+### 🚀 F-3 — <concrete title>
+
+Location: `path:line @ <sha> (head)` or `flow: <entry> → <exit>`
+
+Certainty: <Fact | Inference | Conditional risk>
+
+Step:
+<the exact action and its order relative to the rollout, migration, flag, or job — e.g. `run make migrate only after make deploy reports every container on <head sha>`>
+
+If skipped:
+<what breaks, for whom, and for how long>
+
+Rollback:
+<what a rollback of the code does after this step has run, and the safe way back>
 
 ## Non-Blocking
 
-### ⚪ F-3 — <concrete title>
+### ⚪ F-4 — <concrete title>
 
 Location: `path:line @ <sha> (head)`
 
@@ -86,7 +111,7 @@ Close-out:
 
 ## Ruled Out
 
-### ✅ F-4 — <concrete title>
+### ✅ F-5 — <concrete title>
 
 Original hypothesis:
 <what was suspected>
@@ -112,13 +137,7 @@ Refuting evidence:
 
 ## Still Open
 
-<!-- One entry per open item. Tag `[prerequisite]` exactly the items defined as deployment-safety prerequisites in SKILL.md §1; the verdict's X lists their short names. If none: write exactly `Nothing open — <why the safety prerequisites are all closed>`. -->
+<!-- One entry per open item. Tag `[prerequisite]` exactly the items defined as deployment-safety prerequisites in SKILL.md §1 — each cites why the unfavorable answer is plausible, names its owner, and maps its outcomes. If none: write exactly `Nothing open — <why the safety prerequisites are all closed>`. -->
 
-- [prerequisite] <short name>: I could not verify <fact or condition>. To close it: <exact query, test, or evidence, with source and limits>.
+- [prerequisite] <short name> (owner: **<author | operations>**): I could not verify <fact or condition>. Why it matters: <cited evidence that makes the unfavorable answer plausible>. To close it: <exact query, test, or evidence, with source and limits>. Outcomes: <result → verdict; …>.
 - <short name>: I could not verify <fact or condition>. To close it: <exact query, test, or evidence>.
-
-## Decision
-
-**<request changes | approve with conditions | approve | do not approve until X is verified>**
-
-<exact condition or next action with owner role and close-out evidence; for `approve`, write `No conditions.`>

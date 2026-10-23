@@ -20,7 +20,7 @@
     {
       "id": 1,
       "name": "accepted-yellow",
-      "prompt": "pre-pr-review on the active feature returned `approve with conditions` with one 🟡, F-3 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s. I accept it as-is — the sweep runs from the scheduler, never over HTTP. Record that decision.",
+      "prompt": "pre-pr-review on the active feature returned `decision required` with one 🟡, F-3 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s. I accept it as-is — the sweep runs from the scheduler, never over HTTP. Record that decision.",
       "expected_output": "An amendments.md entry with Layer none and Status accepted, naming the decision and the decider, and no change to spec.md, plan.md, tasks.md, or state.json.",
       "files": ["evals/files/accepted-yellow"],
       "assertions": [
