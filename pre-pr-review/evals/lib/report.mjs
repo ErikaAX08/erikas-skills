@@ -102,7 +102,7 @@ export function forbiddenCommands(toolCalls) {
 // parent_tool_use_id for sub-agent traffic), and a final `result` with cost and usage.
 export function parseTranscript(lines) {
   const toolCalls = [];
-  let result = null;
+  const results = [];
   let init = null;
   const assistantText = [];
   for (const raw of lines) {
@@ -120,17 +120,24 @@ export function parseTranscript(lines) {
         if (block.type === "text" && !m.parent_tool_use_id) assistantText.push(block.text);
       }
     }
-    if (m.type === "result") result = m;
+    if (m.type === "result" && !m.parent_tool_use_id) results.push(m);
   }
+  // The CLI can run more turns after the answer (e.g. a background notification) and end with an
+  // empty or error result; the report is the last non-empty, non-error result. Cost and duration
+  // are cumulative per session, so the largest value is the run's total.
+  const answered = results.filter((r) => typeof r.result === "string" && r.result.trim() && !r.is_error && !r.api_error);
+  const result = answered.at(-1) ?? results.at(-1) ?? null;
+  const maxOf = (k) => (results.length ? Math.max(...results.map((r) => r[k] ?? 0)) : null);
   const skillCall = toolCalls.find((c) => c.name === "Skill" && /pre-pr-review/.test(JSON.stringify(c.input)));
   const usage = result?.usage ?? {};
   return {
     model: init?.model ?? null,
     finalText: result?.result ?? assistantText.at(-1) ?? "",
-    isError: Boolean(result?.is_error) || !result,
+    isError: !answered.length,
+    apiErrors: [...new Set(results.map((r) => r.api_error).filter(Boolean))],
     subtype: result?.subtype ?? "missing-result",
-    costUsd: result?.total_cost_usd ?? null,
-    durationMs: result?.duration_ms ?? null,
+    costUsd: maxOf("total_cost_usd"),
+    durationMs: maxOf("duration_ms"),
     turns: result?.num_turns ?? null,
     tokens: {
       input: usage.input_tokens ?? 0,

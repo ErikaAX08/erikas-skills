@@ -20,6 +20,8 @@
 //     --no-grade           run only; grade later with --grade-only
 //     --grade-only DIR     re-score and re-aggregate an existing output directory without re-running
 //                          (reuses each grading.json; add --regrade to ask the grader again)
+//     --resume             with --out: run only the jobs whose run directory does not exist yet
+//                          (delete a broken run's directory to redo it), then grade everything
 //     --dry-run            print the plan and exit
 //
 // Output: <out>/<config>/<case>/run-<k>/{repo/, transcript.jsonl, stderr.log, report.md,
@@ -40,7 +42,7 @@ const SKILL_DIR = path.resolve(HERE, "..");
 const ALLOWED_TOOLS = ["Bash", "Read", "Grep", "Glob", "Agent", "Task", "Write", "Skill", "TodoWrite"];
 
 export function parseArgs(argv) {
-  const o = { cases: null, configs: ["skill", "baseline"], runs: 1, out: null, model: null, graderModel: "sonnet", effort: null, invoke: "slash", budget: 10, timeoutMin: 40, parallel: 2, grade: true, regrade: false, gradeOnly: null, dryRun: false };
+  const o = { cases: null, configs: ["skill", "baseline"], runs: 1, out: null, model: null, graderModel: "sonnet", effort: null, invoke: "slash", budget: 10, timeoutMin: 40, parallel: 2, grade: true, regrade: false, resume: false, gradeOnly: null, dryRun: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const next = () => argv[++i];
@@ -57,6 +59,7 @@ export function parseArgs(argv) {
     else if (a === "--parallel") o.parallel = Number(next());
     else if (a === "--no-grade") o.grade = false;
     else if (a === "--regrade") o.regrade = true;
+    else if (a === "--resume") o.resume = true;
     else if (a === "--grade-only") o.gradeOnly = path.resolve(next());
     else if (a === "--dry-run") o.dryRun = true;
     else throw new Error(`unknown option ${a}`);
@@ -108,19 +111,32 @@ function runClaude(args, { cwd, env, timeoutMs, stdoutFile, stderrFile, input })
       child.kill("SIGTERM");
       setTimeout(() => child.kill("SIGKILL"), 10_000).unref();
     }, timeoutMs);
-    // The CLI can stay alive after its final `result` message (seen with multi-agent runs), so a
-    // run counts as finished at `result`; the process gets a grace period, then is stopped.
+    // The CLI can stay alive after its final `result` message (seen with multi-agent runs). Only a
+    // top-level `result` line counts (not that text inside a tool result), and the CLI may start
+    // another turn after it, so the process is stopped only after 60 s with no new output.
     let resultSeen = false;
-    let tail = "";
+    let partial = "";
+    let idle = null;
+    const armIdle = () => {
+      clearTimeout(idle);
+      idle = setTimeout(() => {
+        if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM");
+      }, 60_000);
+      idle.unref();
+    };
     child.stdout.on("data", (chunk) => {
-      if (resultSeen) return;
-      tail = (tail + chunk.toString()).slice(-4096);
-      if (/"type"\s*:\s*"result"/.test(tail)) {
-        resultSeen = true;
-        setTimeout(() => {
-          if (child.exitCode === null && child.signalCode === null) child.kill("SIGTERM");
-        }, 30_000).unref();
+      partial += chunk.toString();
+      const lines = partial.split("\n");
+      partial = lines.pop();
+      for (const line of lines) {
+        try {
+          const m = JSON.parse(line);
+          if (m.type === "result" && !m.parent_tool_use_id) resultSeen = true;
+        } catch {
+          // not a JSON line; ignore
+        }
       }
+      if (resultSeen) armIdle();
     });
     child.stdout.pipe(out);
     child.stderr.pipe(err);
@@ -128,6 +144,7 @@ function runClaude(args, { cwd, env, timeoutMs, stdoutFile, stderrFile, input })
     const started = Date.now();
     child.on("close", (code) => {
       clearTimeout(timer);
+      clearTimeout(idle);
       out.end();
       err.end();
       resolve({ code, timedOut, resultSeen, wallMs: Date.now() - started });
@@ -175,6 +192,7 @@ function analyzeRun(dir, testCase, config) {
     timedOut: run.timedOut ?? false,
     isError: t.isError || Boolean(run.timedOut),
     subtype: t.subtype,
+    apiErrors: t.apiErrors,
     model: t.model,
     costUsd: t.costUsd,
     durationMs: t.durationMs ?? run.wallMs ?? null,
@@ -418,7 +436,9 @@ async function main() {
       return 0;
     }
     fs.mkdirSync(out, { recursive: true });
-    await pool(jobs, opts.parallel, async (j) => {
+    const pending = opts.resume ? jobs.filter((j) => !fs.existsSync(j.dir)) : jobs;
+    if (opts.resume) console.log(`Resume: ${pending.length} of ${jobs.length} run(s) missing`);
+    await pool(pending, opts.parallel, async (j) => {
       process.stdout.write(`▶ ${j.config}/${j.testCase.name}/run-${j.k}\n`);
       await executeRun(j, opts);
       process.stdout.write(`✓ ${j.config}/${j.testCase.name}/run-${j.k}\n`);

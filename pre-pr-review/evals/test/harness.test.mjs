@@ -159,6 +159,17 @@ test("parseTranscript reads cost, usage, tool calls, sub-agents, and skill use f
   assert.deepEqual(totalTokens(t), { input: 300, output: 80, cacheRead: 1000, cacheCreation: 20 });
   assert.deepEqual(forbiddenCommands(t.toolCalls).map((f) => f.category), ["git-mutation"]);
   assert.equal(parseTranscript([]).isError, true);
+  // A later turn can end with an empty or failed result; the answer is the last non-empty one,
+  // a result inside a sub-agent stream is ignored, and cost is the session maximum.
+  const multi = parseTranscript([
+    { type: "result", parent_tool_use_id: "t9", result: "sub-agent text", total_cost_usd: 0.1 },
+    { type: "result", subtype: "success", result: "Verdict: **ready to merge**", total_cost_usd: 1.5, duration_ms: 80_000 },
+    { type: "result", subtype: "success", result: "", total_cost_usd: 1.6, duration_ms: 81_000 },
+    { type: "result", subtype: "success", result: "limit", api_error: "usage_limit_reached", total_cost_usd: 1.6 },
+  ].map((m) => JSON.stringify(m)));
+  assert.deepEqual([multi.finalText, multi.costUsd, multi.durationMs, multi.isError, multi.apiErrors], ["Verdict: **ready to merge**", 1.6, 81_000, false, ["usage_limit_reached"]]);
+  const limited = parseTranscript([JSON.stringify({ type: "result", result: "You've hit your limit", api_error: "usage_limit_reached" })]);
+  assert.equal(limited.isError, true);
 });
 
 test("forbiddenCommands flags mutations and external access but not read-only commands", () => {
