@@ -38,7 +38,8 @@ normally and record `draft` in Scope.
 Audience and voice:
 
 - The reader is the person making the merge decision (the author in entry point A, the
-  merger in entry point B). Write about the PR in third person (`the PR changes X`).
+  merger in entry point B). Write about the PR in third person (`the PR changes X`); refer
+  to people only by role (`the author`, `operations`).
 - Never address the PR author (`you should…`), never write a diplomatic review comment,
   never praise, soften, or add filler. `LGTM` and equivalents are forbidden.
 
@@ -55,32 +56,54 @@ Terms (used with exactly these meanings everywhere in this skill and its files):
 
 - **Candidate**: a suspected problem that has not completed Phase 5. **Finding**: a
   candidate classified by Phase 7 (🔴/🟡/⚪/✅) with an ID `F-n`.
-- **Hand-reviewed / noise**: as classified by the `Review load` section of
-  `scripts/collect-diff.sh`. Noise is spot-checked (generator header or version plus one
-  sample hunk), never read in full. The agent may promote a noise file to hand-reviewed
-  (record it in Method); it never demotes a hand-reviewed file to noise.
-- **Activated lens**: a lens of `references/multi-agent-review.md` §3 whose `Activated by`
-  column matches at least one hand-reviewed file (lockfiles, though noise, activate
-  `release-and-ops`). In multi-agent mode each activated lens goes to a reviewer; in
-  single-agent mode each activated lens is one sequential pass.
+- **Hand-reviewed / noise**: as classified by the `Review load` and `File classes` sections
+  of `scripts/collect-diff.sh`. Hand-reviewed files are `source`, `test`, or `docs` (prose
+  only); all three are read in full, but only `source` lines count toward `H` (§4). Noise is
+  spot-checked (generator header or version plus one sample hunk), never read in full. The
+  agent may promote a noise file to hand-reviewed (record it in Method); it never demotes a
+  hand-reviewed file to noise.
+- **Activated lens**: a lens listed in the `Activated lenses` section of
+  `scripts/collect-diff.sh`, which matches each source file's path against the patterns of
+  `references/multi-agent-review.md` §3 (lockfiles, though noise, activate
+  `release-and-ops`; a source file that matches no pattern activates `flow-and-state` as
+  `default`: for those files the lens runs a **behavior-equivalence pass** only — compare
+  each changed function at base and head, trace its direct callers, and raise a candidate
+  only for a behavior difference a caller can observe; the checklist applies to files that
+  matched a pattern. Eval traces showed 67% of the default lens's candidates refuted). Paths
+  cannot show content, so the agent may add a lens whose `Activated by` description a changed
+  file matches (e.g. an HTTP handler outside `routes/`), recording the reason in Method and as a
+  `lens` decision in the trace (§12); it never drops a listed lens. In multi-agent mode each
+  activated lens goes to a reviewer; in single-agent mode each activated lens is one
+  sequential pass.
 - **High-risk area**: auth and permissions, payments and billing, migrations and schemas,
   jobs/queues/events, secrets and security boundaries, deploy coordination (IaC, CI/CD
   pipelines, deploy scripts).
 - **Deployment-safety prerequisite** (tagged `[prerequisite]` in Still Open): an unverified
-  fact that would make a candidate 🔴 if it resolved unfavorably (e.g. the real flag value,
-  real data shape/volume, migration lock behavior, consumer compatibility), plus two
+  fact that would make a candidate 🔴 if it resolved unfavorably **and** for which cited
+  evidence makes the unfavorable answer plausible (e.g. the real flag value when the code
+  reads it from an environment the repo does not pin; migration lock behavior when the
+  engine version is unpinned and the table is documented as large), plus two
   review-integrity facts: the base is confirmed (Phase 2) and the reviewed diff equals the
-  diff that will merge (Phase 2, conflicts).
+  diff that will merge (Phase 2, conflicts). "Nothing in the repository rules it out" is
+  not such evidence — every repository leaves something outside it unverified — so an
+  unknown without a cited signal is a ⚪ with its verification as close-out (Phase 7 rule 6).
+- **Deploy step** (`🚀`): an action the deploy must perform, in a stated order, for the
+  merged code to be safe — the resolution of a deployment-order problem that has an
+  achievable safe order (Phase 7 rule 4). It never blocks the merge; it is part of the
+  verdict's instructions.
 - **Decider role**: exactly one of `product`, `operations`, `architecture`.
+- **Owner**: who acts on the verdict next — `author`, `merger`, or a decider role.
 
 Outcomes. Every run ends in exactly one of:
 
-- **Completed review**: the report of §8 with exactly one verdict from Phase 8.
+- **Completed review**: the report of §8 with exactly one verdict from Phase 8, emitted only
+  after `scripts/check-report.mjs` passes on it (§8 emit gate).
 - **Review not performed**: Phase 2 cannot establish a base SHA and a head SHA (not a git
   work tree, ref not found, no merge base, PR head not obtainable), or the diff is empty
   (`collect-diff.sh` reports `empty-diff` and, in entry point A, no local changes exist).
   Output only `Review not performed: <reason>. Needed: <exact input or action that would
-  allow the review>.` — no verdict, no findings.
+  allow the review>.` — no verdict, no findings — and close the trace with `run.end
+  status=not-performed` (§12).
 
 Stop condition. Investigation ends when (a) every hand-reviewed hunk has been read and
 every noise file spot-checked, (b) every checklist section mapped to an activated lens has
@@ -99,15 +122,15 @@ language (e.g. only a command and a PR number), use English. When writing in ano
 language, translate headings and prose but keep these invariants byte-identical so reports
 stay machine-comparable:
 
-- Severity markers `🔴`, `🟡`, `⚪`, `✅`; finding IDs `F-1`, `F-2`, … (single global
-  sequence, see Phase 7); verdict keys `request changes`, `approve`, `approve with conditions`,
-  `do not approve until X is verified`, where only `X` is replaced (by the
-  semicolon-separated short names of the Still Open items tagged `[prerequisite]`); status
-  enums `CONFIRMED`, `REFUTED`, `UNRESOLVED`; certainty labels `Fact`, `Inference`,
+- Severity markers `🔴`, `🟡`, `🚀`, `⚪`, `✅`; finding IDs `F-1`, `F-2`, … (single global
+  sequence, see Phase 7); verdict keys `changes required`, `verification required`,
+  `decision required`, `ready to merge` (Phase 8); owner keys `author`, `merger`, `product`,
+  `operations`, `architecture`; the prefix `Review not performed:`; status enums
+  `CONFIRMED`, `REFUTED`, `UNRESOLVED`; certainty labels `Fact`, `Inference`,
   `Conditional risk`, `Open question`; the tag `[prerequisite]`.
 - The fixed phrases of §3 (`I could not verify X`, `I was wrong: …`, `Not a code bug; it
   is a deployment-order problem.`, `This requires a product|operations|architecture
-  decision.`) translated once, then used verbatim everywhere in the report.
+  decision.`, `Accepted by …`) translated once, then used verbatim everywhere in the report.
 - Sub-agent briefs (`assets/reviewer-brief.md`, `assets/verifier-brief.md`) carry a
   `language:` field set by the lead. Every agent writes in the final report language.
   Never mix languages in one report.
@@ -146,6 +169,8 @@ stay machine-comparable:
     (classified by Phase 7 rule 4).
   - Ambiguous but valid behavior: `This requires a product decision.` (or `operations` /
     `architecture` — pick exactly one and name the decider role).
+  - Impact already accepted by the objective: `Accepted by <source ID or document>: <impact>.`
+    (Phase 7 rule 2; a Verified bullet, not a finding).
 - Impact classes, in ranking order (used by Phase 7 classification and ordering):
   1. production breakage; 2. data loss or corruption; 3. auth bypass or secret/PII
   exposure; 4. contract breakage; 5. duplicate external effect (charge/send/create twice);
@@ -159,31 +184,53 @@ stay machine-comparable:
 
 ## 4. Effort Calibration
 
-Calibrate after Phase 2 from the `collect-diff.sh` inventory. This section is the single
-source of truth for size and mode; `references/multi-agent-review.md` defers to it.
+Calibrate after Phase 2 from the `Sizing` section of `collect-diff.sh`, which computes the
+values below and the resulting `size` mechanically. This section is the single source of
+truth for size and mode; `references/multi-agent-review.md` defers to it.
 
-- `H` = hand-reviewed lines (`Review load`), plus tracked local churn in entry point A.
+- `H` = lines of hand-reviewed `source` files: the commits plus, when the head is the
+  checkout (entry point A), tracked local churn and every line of untracked files. Test and
+  prose-doc lines (`H_test`, `H_docs`) are read in full but never count toward `H`, so a PR is
+  not sized up for carrying its tests.
 - `N` = number of activated lenses, excluding `tests`.
-- `R` = at least one hand-reviewed file is in a high-risk area.
+- `R` = at least one source file is in a high-risk area, as listed on the `R:` line. Like
+  lenses, the agent may raise `R` for a file whose content puts it in a high-risk area (e.g. a
+  route that changes a permission guard), with the reason in Method; it never lowers it.
+
+Use the script's `size` unless the agent added a lens, raised `R`, or applies the
+narrow-change exception (the script reports whether it is `possible`); then recompute with
+the table and record the change as a `size` decision in the trace (§12).
 
 Fast paths are checked first; otherwise the first matching row of the table wins.
 
 | Size | Condition | Mode | Minimum bar |
 | --- | --- | --- | --- |
-| **L** | `H > 400`, or `N ≥ 3`, or `R` without the narrow-change exception | Multi-agent | Protocol of `references/multi-agent-review.md` |
-| **M** | `H` 51–400, or `N = 2`, or `R` with the narrow-change exception | Single agent | One sequential pass per activated lens, then the Phase 5 second pass for every 🔴/🟡 candidate |
+| **L** | `H > 400`, or `N ≥ 3` with `H > 50` | Multi-agent | Protocol of `references/multi-agent-review.md` |
+| **M** | `H` 51–400, or `N ≥ 2`, or `R` | Single agent | One sequential pass per activated lens, then the Phase 5 second pass for every 🔴/🟡 candidate |
 | **S** | Otherwise (`H ≤ 50`, `N ≤ 1`, not `R`) | Single agent | Phases 1–8 inline; ≥1 test executed or the Phase 6 reason why none ran |
 
-Narrow-change exception (only relevant when `R`): `H ≤ 20`, no migration, schema, message
-shape, or API contract changes, and an existing test that exercises the changed lines is
-cited. Record `narrow-change exception: <test citation>` in Method.
+Fan-out buys coverage only when there is enough to read: with `H ≤ 50` one agent covers
+every lens sequentially at a fraction of the cost (eval traces: multi-agent runs on
+8–26-line diffs cost 4–6× a single-agent run and found nothing more). Risk buys
+**verification depth** instead of fan-out:
+
+- **Independent verification (`R`)**: every 🔴/🟡 candidate gets a verifier sub-agent per
+  `references/multi-agent-review.md` §6 in any mode, and a proposed 🔴 gets two that do not
+  see each other; it stays 🔴 only when neither returns `REFUTED` (on a split, the lead
+  re-reads and decides with cited evidence, §6 step 4). The script's `verification:` line
+  states whether this applies. A host without sub-agents runs the lead's refutation pass
+  twice, the second from the cited lines only, and records it.
+- **Narrow-change exception** (only relevant when `R`): `H ≤ 20`, no migration, schema,
+  message shape, or API contract changes, and an existing test that exercises the changed
+  lines is cited. The size is then computed as if not `R` and independent verification is
+  not required. Record `narrow-change exception: <test citation>` in Method.
 
 Mode overrides (the only ones; record the reason in Method):
 
 - The user explicitly asks for a deep, thorough, or multi-agent review → multi-agent.
 - The user explicitly asks for a quick review, or the host has no sub-agent mechanism →
-  single agent applying the M minimum bar, whatever the size. The size class and all
-  Phase 7–8 rules stay unchanged.
+  single agent applying the M minimum bar, whatever the size. The size class, independent
+  verification under `R`, and all Phase 7–8 rules stay unchanged.
 - If the user asks for both deep and quick, multi-agent wins.
 
 Fast paths (record `size: <fast path>` in Method):
@@ -253,7 +300,8 @@ out-of-scope, and the change class of each changed file.
    (CONTRIBUTING, PR template, README). Record `base: <ref> (confirmed via <method>)` or
    `base: <ref> (unconfirmed: detected via <method>)`; an unconfirmed base is a
    `[prerequisite]` in Still Open.
-3. Run `scripts/collect-diff.sh <base> [<head-sha>]`. Exit code 1 → Review not performed
+3. Run `scripts/collect-diff.sh --trace <RUN_ID> <base> [<head-sha>]` (the `RUN_ID` from
+   §12; the script records its own `sizing` event). Exit code 1 → Review not performed
    with the script's error. `status: empty-diff` → Review not performed, unless entry
    point A has local changes (then review only those).
 4. Read the complete `merge-base..head` diff, never just the last commit, plus local-only
@@ -324,7 +372,7 @@ behavior, look for a test that covers the path; (5) classify per Phase 7.
 Refutation is mandatory for every candidate proposed as 🔴 or 🟡. In multi-agent mode an
 independent verifier does it per `references/multi-agent-review.md` §6. In single-agent
 mode, after all lens passes finish, re-open each cited location at its cited SHA and
-repeat steps 1–6 of the Method in `assets/verifier-brief.md` without relying on the
+repeat steps 1–7 of the Method in `assets/verifier-brief.md` without relying on the
 first-pass conclusion; record `Refutation attempt: <what was checked>` inside the finding.
 Never promote a generic possibility (`what if X?` with no named activating condition in
 this flow) into a candidate.
@@ -395,34 +443,52 @@ Missing. Never claim a pass that was not executed.
 
 ### Phase 7 — Classify findings
 
+Before proposing 🔴 or 🟡 for an effect that depends on timing, versions, or a new input
+(mixed old/new code during a rolling deploy, a rollback, a new optional field, a flag
+flip), apply the **severity rubric** and cite each answer:
+
+1. **Exposure**: which real caller, client, job, or stored data exercises the activating
+   condition during the window the impact needs — traced to a call site, not assumed. A new
+   optional input that no current caller sends, or a path no caller reaches until a later
+   release, has no exposure in that window.
+2. **Window**: permanent, or bounded (the deploy window, until a flag flips, until a
+   backfill runs) — with the bound.
+3. **Reversibility**: whether the effect can be undone (data recoverable, request
+   retryable) or not (lost writes, external effects, leaked data).
+
+No exposure → ⚪ (or 🚀 when a deploy order removes the effect entirely). Bounded and
+reversible → ⚪ with the bound. Exposure with an irreversible effect → rules 2–4 below.
+
 Each candidate takes the category of the first matching rule:
 
 | # | Rule | Category |
 | --- | --- | --- |
 | 0 | No named activating condition in this flow (a generic `what if`) | Discarded, not reported |
-| 1 | Refuted by cited evidence, or the risk is demonstrably covered | **✅ Verified (Ruled Out)** |
-| 2 | Fact or Inference shows a reachable activating condition AND impact in an impact class of §3, the objective (Phase 1, not inferred) does not explicitly accept that impact, and the problem is not a deployment-order problem (rule 4) | **🔴 Blocker** |
-| 3 | Proven behavior is valid but changes externally observable behavior for users, clients, or operators beyond what the objective (Phase 1, not inferred) declares, or requires a deploy-time action (window, flag change), and ≥2 acceptable options exist — or rule 2 matched except that the objective explicitly accepts the impact. Deployment-order problems go to rule 4 | **🟡 Decision required** |
-| 4 | Deployment-order problem (the impact occurs only if changes are deployed or migrated in a particular order): 🟡 (`operations`) when an order that avoids the impact is achievable with the PR as written and the deploy process documented in the repository; 🔴 when none is (e.g. the pipeline always migrates before rolling out code). No documented deploy process → the order counts as achievable, and the decision names it | 🟡 or 🔴 |
+| 1 | Refuted by cited evidence, or the risk is demonstrably covered → **✅ Ruled Out**. Or the impact is real but a non-inferred intent source names and accepts it (ticket acceptance criteria, the declared objective's `Already decided`, the PR description or a commit message) → a Verified bullet `Accepted by <source>: <impact>.`, not a finding. Auth bypass and secret/PII exposure (impact class 3) are accepted only by a ticket or declared objective that names the deciding role, never by PR or commit text alone | **✅** / Verified |
+| 2 | Fact or Inference shows a reachable activating condition AND an impact in an impact class of §3 that survives the severity rubric, and the problem is not a deployment-order problem (rule 4) | **🔴 Blocker** |
+| 3 | Proven behavior is valid but changes externally observable behavior beyond what the objective (Phase 1, not inferred) declares, AND ≥2 acceptable options exist that a named decider role must choose between before merging, because merging commits to one of them. A single safe deploy-time action is not a decision: it is a 🚀 (rule 4) | **🟡 Decision required** |
+| 4 | Deployment-order problem (the impact occurs only if changes are deployed, migrated, or rolled back in a particular order): **🚀 Deploy step** when an order that avoids the impact is achievable with the PR as written and the deploy process documented in the repository (no documented process → achievable); the step states the exact order, what breaks if it is skipped, and the rollback consequence. 🔴 when no such order exists (e.g. the pipeline always migrates before rolling out code) | 🚀 or 🔴 |
 | 5 | Proven, bounded, and rules 2–4 do not match | **⚪ Follow-up** |
-| 6 | Decisive fact missing (Open question, or Conditional risk with an unproven condition): ask which of rules 2–5 would match if the fact resolved unfavorably. Rule 2 → Still Open item tagged `[prerequisite]`; rule 3 or 4 → 🟡 with Certainty `Conditional risk` and the verification inside the decision; rule 5 → ⚪ with Certainty `Conditional risk` and the verification as close-out | Still Open / 🟡 / ⚪ |
+| 6 | Decisive fact missing (Open question, or Conditional risk with an unproven condition): ask which rule would match if the fact resolved unfavorably. Rule 2 **and** cited evidence makes the unfavorable answer plausible (§1, deployment-safety prerequisite) → Still Open item tagged `[prerequisite]`, with an owner and the outcome map of Phase 8. Rule 2 without such evidence → ⚪ with Certainty `Open question` and the verification as close-out. Rule 3 or 4 → 🟡 or 🚀 with Certainty `Conditional risk` and the verification inside. Rule 5 → ⚪ with Certainty `Conditional risk` | Still Open / 🟡 / 🚀 / ⚪ |
 
 Category definitions and examples:
 
 | Category | Meaning | Examples |
 | --- | --- | --- |
 | **🔴 Blocker** | Real impact on production, data, auth, secrets/PII, contracts, duplicate external effects, or safe deployability. Includes a migration that locks, corrupts, loses, or irreversibly rewrites real data, and a deployment that cannot roll back. Preferences and unproven risks never qualify. | auth guard removed on a live route; non-idempotent charge retried; migration drops a live column without backfill/window; response contract breaks the real consumer |
-| **🟡 Decision required** | Valid behavior whose choice belongs to the named decider role, with the options listed. Never presented as a bug. | new validation rejects previously accepted payloads (product: breaking vs versioned); risky-but-online migration needs a maintenance window (operations); eventual consistency accepted vs transactional (architecture) |
-| **⚪ Follow-up** | Bounded risk or improvement that must not gate the merge. State the bound (`affects <who>, at most <cost>`). | tighten log fields; paginate an admin list; flaky test on a changed path |
+| **🟡 Decision required** | A choice between named options that belongs to the decider role and that merging would make implicitly. Never presented as a bug. | new validation rejects previously accepted payloads (product: breaking change vs versioned endpoint); eventual consistency vs transactional write (architecture) |
+| **🚀 Deploy step** | A mandatory, ordered deploy action that makes the merged code safe. Not a condition on the merge. | run the column-drop migration only after the rollout has replaced every old container; enable the flag only after the backfill job reports done |
+| **⚪ Follow-up** | Bounded risk or improvement that must not gate the merge. State the bound (`affects <who>, at most <cost>`). | tighten log fields; paginate an admin list; flaky test on a changed path; confirm with the platform team that no external consumer reads a dropped column |
 | **✅ Verified (Ruled Out)** | Original suspicion + refuting evidence. | `suspected duplicate webhook charge; REFUTED by idempotency key <file:line> + dedupe test <file::name>` |
 
 Schema per category (`assets/review-template.md`): 🔴 carries Location, Certainty, What
 changed, Activating condition, Impact, Evidence, Refutation attempt, Recommendation; 🟡
 carries Location, Certainty, Facts, Activating condition, Impact, Refutation attempt,
-Decision needed; ⚪ carries Location, Certainty, Bounded risk, Close-out; ✅ carries
-Original hypothesis and Refuting evidence.
+Options (each with its consequence and the verdict it leads to); 🚀 carries Location,
+Certainty, Step (exact order), If skipped, Rollback; ⚪ carries Location, Certainty,
+Bounded risk, Close-out; ✅ carries Original hypothesis and Refuting evidence.
 
-Ordering and IDs: sort by category (🔴, 🟡, ⚪, ✅), then by impact class rank (§3), then
+Ordering and IDs: sort by category (🔴, 🟡, 🚀, ⚪, ✅), then by impact class rank (§3), then
 by affected population (larger first, unknown last), then by the first citation's path and
 line. Number `F-1, F-2, …` in that order, one global sequence across all sections. When the
 report is re-emitted after new evidence, existing findings keep their IDs, new findings
@@ -430,26 +496,38 @@ take the next unused numbers, and a reclassified finding moves sections with its
 reuse a number. Merge symptoms with one root cause into one finding keeping the strongest
 evidence from each source.
 
-### Phase 8 — Recommend a decision
+### Phase 8 — Decide
 
-Exactly one verdict. Precedence: any 🔴 → `request changes`; else any `[prerequisite]` in
-Still Open → `do not approve until X is verified`; else any 🟡 → `approve with conditions`;
-else → `approve`.
+A verdict answers one question — **can this merge now?** — and names who acts next. Work
+that must happen before the merge blocks it; work that happens during the deploy is a 🚀
+with an exact order. There is no conditional approval: "approve with conditions" mixed both
+and left the owner of each condition unclear.
 
-| State after classification | Verdict |
-| --- | --- |
-| ≥1 🔴 Blocker | **request changes** — the PR or its deployment plan must change |
-| 0 🔴, ≥1 `[prerequisite]` | **do not approve until X is verified** — X names every `[prerequisite]` item; each has its close-out in Still Open |
-| 0 🔴, 0 `[prerequisite]`, ≥1 🟡 | **approve with conditions** — code is approvable; merge/deploy gated on the listed decisions or actions |
-| 0 🔴, 0 `[prerequisite]`, 0 🟡 | **approve** |
+Exactly one verdict, by precedence:
 
-`approve` and `approve with conditions` additionally require the completeness test: base
-confirmed with SHAs; every hand-reviewed hunk read and every noise file spot-checked; every
-activated lens traced (§7); tests executed or `Executed: none — <reason>` recorded. A
-completeness item that cannot be met (e.g. a lens failed twice and could not be covered)
-becomes a `[prerequisite]` Still Open item `I could not verify <uncovered part>`, which
-moves the verdict to `do not approve until X is verified`. The verdict must match the
-findings; re-run this table whenever new evidence lands.
+| State after classification | Verdict | Owner | Next action |
+| --- | --- | --- | --- |
+| ≥1 🔴 | **changes required** | `author` | Apply each 🔴 Recommendation, then re-run the review |
+| 0 🔴, ≥1 `[prerequisite]` | **verification required** | the role named by each prerequisite: `operations` for production data, engine, or configuration; `author` for facts in reach of the repository and its owners | Obtain each prerequisite's close-out evidence |
+| 0 🔴, 0 `[prerequisite]`, ≥1 🟡 | **decision required** | the decider role of each 🟡 | Choose one option per 🟡 |
+| none of the above | **ready to merge** | `merger` | Merge; when 🚀 exist, deploy following the Deploy Plan in order |
+
+Every verdict carries an **outcome map** (`Unblocks when`): for each blocking item, each
+possible result and the verdict it leads to, so nobody has to re-interpret the review —
+e.g. `server_version ≥ 11 → ready to merge; < 11 → changes required (F-1 becomes 🔴: add
+the column nullable, backfill, then set NOT NULL)`, or `option A (versioned endpoint) →
+changes required (F-2); option B (breaking change accepted) → ready to merge`. For `ready
+to merge` it is `Merge now.` or `Merge now; deploy with the Deploy Plan (<n> steps).` With
+several owners, the `Next` line names the owner of the highest-ranked blocking item and
+the outcome map names the rest.
+
+`ready to merge` additionally requires the completeness test: base confirmed with SHAs;
+every hand-reviewed hunk read and every noise file spot-checked; every activated lens
+traced (§7); tests executed or `Executed: none — <reason>` recorded. A completeness item
+that cannot be met (e.g. a lens failed twice and could not be covered) becomes a
+`[prerequisite]` Still Open item `I could not verify <uncovered part>`, which moves the
+verdict to `verification required`. The verdict must match the findings; re-run this table
+whenever new evidence lands.
 
 ## 6. Multi-Agent Mode
 
@@ -485,10 +563,19 @@ undeclared gap — record it as `I could not verify` instead of claiming coverag
 
 ## 8. Output Format
 
+**Emit gate (mandatory, never skipped):** the report is emitted only after
+`scripts/check-report.mjs` exits 0 on it (§11 item 13) and the result is traced as a `check`
+with `tool=report`. The response **is the checked file's content, verbatim**: no summary
+line before it, no closing remarks after it, no rewording. Any edit after the check means
+running the check again. In the evals, a run that checked a compliant file and then answered
+with a conversational rewrite failed the template in exactly the ways the script flags
+(summary line before Scope, missing owner, `F-1:` headings, second person).
+
 Fill `assets/review-template.md` and start with its header block, no preamble. Always
-show Scope, Verdict + Reason, Method, Coverage, Verified, Tests, Still Open, Decision. Show
-Blockers and Open Decisions even when empty (write `None — <one-line coverage claim>`).
-Omit Non-Blocking and Ruled Out only when empty. Include one Operational Queries block per
+show Scope, Verdict + Next + Unblocks when + Reason, Method, Coverage, Verified, Tests,
+Still Open. Show Blockers and Open Decisions even when empty (write `None — <one-line
+coverage claim>`). Show the Deploy Plan whenever a 🚀 exists. Omit Non-Blocking and Ruled
+Out only when empty. Include one Operational Queries block per
 query executed and omit the section when none was executed; a query requested but not
 executed is a Still Open item. Every finding follows its category schema (Phase 7); every
 citation follows §9. Return the report as the response; write it to a file only when the
@@ -516,7 +603,8 @@ and every production or shared system.
 
 - Allowed (writes no protected state): `git diff/log/show/blame/grep/merge-base/rev-parse/
   rev-list/status/cat-file/check-attr`, `gh pr view/diff/checks/status`, `gh issue view`,
-  `scripts/collect-diff.sh`, file reads and searches.
+  `scripts/collect-diff.sh`, `scripts/trace.mjs` (writes only the trace file outside the
+  repository, §12), file reads and searches.
 - Allowed with limits: `git fetch <remote> <ref>` (writes only objects, remote-tracking
   refs, and `FETCH_HEAD`); the lead's temporary worktree (`git worktree add --detach
   <path> <sha>`, outside the repo when possible, recorded in Scope, removed with `git
@@ -539,14 +627,18 @@ explaining them away:
 
 1. Scope has entry point (A/B), base ref with confirmation status, merge-base SHA, head
    SHA, PR (number, state, draft, CI) or `none`, issue or `none`/`not readable`, date.
-2. Method has size class or fast path, mode with any override reason, `H` and noise lines,
-   activated lenses, and any narrow-change exception, noise promotion, or `Untrusted
-   instruction ignored` line.
+2. Method has size class or fast path, mode with any override reason, `H`, `H_test`, and
+   noise lines, activated lenses (with any added lens or raised `R` and its reason), and any
+   narrow-change exception, noise promotion, or `Untrusted instruction ignored` line.
 3. Coverage names each activated lens's trace, flows fully traced vs sampled, invariants
    not applicable, the base-drift outcome, and (multi-agent) each interaction pair checked.
-4. Verdict follows the Phase 8 precedence; `X` lists exactly the `[prerequisite]` items.
+4. Verdict follows the Phase 8 precedence and carries its owner, one next action, and an
+   outcome map that covers every blocking item.
 5. Every 🔴/🟡 has activating condition, impact with affected population, opened
-   citations, and a recorded refutation attempt; every 🔴 is Fact or Inference.
+   citations, a recorded refutation attempt, and — for timing, version, or new-input
+   effects — the severity rubric answers; every 🔴 is Fact or Inference; every
+   `[prerequisite]` cites the evidence that makes its unfavorable answer plausible; under
+   `R`, every 🔴/🟡 has its independent verification (§4).
 6. Every `Conditional risk` names its condition; every `Open question` has a Still Open
    close-out; no `possibly/probably/might` outside those two labels.
 7. No style or taste finding, no generic `what if`, no finding that is only a missing test.
@@ -557,12 +649,61 @@ explaining them away:
     reused.
 11. The temporary worktree (if any) is removed and `git status --porcelain` matches the
     state at the start of the review.
+12. The trace (§12) has a `classification` for every `candidate`, a `verification` for every
+    🔴/🟡, and a `run.end` whose `verdict` is the report's verdict.
+13. Write the report to a file in the scratchpad or temp directory and run
+    `node <skill>/scripts/check-report.mjs <file> [--trace <runs.jsonl> --run <RUN_ID>]`. It
+    checks the template mechanically (Scope first, the verdict, owner, and outcome-map lines,
+    finding headings and order, verdict-vs-findings precedence, no second-person address,
+    the `Review not performed:` form, and the trace's verdict). Fix every `ERROR` and re-run
+    until it exits 0; only then emit the report. A host that cannot run Node applies the same
+    checks by reading the script.
+
+## 12. Run Trace
+
+Every review leaves an append-only trace of what it decided and **why**, so the skill's
+reasoning, precision, and cost can be measured across reviews and evals
+(`scripts/trace-report.mjs`, `evals/run-evals.mjs`). It is observability, not evidence:
+nothing reads the trace to decide, and it never replaces the report.
+
+Write events only with `node <skill>/scripts/trace.mjs <event> --run <RUN_ID> key=value…`
+(lists are comma-separated; quote a pair whose value has spaces, e.g.
+`"verdict=changes required"`). Start with `trace.mjs run.start entry=<A|B>`, which prints the
+`RUN_ID` every later call passes; end with `run.end`, also when the run stops early. The
+trace goes to `$PRE_PR_REVIEW_TRACE_DIR/runs.jsonl` or `~/.local/state/pre-pr-review/runs.jsonl`
+— never inside the reviewed repository. `PRE_PR_REVIEW_TRACE=off` disables it (the commands
+print `TRACE: off` and succeed); a failing trace call never blocks the review.
+
+| Event | Required data | Record it when |
+| --- | --- | --- |
+| `run.start` | `entry` (plus `pr`, `request` = `quick`/`deep`/`default`) | After choosing the entry point (§1) |
+| `sizing` | written by `collect-diff.sh --trace` | Phase 2 step 3 |
+| `decision` | `kind`, `value`, `rationale` | The skill chooses between alternatives — kinds `entry`, `base`, `size`, `mode`, `lens`, `fast-path`, `noise-promotion`, `test-execution`, `probe`, `data-access`, `merge` (dedupe by root cause), `verdict`, `other` |
+| `agent` | `role` (`reviewer`/`verifier`), `status` (`ok`/`failed`/`timeout`/`rerun`/`covered-by-lead`) (plus `lens`, `candidates`) | Each sub-agent returns or fails |
+| `candidate` | `id`, `lens`, `proposed` (`red`/`yellow`/`deploy`/`white`), `summary` (plus `location`, `origin`) | Each candidate enters Phase 5 — from a reviewer, the lead, an `out_of_lens` item, or a verifier side note |
+| `verification` | `id`, `status` (`CONFIRMED`/`REFUTED`/`UNRESOLVED`), `by` (`verifier`/`lead`) (plus `rationale`) | Each refutation attempt of Phase 5 or multi-agent §6 completes |
+| `classification` | `id`, `category` (`🔴`/`🟡`/`🚀`/`⚪`/`✅`/`accepted`/`still-open`/`discarded`), `rule` (0–6) (plus `finding` = `F-n`, `certainty`, `prerequisite` = `true`, `rubric` = `no-exposure`/`bounded`/`irreversible`, `merged_into` = the surviving candidate's `id` when deduplicated by root cause) | Phase 7 classifies a candidate — every candidate, discarded and merged ones included |
+| `check` | `tool` (`test`/`build`/`typecheck`/`lint`/`probe`/`ci`/`query`/`report`/`other`), `exit` (plus `command`, `duration_ms`) | A test, probe, CI result, or approved query is used as evidence; and every run of `check-report.mjs` (`tool=report`) |
+| `deviation` | `rule`, `reason` | A rule of this skill is not followed (e.g. a lens could not be covered) |
+| `run.end` | `status` (`done`/`not-performed`/`failed`) (plus `verdict`, `owner`, `red`, `yellow`, `deploy_steps`, `white`, `ruled_out`, `prerequisites`) | Last thing; `verdict` and `owner` are the literal keys of Phase 8 |
+
+A candidate keeps one `id` across its events (the reviewer's `<lens>-n`, or `lead-n`). A
+`rationale` is one or two sentences in the skill's own words citing the IDs or lines that
+drove it — that is what makes the reasoning reviewable later. Record decisions, not
+narration. The lead writes every event; sub-agents never write to the trace. The trace
+holds IDs, counts, paths, commands, and short rationales — never code, secrets, or personal
+data; `trace.mjs` masks e-mail addresses, long digit runs, token shapes, and connection
+strings as a backstop, not as permission to paste sensitive values.
 
 ## Supporting Files
 
 | Path | Use |
 | --- | --- |
-| [scripts/collect-diff.sh](scripts/collect-diff.sh) | Read-only diff inventory, hand-reviewed vs noise, base drift (Phase 2) |
+| [scripts/collect-diff.sh](scripts/collect-diff.sh) | Read-only diff inventory: file classes, noise, local and untracked changes, base drift, activated lenses, sizing (Phase 2, §4) |
+| [scripts/check-report.mjs](scripts/check-report.mjs) | Mechanical template and verdict check run before emitting (§11 item 13) |
+| [scripts/trace.mjs](scripts/trace.mjs) | Appends one validated, redacted event to the review trace (§12) |
+| [scripts/trace-report.mjs](scripts/trace-report.mjs) | Summarizes traces: candidate funnel, per-lens refutation rate and yield, consistency violations, signals (§12) |
+| [evals/run-evals.mjs](evals/run-evals.mjs) | Runs the evals with and without the skill and reports precision, recall, verdict accuracy, and cost (`evals/README.md`) |
 | [references/risk-checklist.md](references/risk-checklist.md) | Domain-specific risk questions (phases 3–5; binding rule in §7) |
 | [references/operational-data-protocol.md](references/operational-data-protocol.md) | Safe DB and log access (Phase 5) |
 | [references/multi-agent-review.md](references/multi-agent-review.md) | Lenses, roles, verification, and synthesis in multi-agent mode |

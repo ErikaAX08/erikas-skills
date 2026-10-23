@@ -320,15 +320,17 @@ the stories under review need, not as long as the history of previous gates.
 
 ## Review Verdict Handling
 
-`pre-pr-review` emits exactly one of these verdict keys, byte-identical in every language (only
-`X` varies) — match them literally:
+`pre-pr-review` emits exactly one of these verdict keys, byte-identical in every language — match
+them literally. Each verdict also names its owner (`Next:`) and an outcome map (`Unblocks when:`)
+that says which verdict each pending result leads to; follow the map instead of re-interpreting
+the findings:
 
 | Verdict | What this skill does |
 | --- | --- |
-| `approve` | The gate passes. Every `amendments.md` entry in `executed` status whose tasks this gate covered becomes `verified`. |
-| `approve with conditions` | Each `🟡` needs a recorded decision before the gate counts as passed. Present the `🟡` items together; for each, the user either accepts it as-is (→ `spec-kit-amend-artifacts` records it with `Layer: none`, `Status: accepted`) or decides a change (→ `spec-kit-amend-artifacts` applies it). Never leave a `🟡` decided only in chat. Once every `🟡` is decided, covered `executed` entries become `verified`, as for `approve`. |
-| `do not approve until X is verified` | Obtain the named verification (a probe, a test, an authorized read). If it settles the item, re-run the gate; if it reveals a defect, treat it as `request changes`. |
-| `request changes` | Each `🔴` is a change to decide and apply through `spec-kit-amend-artifacts`, then execute the resulting tasks and re-run the gate. |
+| `ready to merge` | The gate passes. Every `amendments.md` entry in `executed` status whose tasks this gate covered becomes `verified`. When the report has a Deploy Plan (`🚀` items), carry its steps, in order, into the completion report's `NEXT` — they are mandatory deploy instructions, not optional notes. |
+| `decision required` | Each `🟡` needs a recorded decision before the gate counts as passed. Present the `🟡` items together with the options the report lists; for each, the user either accepts the option that leads to `ready to merge` as-is (→ `spec-kit-amend-artifacts` records it with `Layer: none`, `Status: accepted`) or decides a change (→ `spec-kit-amend-artifacts` applies it). Never leave a `🟡` decided only in chat. Once every `🟡` is decided toward `ready to merge`, covered `executed` entries become `verified`, as for `ready to merge`. |
+| `verification required` | Obtain each named verification (a probe, a test, an authorized read). Follow the outcome map: a result that leads to `ready to merge` → re-run the gate; one that leads to `changes required` → treat it as `changes required`. |
+| `changes required` | Each `🔴` is a change to decide and apply through `spec-kit-amend-artifacts`, then execute the resulting tasks and re-run the gate. |
 
 Feedback upstream, in every case: if a finding shows a feature is incomplete or a deferral is
 unsafe, report it as a Safe Deferral misclassification toward `spec-kit-generate-plan` (an

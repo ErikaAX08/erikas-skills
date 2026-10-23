@@ -15,7 +15,7 @@ Phase 7.
 - Did the durable order of operations or transaction boundary change? (before/after code citations at base and head)
 - Is state persisted before or after an external effect, and is that order crash-safe? (traced flow + failure-path analysis)
 - Is rollback real, and are intermediate states enumerated and recoverable? (rollback path citation or Still Open)
-- Does the new flow preserve compatibility with in-flight and previous behavior? (base-vs-head comparison + old-client/worker check)
+- Does the new flow preserve compatibility with in-flight and previous behavior? (base-vs-head comparison + old-client/worker check; rate any mixed-version effect with the `SKILL.md` Phase 7 severity rubric — which caller hits it in the window, how long, reversible or not)
 
 ## APIs and Contracts
 
@@ -38,7 +38,7 @@ Phase 7.
 ## Feature Flags
 
 - Does the flag exist in code and in the relevant environment, with its default read from code? (`flag: <name> = <default> @ <env>` with file:line)
-- What is its real value in each environment, and what happens when it is absent or misspelled? (executed config read or Still Open as safety prerequisite)
+- What is its real value in each environment, and what happens when it is absent or misspelled? (executed config read; a `[prerequisite]` only when the value lives in an environment the repository does not pin and the wrong value would be 🔴)
 - Which branch receives real traffic today, and is the OFF branch actually safe (old code path still exercised)? (traffic/flag evidence + OFF-branch trace)
 
 ## Database and Migrations
@@ -47,7 +47,7 @@ Phase 7.
 - Is it idempotent and re-runnable; does it lock, block writes, touch many rows, or rebuild indexes? (migration code + engine lock semantics + plan review)
 - Does it preserve evidence and temporal semantics, including `ON UPDATE`, audit rows, and soft-delete meaning? (schema before/after)
 - Does it require batching, a backfill, a maintenance window, or separation from the code deploy (expand-then-contract)? (deployment-order statement; ordering problems use the fixed phrase from `SKILL.md` §3)
-- Is the code compatible before, during, and after the migration (old code×new schema, new code×old schema)? (compat matrix or 🟡 with decider)
+- Is the code compatible before, during, and after the migration (old code×new schema, new code×old schema)? (compat matrix; an incompatibility a deploy order avoids is a 🚀 candidate, one no order avoids is a 🔴 candidate)
 
 ## Jobs, Queues, and Events
 
@@ -89,7 +89,7 @@ Phase 7.
 ## Deployment and Rollback
 
 - What is the required deploy order (migration vs code, workers vs web, flags vs code), and what breaks if it is violated? (ordered steps + violation impact)
-- Can rollback execute without data loss or version incompatibility (forward-incompatible schema, old workers vs new messages)? (rollback rehearsal reasoning or 🟡/🔴)
+- Can rollback execute without data loss or version incompatibility (forward-incompatible schema, old workers vs new messages)? (rollback rehearsal reasoning; a safe rollback order is a 🚀 candidate, none is a 🔴 candidate)
 - Are feature flags, config, and IaC changes applied and reverted through the same path as code? (release pipeline citation)
 
 ## Dependencies

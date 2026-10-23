@@ -21,6 +21,11 @@
     "url": "https://github.com/ErikaAX08/erikas-skills/issues"
   },
   "type": "module",
+  "scripts": {
+    "test": "node --test scripts/test/scripts.test.mjs evals/test/harness.test.mjs",
+    "evals": "node evals/run-evals.mjs",
+    "trace:report": "node scripts/trace-report.mjs"
+  },
   "files": [
     "SKILL.md",
     "references/**/*",

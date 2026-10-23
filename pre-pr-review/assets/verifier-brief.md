@@ -35,7 +35,12 @@ For each candidate:
    reproduce it: write a small probe in `<scratch dir>`, run it against the installed dependency,
    and cite the command and its output in `evidence`. Reading that library's source is not
    enough to decide such a claim either way. If no probe is possible, say why in `reasoning`.
-6. Decide one status:
+6. When the claim depends on timing, versions, or a new input (rolling deploy, rollback, a new
+   optional field, a flag flip), answer the severity rubric with citations: **exposure** — which
+   real caller, client, job, or stored data hits the condition in that window (a field no caller
+   sends yet has none); **window** — permanent or bounded, with the bound; **reversibility** —
+   recoverable or not. If the claimed severity does not survive it, say so in `severity_correction`.
+7. Decide one status:
    - `CONFIRMED`: the condition is reachable and the impact follows.
    - `REFUTED`: evidence prevents the condition or the impact.
    - `UNRESOLVED`: the decisive fact needs data you cannot reach (real data, traffic, flag values in
@@ -62,6 +67,8 @@ results:
     reasoning: <the path you traced, in two to four sentences>
     evidence: [<file:line, test, contract, commit>]
     impact_correction: <only if the real impact is larger or smaller than claimed>
+    rubric: <only for timing/version/new-input claims: exposure; window; reversibility — each cited>
+    severity_correction: <only if the rubric or the evidence moves the severity: from → to, and why>
     decisive_fact: <only for UNRESOLVED: exact fact and where it lives>
 side_notes: [<optional, with location>]
 ```

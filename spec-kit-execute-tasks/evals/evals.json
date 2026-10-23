@@ -3,12 +3,12 @@
   "evals": [
     {
       "id": 0,
-      "name": "approve-with-conditions",
-      "prompt": "Every task in the active feature is done. Run the final gate. For the pre-pr-review step, use this result instead of running it: Verdict `approve with conditions`. 🟡 F-1 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s — I accept this as-is, the sweep runs from the scheduler. 🟡 F-2 (This requires a product decision): R-AC02 shows the agent the provider's raw rejection reason, which can include internal provider codes — I have not decided this yet.",
-      "expected_output": "The verdict is matched literally as `approve with conditions`; F-1 is recorded through spec-kit-amend-artifacts as Layer none / accepted; F-2 is presented as an open product decision with options; the feature is not reported complete and nothing is marked verified while F-2 is undecided.",
-      "files": ["evals/files/approve-with-conditions"],
+      "name": "decision-required",
+      "prompt": "Every task in the active feature is done. Run the final gate. For the pre-pr-review step, use this result instead of running it: Verdict `decision required`, Next: **operations** — choose an option for F-1, then **product** for F-2. 🟡 F-1 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s — I accept this as-is, the sweep runs from the scheduler. 🟡 F-2 (This requires a product decision): R-AC02 shows the agent the provider's raw rejection reason, which can include internal provider codes — I have not decided this yet.",
+      "expected_output": "The verdict is matched literally as `decision required`; F-1 is recorded through spec-kit-amend-artifacts as Layer none / accepted; F-2 is presented as an open product decision with options; the feature is not reported complete and nothing is marked verified while F-2 is undecided.",
+      "files": ["evals/files/decision-required"],
       "assertions": [
-        "Treats the verdict as the literal key `approve with conditions` and applies that row of the skill's verdict handling.",
+        "Treats the verdict as the literal key `decision required` and applies that row of the skill's verdict handling.",
         "Routes F-1 to `spec-kit-amend-artifacts` to be recorded with `Layer: none` / `Status: accepted` (or records it that way through that skill), not only in chat.",
         "Presents F-2 to the user as an undecided product decision with concrete options, and does not decide it or edit spec.md/plan.md/tasks.md to resolve it.",
         "Does not report the feature as complete or `ready for PR`; `NEXT` names the pending F-2 decision.",
