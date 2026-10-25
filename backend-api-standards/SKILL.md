@@ -1,7 +1,7 @@
 ---
 name: backend-api-standards
 description: Defines mandatory standards for REST API contracts and data format, including unified response structure, OpenAPI documentation, ULID identifiers, JWT auth headers, mandatory entity fields, and HTTP status codes. Framework-agnostic — describes what the API must return, not how to build it.
-license: Complete terms in LICENSE.txt
+license: Apache-2.0
 ---
 
 # Backend API Standards Skill

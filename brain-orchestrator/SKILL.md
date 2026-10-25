@@ -1,7 +1,7 @@
 ---
 name: brain-orchestrator
 description: Act as the architectural brain of a multi-agent engineering operation — investigate an unfamiliar, large, or legacy codebase, model how it really works, diagnose root causes instead of symptoms, design the minimal architecturally-correct change, decompose it into scoped task contracts with a dependency DAG, persist everything to a `.agent/` memory tree, delegate to subagents, verify their work against their contracts, integrate, and replan when evidence invalidates the plan. Use for complex, cross-module, high-risk, multi-session, or multi-agent work — bug hunts in systems nobody fully understands, changes that touch shared contracts, coordinating parallel agents, or resuming work whose conversational context was lost. Not for trivial single-file edits.
-license: MIT
+license: Apache-2.0
 ---
 
 # Brain — Architect & Orchestrator for Multi-Agent Engineering

@@ -1,7 +1,7 @@
 ---
 name: spec-kit-amend-artifacts
 description: Apply an already-decided change — a pre-pr-review finding, a refuted [SONDA] premise, or unplanned scope the user resolved — to spec.md/plan.md/tasks.md in one confirmed pass, starting at the lowest artifact that owns the change and propagating only downward, by running each generating skill's own "Updating an Existing X" procedure with scoped validation. Records every decision in amendments.md before editing (write-ahead, so a stopped amendment can be resumed or undone), reworks closed tasks only through the Task Lifecycle, lets each owning procedure refresh its state.json entry, and hands off to spec-kit-execute-tasks. Never decides a change for the user and never writes product code. When an artifact-amender agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
-license: MIT
+license: Apache-2.0
 ---
 
 # Amend Artifacts — Decided-Change Skill

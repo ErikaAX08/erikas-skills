@@ -1,7 +1,7 @@
 ---
 name: verify-before-implement
 description: Analyze and implement code changes with strict verification protocol. Use when implementing features, fixing bugs, or modifying existing code. Enforces reality-checking against actual codebase, contracts, and specs before making changes. Prevents assumption-based development and invented parameters/entities.
-license: MIT
+license: Apache-2.0
 ---
 
 # VERIFY-BEFORE-IMPLEMENT.md — Reality-First Implementation Skill

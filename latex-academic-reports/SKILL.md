@@ -1,7 +1,7 @@
 ---
 name: latex-academic-reports
 description: Generate academic reports, papers, and technical documentation using LaTeX. Use when the user asks to create research papers, lab reports, theses, technical documentation, IEEE-style papers, or any academic document requiring professional typesetting. Produces publication-quality PDFs with proper formatting, citations, figures, tables, and mathematical notation. Ideal for Computer Science, Engineering, and scientific documents.
-license: MIT
+license: Apache-2.0
 ---
 
 This skill guides the creation of professional academic documents using LaTeX, producing high-quality PDFs with proper formatting, citations, and technical content presentation.

@@ -1,7 +1,7 @@
 ---
 name: spec-kit-sync-artifacts
 description: Detect drift between spec.md/plan.md/tasks.md and their recorded state.json fingerprints — mechanical hash comparison plus best-effort structural localization by stable ID — and recommend which upstream spec-kit skill to re-invoke, one hop at a time. Never edits spec.md, plan.md, or tasks.md itself; that stays each generating skill's own "Updating an Existing X" procedure. Invocable standalone after editing a source document, or as the Fase 0 staleness check inside spec-kit-generate-plan, spec-kit-generate-tasks, and spec-kit-execute-tasks. When a drift-watcher agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
-license: MIT
+license: Apache-2.0
 ---
 
 # Sync Artifacts — Drift Detection Skill

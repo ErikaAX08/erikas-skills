@@ -1,7 +1,7 @@
 ---
 name: code-architecture-explainer
 description: Analyze and explain code from multiple levels - from implementation details to software architecture. Use when understanding new codebases, explaining system design, documenting architecture, learning patterns, or analyzing technical decisions. Provides technical deep-dives, architectural overviews, flow diagrams, and concrete examples. Works at any abstraction level from "what does this function do" to "how does this system scale".
-license: MIT
+license: Apache-2.0
 ---
 
 This skill guides comprehensive code and architecture analysis at multiple levels of abstraction, from low-level implementation details to high-level system design.

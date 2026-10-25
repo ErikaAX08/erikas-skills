@@ -1,7 +1,7 @@
 ---
 name: spec-kit-generate-spec
 description: Generate or update a governed, implementation-ready specification from a PRD, document, file reference, or free-form text using SPDD and the REASONS Canvas; when support agents are requested, generate compatible definitions for both Kiro CLI and Claude Code.
-license: MIT
+license: Apache-2.0
 ---
 
 # Generate Spec — SPDD REASONS Specification Skill

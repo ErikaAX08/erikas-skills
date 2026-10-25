@@ -1,7 +1,7 @@
 ---
 name: spec-kit-generate-tasks
 description: Decompose an approved technical plan (plan.md) into an executable, user-story-organized task list (tasks.md) — Setup, Foundational, one phase per user story in priority order with a mandatory closure checkpoint, then Polish. Enforces the Safe Deferral rule from spec-kit-generate-plan and traceability to spec.md/plan.md; when a task-decomposer agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
-license: MIT
+license: Apache-2.0
 ---
 
 # Generate Tasks — Task Decomposition Skill

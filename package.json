@@ -12,7 +12,7 @@
     "copilot",
     "cursor"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "author": "ErikaAX08 <eamastalxochimitl@gmail.com>",
   "repository": {
     "type": "git",
@@ -50,7 +50,8 @@
     "verify-before-implement/**/*",
     "brand-guidelines/**/*",
     "bin/**/*",
-    "scripts/**/*"
+    "scripts/**/*",
+    "NOTICE"
   ],
   "bin": {
     "erikas-skills": "./bin/cli.mjs"

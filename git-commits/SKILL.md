@@ -1,7 +1,7 @@
 ---
 name: git-commits
 description: Write clear, semantic git commit messages and PR/MR titles following Conventional Commits. Use when the user asks to write commit messages, format git history, improve commit quality, or set a PR/MR title, or mentions "commit message", "conventional commits", "merge message", or "git history". For the full PR/MR body description, use the create-pull-request skill instead. Generates professional, consistent commit messages and titles that make project history easy to understand.
-license: MIT
+license: Apache-2.0
 ---
 
 # GIT-COMMITS.md — Conventional Commits Engineering Skill

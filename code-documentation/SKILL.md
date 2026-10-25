@@ -1,7 +1,7 @@
 ---
 name: code-documentation
 description: Document code clearly, concisely, and professionally. Use when the user asks to document functions, classes, structs, or code files; add comments to existing code; improve existing documentation; or mentions "document", "comments", "docstrings", "JSDoc", "godoc", or "code documentation". Generates documentation that other engineers can quickly understand without being verbose, with strict prose line-count caps and no comment-width limit, while allowing one line per structured parameter, return, or error entry and forbidding per-property and per-interface-member documentation except for extreme type ambiguity.
-license: MIT
+license: Apache-2.0
 ---
 
 # Code Documentation

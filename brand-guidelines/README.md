@@ -1,7 +1,7 @@
 ---
 name: brand-guidelines
 description: Applies brand colors and typography to any artifact requiring visual styling. Use it when brand colors, style guidelines, visual formatting, or design standards apply. Works with any brand palette, not just Anthropic's.
-license: Complete terms in LICENSE.txt
+license: Apache-2.0
 ---
 
 # Brand Styling Skill

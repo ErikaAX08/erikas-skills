@@ -1,7 +1,7 @@
 ---
 name: spec-kit-generate-plan
 description: Generate or update a technical implementation plan (plan.md) from an approved REASONS specification, enforcing verified project context, two-gate Constitution Check, convention enforcement, and the Safe Deferral rule for phased work; when a plan-reviewer agent is requested, generate compatible definitions for both Kiro CLI and Claude Code.
-license: MIT
+license: Apache-2.0
 ---
 
 # Generate Plan — Technical Planning Skill
