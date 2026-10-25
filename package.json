@@ -60,7 +60,8 @@
     "install:skills": "node ./scripts/install.mjs",
     "validate": "node ./scripts/validate.mjs",
     "sync:versions": "node ./scripts/sync-versions.mjs",
-    "test": "node ./scripts/validate.mjs && pnpm run test:spec-kit && pnpm run test:pre-pr-review",
+    "test": "node ./scripts/validate.mjs && pnpm run test:cli && pnpm run test:spec-kit && pnpm run test:pre-pr-review",
+    "test:cli": "node --test scripts/test/install.test.mjs",
     "test:spec-kit": "node --test spec-kit-shared/scripts/test/scripts.test.mjs spec-kit-shared/scripts/test/runlog.test.mjs scripts/test/check-references.test.mjs",
     "test:pre-pr-review": "node --test pre-pr-review/scripts/test/scripts.test.mjs pre-pr-review/evals/test/harness.test.mjs"
   }

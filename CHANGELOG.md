@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- `brand-guidelines` is now a real skill (`SKILL.md` + `@erikaax/brand-guidelines`) — before, its content lived in `README.md`, so assistants never discovered it and the CLI could not install it.
+- The installer no longer copies repo-only files into users' projects: `package.json`, a skill's own `README.md`, `evals/` (with fixture `package.json` and `*.test.js` files a host test runner could pick up), and `test/` folders.
+- The CI smoke test now runs the local CLI instead of the npm-published package, and steps fail on errors hidden behind a pipe.
+
 ## [0.1.0] - 2026-08-30
 
 ### Added
