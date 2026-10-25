@@ -58,6 +58,14 @@ Treat the specification as a first-class delivery artifact:
 13. **Generate portable agent pairs.** If this workflow creates a support agent, it must generate and validate both a Kiro CLI JSON definition and a Claude Code Markdown definition with equivalent intent and least-privilege capabilities.
 14. **Stay at the behavior layer.** The spec owns what the system must do and must never do — behavior, rules, entities, invariants, safeguards — and describes Approach, Structure, and Operations at the capability level. Library choices, file-level change lists, wiring points, concrete values that satisfy a stated `R-QR`, and runtime premises belong to `plan.md` (`spec-kit-shared/artifact-conventions.md` § Layer Ownership). A spec that pins file-level detail forces a new spec version for every technical fix.
 
+## Shared Files
+
+`spec-kit-shared/…` paths resolve against `<skills-root>`, the parent of this skill's own
+directory: `.claude/skills/` or the host's equivalent once installed, the repository root in a
+checkout of the kit. Run shared scripts from the project root as
+`node <skills-root>/spec-kit-shared/scripts/<script>.mjs`, with `<skills-root>` written out as an
+absolute path; a bare `spec-kit-shared/…` script path resolves against the project and fails.
+
 ## Cross-Platform Agent Compatibility
 
 The complete portability contract — Kiro CLI + Claude Code file requirements, naming rules, the
@@ -75,7 +83,7 @@ out-of-date recollection of it. If the active host cannot resolve that file refe
 ## Run Log
 
 Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
-`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-generate-spec mode=<mode>` and pass the printed `RUN_ID` to every
+`node <skills-root>/spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-generate-spec mode=<mode>` and pass the printed `RUN_ID` to every
 later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
 Pass `--log <RUN_ID> --skill spec-kit-generate-spec` to `fingerprint.mjs --record … spec` so they record their own results.
 Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
@@ -336,7 +344,7 @@ it completely before writing the canvas, and follow it as if it were inline here
 
 Create `<feature-directory>/checklists/requirements.md` from the template in `references/requirements-checklist.md`.
 
-Before validating item by item, run `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>`: a `BLOCKING` finding in `spec.md` (duplicate or broken ID, an unenumerated sensitive-data channel) is a failed checklist item.
+Before validating item by item, run `node <skills-root>/spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>`: a `BLOCKING` finding in `spec.md` (duplicate or broken ID, an unenumerated sensitive-data channel) is a failed checklist item.
 
 Validate the specification item by item:
 
@@ -366,7 +374,7 @@ Also perform these consistency checks:
 
 Per `spec-kit-shared/artifact-conventions.md`'s schema, write or update
 `.speckit/specs/<feature-dir>/state.json`'s `artifacts.spec` entry — always with
-`node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> spec`, which computes the content
+`node <skills-root>/spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> spec`, which computes the content
 hash and per-ID `sections` of the final `spec.md` — and its `source_documents` map (mirroring the Evidence Catalog's fingerprints exactly) — in both
 new mode and update mode, whether or not a `plan.md` exists yet. This is what lets
 `spec-kit-sync-artifacts` check a fresh specification against its sources standalone, before anyone has run

@@ -89,6 +89,14 @@ or a short description of a change the user already decided.
     support agent), it must generate and validate both a Kiro CLI and a Claude Code definition per
     the shared portability contract.
 
+## Shared Files
+
+`spec-kit-shared/…` paths resolve against `<skills-root>`, the parent of this skill's own
+directory: `.claude/skills/` or the host's equivalent once installed, the repository root in a
+checkout of the kit. Run shared scripts from the project root as
+`node <skills-root>/spec-kit-shared/scripts/<script>.mjs`, with `<skills-root>` written out as an
+absolute path; a bare `spec-kit-shared/…` script path resolves against the project and fails.
+
 ## Cross-Platform Agent Compatibility
 
 The complete portability contract lives in `spec-kit-shared/agent-portability.md`. Before
@@ -109,7 +117,7 @@ Layer Ownership, Evidence Levels, Task Lifecycle, and the `amendments.md` format
 ## Run Log
 
 Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
-`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-amend-artifacts mode=<mode>` and pass the printed `RUN_ID` to every
+`node <skills-root>/spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-amend-artifacts mode=<mode>` and pass the printed `RUN_ID` to every
 later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
 Pass `--log <RUN_ID> --skill spec-kit-amend-artifacts` to `fingerprint.mjs --record` (through the owning procedures), `fingerprint.mjs --state`, and `lint-artifacts.mjs` so they record their own results.
 Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
@@ -259,8 +267,8 @@ set `Status: stopped` and `Stopped at: <layer> — <failed item>`, and stop (Rul
 
 ### Phase 5 — Confirm State and Close the Entry
 
-1. Confirm the chain: `node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>` must
-   report `ARTIFACT_DRIFT: NO`, and `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` must report no `BLOCKING` finding other than
+1. Confirm the chain: `node <skills-root>/spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>` must
+   report `ARTIFACT_DRIFT: NO`, and `node <skills-root>/spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` must report no `BLOCKING` finding other than
    L19 for this entry itself (still `planned` until step 2). Drift here means an owning procedure did not refresh its entry —
    stop with `Status: stopped` and `Stopped at: state — <artifact>` rather than writing the hash
    on its behalf.

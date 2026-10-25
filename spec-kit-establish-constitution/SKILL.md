@@ -83,6 +83,14 @@ never binding until the user confirms them.**
     support agent), it must generate and validate both a Kiro CLI and a Claude Code definition per
     the shared portability contract.
 
+## Shared Files
+
+`spec-kit-shared/…` paths resolve against `<skills-root>`, the parent of this skill's own
+directory: `.claude/skills/` or the host's equivalent once installed, the repository root in a
+checkout of the kit. Run shared scripts from the project root as
+`node <skills-root>/spec-kit-shared/scripts/<script>.mjs`, with `<skills-root>` written out as an
+absolute path; a bare `spec-kit-shared/…` script path resolves against the project and fails.
+
 ## Cross-Platform Agent Compatibility
 
 The complete portability contract lives in `spec-kit-shared/agent-portability.md`. Before
@@ -103,7 +111,7 @@ Read it before Phase 1 below.
 ## Run Log
 
 Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (project-wide, so `<dir>` is `.speckit`): start with
-`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-establish-constitution mode=<mode>` and pass the printed `RUN_ID` to every
+`node <skills-root>/spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-establish-constitution mode=<mode>` and pass the printed `RUN_ID` to every
 later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
 Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
 

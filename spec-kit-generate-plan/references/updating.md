@@ -13,7 +13,7 @@ When `spec.md` changed since the last `plan.md` (Fase 0 detected material drift)
 4. Preserve stable IDs (`PL-D##`, `PL-O##`, `RS-##`, or a legacy plan's `A-D0#`/`O-0#`) where
    semantics are unchanged; add new `PL-` IDs for new semantics.
 5. Update `state.json`'s `artifacts.plan.content_hash` and `based_on_spec_hash` only after the
-   targeted regeneration validates. Write it with `node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> plan`, which applies `artifact-conventions.md` § Schema Versions and Migrations — it refuses a state newer than the contract (exit 3: stop) and migrates a version-1 file, reporting `SCHEMA_MIGRATED: 1→2`.
+   targeted regeneration validates. Write it with `node <skills-root>/spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> plan`, which applies `artifact-conventions.md` § Schema Versions and Migrations — it refuses a state newer than the contract (exit 3: stop) and migrates a version-1 file, reporting `SCHEMA_MIGRATED: 1→2`.
 6. Re-run the full `plan-quality.md` checklist regardless of how small the change was — except
    when `spec-kit-amend-artifacts` invokes this procedure for a bounded amendment: then validate the
    scope `spec-kit-shared/artifact-conventions.md` § Scoped Validation defines for `plan.md`.

@@ -39,6 +39,21 @@ test("a renamed heading, a missing file, and an unknown target are reported", ()
   assert.ok(problems.some((p) => p.includes("nope-skill")));
 });
 
+test("shared scripts must be run from <skills-root> and exist", () => {
+  const root = kit({
+    ...BASE,
+    "spec-kit-shared/scripts/log-event.mjs": "",
+    "spec-kit-demo/SKILL.md": BASE["spec-kit-demo/SKILL.md"] +
+      "\nRun `node <skills-root>/spec-kit-shared/scripts/log-event.mjs <dir>` and\n`node <skills-root>/spec-kit-shared/scripts/<script>.mjs`.\n" +
+      "\n```bash\nnode spec-kit-shared/scripts/log-event.mjs <dir>\n```\n" +
+      "\nThen `node <skills-root>/spec-kit-shared/scripts/gone.mjs`.\n",
+  });
+  const problems = checkReferences(root);
+  assert.equal(problems.length, 2);
+  assert.ok(problems.some((p) => p.includes("write `node <skills-root>/spec-kit-shared/…`")));
+  assert.ok(problems.some((p) => p.includes("spec-kit-shared/scripts/gone.mjs") && p.includes("does not exist")));
+});
+
 test("the repository's own kit has no broken reference", () => {
   assert.deepEqual(checkReferences(), []);
 });

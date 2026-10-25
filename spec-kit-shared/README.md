@@ -10,7 +10,9 @@ CLI + Claude Code) agent generation built in at every step.
 other skill in this repo uses, so each is independently discoverable and copyable. This folder,
 `spec-kit-shared/`, holds only the documents those skills reference in common (§ Shared Contracts
 below) — it is not a skill itself and has no `SKILL.md`. Copy it alongside any spec-kit skill you
-use; the skills reference it as `spec-kit-shared/<file>`, a path relative to the repository root.
+use, as a sibling of the skill folders; the skills reference it as `spec-kit-shared/<file>`, a path
+relative to that shared parent (`<skills-root>`: `.claude/skills/` once installed, the repository
+root in a checkout), and run its scripts as `node <skills-root>/spec-kit-shared/scripts/<script>.mjs`.
 
 ## Order and When to Use Each Skill
 
