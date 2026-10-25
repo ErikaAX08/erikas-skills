@@ -5,8 +5,12 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write
-  id-token: write  # OIDC for npm provenance
+  contents: write  # GitHub Release
+  id-token: write  # npm trusted publishing (OIDC)
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   publish:
@@ -16,18 +20,31 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24  # trusted publishing needs Node >= 22.14 and npm >= 11.5.1
           cache: pnpm
           registry-url: https://registry.npmjs.org
+      - name: Check npm supports trusted publishing
+        run: |
+          npm --version
+          node -e 'const [a, b, c] = process.argv[1].split(".").map(Number); process.exit(a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1))) ? 0 : 1)' "$(npm --version)"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run validate
-      # Publish the bundle + every workspace with provenance (requires NPM_TOKEN unless using Trusted Publisher)
-      - run: pnpm -r publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: pnpm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Check the tag matches the version
+        run: test "${GITHUB_REF_NAME#v}" = "$(node -p 'require("./package.json").version')"
+      - run: pnpm test
+      # npm publish, not pnpm publish: npm authenticates with this workflow's OIDC token, so there is
+      # no NPM_TOKEN secret, and attaches provenance itself. Versions already on the registry are
+      # skipped, so re-running after a partial failure publishes only what is missing.
+      - name: Publish to npm
+        run: |
+          for dir in $(grep '^  - ' pnpm-workspace.yaml | sed 's/^  - //') .; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version > /dev/null 2>&1; then
+              echo "= $name@$version is already published"
+            else
+              (cd "$dir" && npm publish --access public)
+            fi
+          done
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         with:

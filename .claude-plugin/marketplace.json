@@ -1,0 +1,79 @@
+{
+  "name": "erikas-skills",
+  "description": "Reusable skills for frontend architecture, API standards, spec-driven development, orchestration and code quality.",
+  "owner": {
+    "name": "Erika Amastal",
+    "url": "https://github.com/ErikaAX08"
+  },
+  "plugins": [
+    {
+      "name": "frontend",
+      "source": "./",
+      "strict": false,
+      "description": "Clean Architecture for frontends, distinctive production-grade UI, and brand colors and typography.",
+      "category": "frontend",
+      "license": "Apache-2.0",
+      "skills": ["./frontend-architecture", "./frontend-design", "./brand-guidelines"]
+    },
+    {
+      "name": "backend",
+      "source": "./",
+      "strict": false,
+      "description": "REST contract standards: unified responses, OpenAPI, ULIDs, JWT headers and status codes.",
+      "category": "backend",
+      "license": "Apache-2.0",
+      "skills": ["./backend-api-standards"]
+    },
+    {
+      "name": "workflow",
+      "source": "./",
+      "strict": false,
+      "description": "Project bootstrapping, verification against the real codebase before changing it, and evidence-based pre-merge review.",
+      "category": "workflow",
+      "license": "Apache-2.0",
+      "skills": ["./project-setup", "./verify-before-implement", "./pre-pr-review"]
+    },
+    {
+      "name": "docs",
+      "source": "./",
+      "strict": false,
+      "description": "Code and architecture explanations, concise code documentation, Conventional Commits, PR descriptions, and LaTeX reports.",
+      "category": "documentation",
+      "license": "Apache-2.0",
+      "skills": [
+        "./code-architecture-explainer",
+        "./code-documentation",
+        "./git-commits",
+        "./create-pull-request",
+        "./latex-academic-reports"
+      ]
+    },
+    {
+      "name": "orchestration",
+      "source": "./",
+      "strict": false,
+      "description": "Multi-agent investigation, planning and delegation, and an evidence-backed living memory of a project.",
+      "category": "orchestration",
+      "license": "Apache-2.0",
+      "skills": ["./brain-orchestrator", "./project-intelligence"]
+    },
+    {
+      "name": "spec-kit",
+      "source": "./",
+      "strict": false,
+      "description": "Spec-driven development chain: constitution, spec, plan, tasks, consistency check, execution, drift detection and amendments.",
+      "category": "workflow",
+      "license": "Apache-2.0",
+      "skills": [
+        "./spec-kit-establish-constitution",
+        "./spec-kit-generate-spec",
+        "./spec-kit-generate-plan",
+        "./spec-kit-generate-tasks",
+        "./spec-kit-analyze-consistency",
+        "./spec-kit-sync-artifacts",
+        "./spec-kit-execute-tasks",
+        "./spec-kit-amend-artifacts"
+      ]
+    }
+  ]
+}

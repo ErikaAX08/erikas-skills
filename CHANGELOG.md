@@ -4,6 +4,13 @@ All notable changes to this project are documented here. Format based on [Keep a
 
 ## [Unreleased]
 
+### Added
+- Claude Code plugin marketplace (`.claude-plugin/marketplace.json`): the skills install as six plugins — `frontend`, `backend`, `workflow`, `docs`, `orchestration`, `spec-kit` — with `/plugin install <plugin> --marketplace ErikaAX08/erikas-skills`. `pnpm run validate` checks that every skill is in exactly one plugin.
+
+### Changed
+- Releases publish with npm trusted publishing (OIDC) instead of an `NPM_TOKEN` secret, after running the full test suite and checking that the tag matches the version; versions already on npm are skipped.
+- The CLI moved from `bin/` to `cli/`, because Claude Code puts a plugin's `bin/` on the shell `PATH` and claude.ai refuses plugins that have one. The `erikas-skills` command is unchanged.
+
 ### Fixed
 - `brand-guidelines` is now a real skill (`SKILL.md` + `@erikaax/brand-guidelines`) — before, its content lived in `README.md`, so assistants never discovered it and the CLI could not install it.
 - The installer no longer copies repo-only files into users' projects: `package.json`, a skill's own `README.md`, `evals/` (with fixture `package.json` and `*.test.js` files a host test runner could pick up), and `test/` folders.

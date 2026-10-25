@@ -8,6 +8,23 @@ Reusable skills for AI coding assistants (Claude Code, OpenCode, Cursor, Windsur
 
 ## Installation
 
+### Claude Code plugins
+
+The skills are grouped into plugins that mirror the table below:
+
+```
+/plugin install frontend --marketplace ErikaAX08/erikas-skills
+/plugin install backend --marketplace ErikaAX08/erikas-skills
+/plugin install workflow --marketplace ErikaAX08/erikas-skills
+/plugin install docs --marketplace ErikaAX08/erikas-skills
+/plugin install orchestration --marketplace ErikaAX08/erikas-skills
+/plugin install spec-kit --marketplace ErikaAX08/erikas-skills
+```
+
+On Claude Code older than 2.1.275, add the marketplace first with `/plugin marketplace add ErikaAX08/erikas-skills`, then run `/plugin install <plugin>@erikas-skills`. Plugin skills are namespaced by plugin, e.g. `/spec-kit:spec-kit-generate-spec`.
+
+### Any assistant (CLI)
+
 Requires Node >= 18.
 
 ```bash
