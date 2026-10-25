@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkMarketplace } from "./check-marketplace.mjs";
 import { checkReferences } from "./check-references.mjs";
 import { SPEC_KIT_MANIFEST, SPEC_KIT_SKILLS } from "./spec-kit-manifest.mjs";
 
@@ -111,8 +112,14 @@ export async function validate() {
   if (refProblems.length) ok = false;
   else console.log("  ✓ spec-kit references resolve");
 
-  // check bin and scripts
-  for (const f of ["bin/cli.mjs", "scripts/install.mjs", "scripts/validate.mjs", "scripts/sync-versions.mjs", "scripts/check-references.mjs"]) {
+  // Claude Code plugin marketplace: every skill in exactly one plugin.
+  const marketplaceProblems = checkMarketplace();
+  for (const p of marketplaceProblems) console.error(`  ✗ marketplace: ${p}`);
+  if (marketplaceProblems.length) ok = false;
+  else console.log("  ✓ marketplace lists every skill once");
+
+  // check cli and scripts
+  for (const f of ["cli/cli.mjs", "scripts/install.mjs", "scripts/validate.mjs", "scripts/sync-versions.mjs", "scripts/check-references.mjs", "scripts/check-marketplace.mjs"]) {
     if (!fs.existsSync(path.join(ROOT, f))) { console.error(`  ✗ missing ${f}`); ok = false; }
   }
   if (ok) console.log("\n✓ Validation passed");

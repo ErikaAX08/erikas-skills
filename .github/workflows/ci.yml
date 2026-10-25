@@ -31,10 +31,10 @@ jobs:
       - run: pnpm pack --dry-run
       - name: Smoke test the local CLI
         run: |
-          node bin/cli.mjs --help > /dev/null
-          listed=$(node bin/cli.mjs list | grep -c '^ - ')
+          node cli/cli.mjs --help > /dev/null
+          listed=$(node cli/cli.mjs list | grep -c '^ - ')
           expected=$(grep -c '^  - ' pnpm-workspace.yaml)
           echo "cli list: $listed skills, workspace: $expected"
           test "$listed" -eq "$expected"
-          node bin/cli.mjs install --target dir --dir "$RUNNER_TEMP/skills"
+          node cli/cli.mjs install --target dir --dir "$RUNNER_TEMP/skills"
           test -f "$RUNNER_TEMP/skills/brand-guidelines/SKILL.md"
