@@ -1,0 +1,31 @@
+{
+  "name": "@erikaax/brand-guidelines",
+  "version": "0.1.0",
+  "description": "Applies brand colors and typography to any artifact requiring visual styling. Use it when brand colors, style guidelines, visual formatting, or design standards apply. Works with any brand palette, not just Anthropic's.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "brand-guidelines"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "brand-guidelines"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/brand-guidelines",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

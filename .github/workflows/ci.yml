@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash  # -eo pipefail, so a failing command before a pipe fails the step
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -18,9 +25,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run validate
+      - run: pnpm run test:cli
       - run: pnpm run test:spec-kit
       - run: pnpm run test:pre-pr-review
       - run: pnpm pack --dry-run
-      - run: node ./scripts/install.mjs --help 2>&1 | head -n 5
-      - run: npx --yes erikas-skills list 2>&1 | head -n 20
-        # smoke: list should contain 14 entries
+      - name: Smoke test the local CLI
+        run: |
+          node bin/cli.mjs --help > /dev/null
+          listed=$(node bin/cli.mjs list | grep -c '^ - ')
+          expected=$(grep -c '^  - ' pnpm-workspace.yaml)
+          echo "cli list: $listed skills, workspace: $expected"
+          test "$listed" -eq "$expected"
+          node bin/cli.mjs install --target dir --dir "$RUNNER_TEMP/skills"
+          test -f "$RUNNER_TEMP/skills/brand-guidelines/SKILL.md"

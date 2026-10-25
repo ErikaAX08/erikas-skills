@@ -12,6 +12,7 @@ export { SPEC_KIT_SKILLS };
 const FALLBACK_SKILLS = [
   "backend-api-standards",
   "brain-orchestrator",
+  "brand-guidelines",
   "code-architecture-explainer",
   "code-documentation",
   "create-pull-request",
@@ -83,12 +84,25 @@ function resolveTargetDir(target, global) {
   }
 }
 
-function copyDirRecursive(src, dest) {
+// Repo-only files that must not land in a user's project: npm metadata, human docs, evals and their
+// fixtures (nested package.json, *.test.js), and script tests — a host test runner would pick them up
+const SKIP_AT_ROOT = new Set(["package.json", "evals", "node_modules"]);
+const SKIP_ANYWHERE = new Set(["test", ".DS_Store"]);
+
+function shouldSkip(entry, isRoot, isSkill) {
+  if (SKIP_ANYWHERE.has(entry.name)) return true;
+  if (!isRoot) return false;
+  // spec-kit-shared/README.md is the kit's index; only a skill's own README is redundant with SKILL.md
+  return SKIP_AT_ROOT.has(entry.name) || (isSkill && entry.name === "README.md");
+}
+
+function copyDirRecursive(src, dest, isRoot = true, isSkill = fs.existsSync(path.join(src, "SKILL.md"))) {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    if (shouldSkip(entry, isRoot, isSkill)) continue;
     const s = path.join(src, entry.name);
     const d = path.join(dest, entry.name);
-    if (entry.isDirectory()) copyDirRecursive(s, d);
+    if (entry.isDirectory()) copyDirRecursive(s, d, false, isSkill);
     else if (entry.isFile()) fs.copyFileSync(s, d);
   }
 }
