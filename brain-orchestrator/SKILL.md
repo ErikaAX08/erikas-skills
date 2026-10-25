@@ -461,7 +461,8 @@ Load `references/subagent-protocol.md`. Core rules:
   dependency order, still honoring read-before-work and write-after-work. The method does not
   require multiple agents; it requires bounded work with persisted context.
 - If a reusable agent role is materialized, generate the portable pair per
-  `spec-kit-shared/agent-portability.md`.
+  `spec-kit-shared/agent-portability.md` (ships with Spec Kit, next to this skill's folder; without
+  it, see `references/subagent-protocol.md` § 9).
 
 **Writes:** task status → `IN_PROGRESS` in the task file and `PROJECT_STATE.md`; temporary file
 ownership recorded so no other agent touches those paths.

@@ -87,6 +87,14 @@ passed — not when the code looks right. A story is done when its checkpoint ho
     support agent), it must generate and validate both a Kiro CLI and a Claude Code definition per
     the shared portability contract.
 
+## Shared Files
+
+`spec-kit-shared/…` paths resolve against `<skills-root>`, the parent of this skill's own
+directory: `.claude/skills/` or the host's equivalent once installed, the repository root in a
+checkout of the kit. Run shared scripts from the project root as
+`node <skills-root>/spec-kit-shared/scripts/<script>.mjs`, with `<skills-root>` written out as an
+absolute path; a bare `spec-kit-shared/…` script path resolves against the project and fails.
+
 ## Cross-Platform Agent Compatibility
 
 The complete portability contract lives in `spec-kit-shared/agent-portability.md`. Before
@@ -120,7 +128,7 @@ pattern `spec-kit-generate-spec` uses for its Extension Hooks):
 ## Run Log
 
 Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
-`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-execute-tasks mode=<mode>` and pass the printed `RUN_ID` to every
+`node <skills-root>/spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-execute-tasks mode=<mode>` and pass the printed `RUN_ID` to every
 later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
 Pass `--log <RUN_ID> --skill spec-kit-execute-tasks` to `lint-artifacts.mjs` and `fingerprint.mjs --state` (readiness and Fase 0) so they record their own results.
 Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
@@ -149,7 +157,7 @@ If logging is off (`RUN_LOG: off`), continue normally.
 
 ### Readiness Gate
 
-- Run `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` first. A `BLOCKING` finding — an open amendment (L19), a story without one
+- Run `node <skills-root>/spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` first. A `BLOCKING` finding — an open amendment (L19), a story without one
   active closure (L08), a task built on an unprobed assumption (L14), a task with no
   `Validación` (L06) — stops execution until the owning skill fixes it, whatever `STATUS` says.
 - If `tasks-quality.md`'s `STATUS` is `READY`, proceed.
@@ -347,7 +355,7 @@ evidence rule was not applied.
    10), with the § Review Context above. Handle its verdict per § Review Verdict Handling; the
    feature is not done while a `🔴`, an unverified `X`, or an undecided `🟡` remains.
 3. **Run report**: when the feature is complete, run
-   `node spec-kit-shared/scripts/run-report.mjs <feature-dir>` and carry its Signals into the
+   `node <skills-root>/spec-kit-shared/scripts/run-report.mjs <feature-dir>` and carry its Signals into the
    Completion Report. They are feedback about the kit's behavior on this feature — which skill or
    rule to improve — not new work for the feature itself.
 

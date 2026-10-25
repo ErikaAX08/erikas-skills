@@ -74,6 +74,14 @@ reference to a feature directory; this skill checks whatever subset of `spec.md`
     support agent), it must generate and validate both a Kiro CLI and a Claude Code definition per
     the shared portability contract.
 
+## Shared Files
+
+`spec-kit-shared/…` paths resolve against `<skills-root>`, the parent of this skill's own
+directory: `.claude/skills/` or the host's equivalent once installed, the repository root in a
+checkout of the kit. Run shared scripts from the project root as
+`node <skills-root>/spec-kit-shared/scripts/<script>.mjs`, with `<skills-root>` written out as an
+absolute path; a bare `spec-kit-shared/…` script path resolves against the project and fails.
+
 ## Cross-Platform Agent Compatibility
 
 The complete portability contract lives in `spec-kit-shared/agent-portability.md`. Before
@@ -94,7 +102,7 @@ to it — that remains `spec-kit-sync-artifacts`'/the generating skill's respons
 ## Run Log
 
 Record this run per `spec-kit-shared/artifact-conventions.md` § Run Log (`<dir>` is the feature directory): start with
-`node spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-analyze-consistency mode=<mode>` and pass the printed `RUN_ID` to every
+`node <skills-root>/spec-kit-shared/scripts/log-event.mjs <dir> run.start --skill spec-kit-analyze-consistency mode=<mode>` and pass the printed `RUN_ID` to every
 later call; end with a `run.end` event (`status`, `reason` when it stops, `next`), also when the run stops early.
 Pass `--log <RUN_ID> --skill spec-kit-analyze-consistency` to `lint-artifacts.mjs` (Phase 1.5) so they record their own results.
 Record these decisions, each with a one- or two-sentence `rationale` citing its IDs:
@@ -141,7 +149,7 @@ artifact's own internal validation.
 
 ### Phase 1.5 — Mechanical Checks
 
-Run `node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` `--json` (`artifact-conventions.md` § Mechanical Checks). Every finding it returns
+Run `node <skills-root>/spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir>` `--json` (`artifact-conventions.md` § Mechanical Checks). Every finding it returns
 goes into the report with its code (`L02`, `L08`, …), file, line, and the severity the script
 assigned — they are already classified per this skill's rules, so do not re-derive or re-grade
 them. The script covers the mechanical part of Phases 2, 3 (operation links), 6, and 9 (checks 3

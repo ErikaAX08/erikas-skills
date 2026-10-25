@@ -9,6 +9,11 @@
 > **Used by**: `spec-kit-generate-spec`, `spec-kit-establish-constitution`, `spec-kit-generate-plan`, `spec-kit-generate-tasks`,
 > `spec-kit-analyze-consistency`, `spec-kit-sync-artifacts`, `spec-kit-execute-tasks`, `spec-kit-amend-artifacts`.
 >
+> **Paths**: `spec-kit-shared/…` resolves against `<skills-root>`, the directory that holds the
+> kit's skill folders (`.claude/skills/` or the host's equivalent once installed, the repository
+> root in a checkout). Scripts run from the project root as
+> `node <skills-root>/spec-kit-shared/scripts/<script>.mjs`, with `<skills-root>` as an absolute path.
+>
 > **Contract version**: 2 — the value `state.json` records as `schema_version` (§ Schema Versions
 > and Migrations).
 
@@ -241,10 +246,10 @@ should. Execution progress is the one edit that is not a content change.
 Compute fingerprints mechanically, never by estimation:
 
 ```bash
-node spec-kit-shared/scripts/fingerprint.mjs <file>...                    # sha256:<hex>  <file>
-node spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>        # chain comparison, localized by ID
-node spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> <spec|plan|tasks>
-                                         # writes that artifact's state.json entry — owner only
+node <skills-root>/spec-kit-shared/scripts/fingerprint.mjs <file>...                   # sha256:<hex>  <file>
+node <skills-root>/spec-kit-shared/scripts/fingerprint.mjs --state <feature-dir>       # chain comparison, localized by ID
+node <skills-root>/spec-kit-shared/scripts/fingerprint.mjs --record <feature-dir> <spec|plan|tasks>
+                                                                                       # writes that artifact's state.json entry — owner only
 ```
 
 `--record` is how an owning skill writes its own `state.json` entry (§ Write Ownership): it
@@ -398,7 +403,7 @@ columns of the `ID` tables in `plan.md` and `research.md`, or from `- **Evidence
 
 ### Mechanical Checks
 
-`node spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir> [--json]` runs every check that can
+`node <skills-root>/spec-kit-shared/scripts/lint-artifacts.mjs <feature-dir> [--json]` runs every check that can
 be decided from the text alone. Codes are stable; severities follow
 `spec-kit-analyze-consistency`. Exit 0 = no `BLOCKING`, 1 = `BLOCKING` found, 2 = not a feature
 directory, 3 = `state.json` newer than this contract.
@@ -516,7 +521,7 @@ drove it — that is what makes the reasoning reviewable later. Record decisions
 secrets, or personal data. `log-event.mjs` masks long digit runs (phone numbers), e-mail addresses,
 and token shapes before writing; it is a backstop, not permission to paste sensitive values.
 
-**Reading it**: `node spec-kit-shared/scripts/run-report.mjs <feature-dir | .speckit>` summarizes the
+**Reading it**: `node <skills-root>/spec-kit-shared/scripts/run-report.mjs <feature-dir | .speckit>` summarizes the
 log into runs per skill, why runs stopped, decisions by kind, recurring BLOCKING lint codes,
 findings, artifact versions, amendments, user interactions, rule deviations, a timeline, and
 **signals** — thresholds that point at the skill or rule to improve (spec churn, spec defects found

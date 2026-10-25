@@ -11,6 +11,9 @@ let ROOT = REPO_ROOT;
 // Feature artifacts (spec.md, plan.md, …) are not kit files: references into them are skipped.
 const ARTIFACTS = new Set(["spec.md", "plan.md", "tasks.md", "research.md", "data-model.md", "quickstart.md", "amendments.md", "state.json", "constitution.md"]);
 const PATH_RE = /`((?:spec-kit-[a-z-]+|pre-pr-review|verify-before-implement|references|assets|scripts|templates)\/[A-Za-z0-9._/-]+\.(?:md|mjs|sh|json))`/g;
+// Shared scripts run from the user's project, where spec-kit-shared/ is not; commands must anchor
+// them at <skills-root>. Group 1 is the script path when anchored, undefined for a bare command.
+const SCRIPT_RE = /\bnode\s+(?:<skills-root>\/(spec-kit-shared\/[A-Za-z0-9._/-]+\.mjs)|spec-kit-shared\/)/g;
 // A reference runs from `§` to the first clause punctuation; a period ends it only before whitespace,
 // so `6.9` and `state.json` stay whole.
 // It also ends before the next "`target` §", so two references in one sentence stay separate.
@@ -106,6 +109,11 @@ export function checkReferences(root = REPO_ROOT) {
       const fromRoot = path.join(ROOT, ref);
       const fromSkill = path.join(skillDir(file), ref);
       if (!fs.existsSync(fromRoot) && !fs.existsSync(fromSkill)) problems.push(`${rel}: path \`${ref}\` does not exist`);
+    }
+    // Fenced blocks included: a command inside one is copied as literally as one in prose
+    for (const m of fs.readFileSync(file, "utf8").matchAll(SCRIPT_RE)) {
+      if (!m[1]) problems.push(`${rel}: \`node spec-kit-shared/…\` runs against the user's project — write \`node <skills-root>/spec-kit-shared/…\``);
+      else if (!fs.existsSync(path.join(ROOT, m[1]))) problems.push(`${rel}: script \`${m[1]}\` does not exist`);
     }
     for (const m of text.matchAll(REF_RE)) {
       const [, token, ref] = m;

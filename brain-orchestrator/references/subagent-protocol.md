@@ -181,7 +181,10 @@ state — and loses only wall-clock parallelism.
 
 If the operation warrants standing agent definitions, generate them per
 `spec-kit-shared/agent-portability.md` (naming, tool mapping, Kiro + Claude pair, validation,
-reporting). Roles for this skill — do not reuse these names for other purposes:
+reporting). It ships with Spec Kit, in the directory that holds this skill's folder; when it is not
+installed, still write both `.kiro/agents/<name>.json` and `.claude/agents/<name>.md` with the same
+kebab-case name and intent, and say the portability contract was not available. Roles for this
+skill — do not reuse these names for other purposes:
 
 | Role                 | Purpose                                                                           | Tools                    |
 | -------------------- | --------------------------------------------------------------------------------- | ------------------------ |
