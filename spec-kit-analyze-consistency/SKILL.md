@@ -1,7 +1,7 @@
 ---
 name: spec-kit-analyze-consistency
 description: Read-only cross-artifact consistency check across spec.md, plan.md, and tasks.md — coverage gaps, orphan tasks, unsafe deferrals, incomplete story checkpoints, and unverified safeguards. Produces checklists/consistency-report.md and a READY_FOR_EXECUTION verdict; never modifies spec.md, plan.md, tasks.md, or state.json. When a spec-analyzer agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
-license: MIT
+license: Apache-2.0
 ---
 
 # Analyze Consistency — Cross-Artifact Verification Skill

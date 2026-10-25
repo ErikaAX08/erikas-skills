@@ -1,7 +1,7 @@
 ---
 name: spec-kit-establish-constitution
 description: Create or update .speckit/memory/constitution.md — a project's non-negotiable architecture, security, and quality principles — from explicit documentation and/or by mining consistent patterns across existing code. Every mined principle carries evidence, coverage, and confidence, and none becomes binding without explicit user confirmation. Optional, and re-invocable to check whether current code has drifted from an existing constitution. When a pattern-miner agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
-license: MIT
+license: Apache-2.0
 ---
 
 # Establish Constitution — Project Convention Skill

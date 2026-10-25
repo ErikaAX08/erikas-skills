@@ -1,7 +1,7 @@
 ---
 name: spec-kit-execute-tasks
 description: Execute tasks.md in dependency order, producing real code — delegating implementation discipline to verify-before-implement, commit messages to git-commits, and a final safety-net review to pre-pr-review, instead of reimplementing any of their rules. Runs stories sequentially by default, or in parallel across independent stories/tasks via task-executor subagents when the story boundaries genuinely allow it. Never invents scope beyond tasks.md/plan.md/spec.md, never silently re-touches a task already marked done, and never skips a story's closure checkpoint. When a task-executor agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
-license: MIT
+license: Apache-2.0
 ---
 
 # Execute Tasks — Implementation Orchestration Skill

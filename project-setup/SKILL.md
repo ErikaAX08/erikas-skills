@@ -1,7 +1,7 @@
 ---
 name: project-setup
 description: Standard for initializing new projects by asking which architecture skills to apply and providing setup commands with latest library versions. Never generates the project directly; always provides commands for the user to execute. Ensures libraries are always at their latest versions without hardcoding version numbers.
-license: Complete terms in LICENSE.txt
+license: Apache-2.0
 ---
 
 # Project Setup Skill

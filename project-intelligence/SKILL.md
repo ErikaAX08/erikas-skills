@@ -1,7 +1,7 @@
 ---
 name: project-intelligence
 description: Act as the technical brain and living memory of a software project — build, maintain, and answer from an evidence-backed model of its stack, architecture, AWS and other infrastructure, external integrations, databases, environments, environment variables, business flows, and the history of what changed and why. Use when entering an unfamiliar or inherited codebase, answering "what does this project use / where does X live / how is this deployed / how do I test this flow / what breaks if I change this", recording what a change did and why it was made, preparing a context package for another agent, or running a real database or infrastructure operation safely. Every claim is stamped CONFIRMED / INFERRED / UNKNOWN with its evidence, and the knowledge persists under `.ai/` (or `docs/ai/`) so no agent has to rediscover the system.
-license: MIT
+license: Apache-2.0
 ---
 
 # Project Intelligence — Technical Model & Living Memory of a Project

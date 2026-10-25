@@ -1,7 +1,7 @@
 ---
 name: create-pull-request
 description: Create Pull Request descriptions grounded in the actual git diff, first looking for the PR template defined in the repository (GitHub, GitLab, Azure DevOps, or CONTRIBUTING.md) and falling back to an improved default template only when the repo defines none. Use when the user asks to create/open/draft a pull request, write a PR description, prepare a PR for review, or mentions "create PR", "pull request", "open PR", "PR description", "merge request", or "merge description". Generates professional PR titles and bodies grounded in the actual git diff, never inventing files, test results, issue numbers, or breaking-change claims.
-license: MIT
+license: Apache-2.0
 ---
 
 # CREATE-PULL-REQUEST — Pull Request Creation Skill

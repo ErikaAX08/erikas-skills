@@ -1,7 +1,7 @@
 ---
 name: frontend-architecture
 description: Defines a Clean Architecture and reusable component structures for frontend. Especially useful when the user wants to organize pages, tables, lists, item cards, subpages, and modal dialogs in a predictable and maintainable way. Applies to React, Vue, Svelte, or similar frameworks.
-license: Complete terms in LICENSE.txt
+license: Apache-2.0
 ---
 
 # Frontend Architecture Skill

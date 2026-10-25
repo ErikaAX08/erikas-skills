@@ -1,7 +1,7 @@
 # erikas-skills
 
 [![npm version](https://img.shields.io/npm/v/erikas-skills?color=cb0000)](https://www.npmjs.com/package/erikas-skills)
-[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![license: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![CI](https://github.com/ErikaAX08/erikas-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/ErikaAX08/erikas-skills/actions/workflows/ci.yml)
 
 Reusable skills for AI coding assistants (Claude Code, OpenCode, Cursor, Windsurf, Codex) — frontend architecture, API standards, spec-driven development, orchestration and code quality.
@@ -78,4 +78,4 @@ Use the spec-kit-generate-spec skill for docs/prd.md
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). Licensed under [MIT](./LICENSE).
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Licensed under [Apache 2.0](./LICENSE) — you may use and modify these skills freely, as long as you keep the attribution in [NOTICE](./NOTICE).
