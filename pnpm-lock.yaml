@@ -12,6 +12,8 @@ importers:
 
   brain-orchestrator: {}
 
+  brand-guidelines: {}
+
   code-architecture-explainer: {}
 
   code-documentation: {}

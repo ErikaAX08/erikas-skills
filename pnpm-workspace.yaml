@@ -1,6 +1,7 @@
 packages:
   - backend-api-standards
   - brain-orchestrator
+  - brand-guidelines
   - code-architecture-explainer
   - code-documentation
   - create-pull-request
