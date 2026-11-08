@@ -18,6 +18,7 @@ const FALLBACK_SKILLS = [
   "create-pull-request",
   "frontend-architecture",
   "frontend-design",
+  "gh-stack",
   "git-commits",
   "latex-academic-reports",
   "pre-pr-review",

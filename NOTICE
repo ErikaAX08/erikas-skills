@@ -16,3 +16,6 @@ Third-party material:
 - frontend-design and brand-guidelines are based on skills published by
   Anthropic, PBC (https://github.com/anthropics/skills) under the Apache
   License, Version 2.0, and have been modified.
+- gh-stack is copied unmodified from https://github.com/github/gh-stack
+  (skills/gh-stack, commit bd0a325), Copyright GitHub, Inc., under the MIT
+  License; see gh-stack/LICENSE. It is not covered by the Apache License.

@@ -54,6 +54,7 @@ Each skill is also published on its own as `@erikaax/<skill-name>`. Spec Kit is 
 | `project-setup` | Bootstraps projects with setup commands for the latest library versions |
 | `verify-before-implement` | Checks the real codebase and contracts before changing code |
 | `pre-pr-review` | Evidence-based audit of a diff before merging or deploying |
+| `gh-stack` | Stacked PRs with the `gh stack` CLI extension: split work into reviewable layers, sync, rebase and merge ([upstream](https://github.com/github/gh-stack)) |
 | **Documentation** | |
 | `code-architecture-explainer` | Explains code from implementation details to system architecture |
 | `code-documentation` | Concise, professional comments and docstrings |
