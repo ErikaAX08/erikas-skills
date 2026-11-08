@@ -5,6 +5,7 @@ All notable changes to this project are documented here. Format based on [Keep a
 ## [Unreleased]
 
 ### Added
+- `gh-stack` skill (`@erikaax/gh-stack`, in the `workflow` plugin): GitHub's skill for stacked PRs with the `gh stack` CLI extension, vendored unmodified from github/gh-stack under its MIT license.
 - Claude Code plugin marketplace (`.claude-plugin/marketplace.json`): the skills install as six plugins — `frontend`, `backend`, `workflow`, `docs`, `orchestration`, `spec-kit` — with `/plugin install <plugin> --marketplace ErikaAX08/erikas-skills`. `pnpm run validate` checks that every skill is in exactly one plugin.
 
 ### Changed

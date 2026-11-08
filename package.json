@@ -10,7 +10,8 @@
     "spec-kit",
     "frontend-architecture",
     "copilot",
-    "cursor"
+    "cursor",
+    "gh-stack"
   ],
   "license": "Apache-2.0",
   "author": "ErikaAX08 <eamastalxochimitl@gmail.com>",
@@ -40,6 +41,7 @@
     "create-pull-request/**/*",
     "frontend-architecture/**/*",
     "frontend-design/**/*",
+    "gh-stack/**/*",
     "git-commits/**/*",
     "latex-academic-reports/**/*",
     "pre-pr-review/**/*",

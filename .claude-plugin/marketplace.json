@@ -28,10 +28,10 @@
       "name": "workflow",
       "source": "./",
       "strict": false,
-      "description": "Project bootstrapping, verification against the real codebase before changing it, and evidence-based pre-merge review.",
+      "description": "Project bootstrapping, verification against the real codebase before changing it, evidence-based pre-merge review, and stacked PRs with gh-stack.",
       "category": "workflow",
       "license": "Apache-2.0",
-      "skills": ["./project-setup", "./verify-before-implement", "./pre-pr-review"]
+      "skills": ["./project-setup", "./verify-before-implement", "./pre-pr-review", "./gh-stack"]
     },
     {
       "name": "docs",

@@ -1,0 +1,35 @@
+{
+  "name": "@erikaax/gh-stack",
+  "version": "0.1.0",
+  "description": "Manages stacked PRs and splits multi-part work into reviewable branches with gh-stack. Use for stack creation, viewing, edits, push, submit, sync, rebase, merge, or checkout; when asked to split or isolate work for review; whenever a user mentions a stack, branch layers, dependent PRs, or gh stack; or when a stack is checked out.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "gh-stack",
+    "stacked-prs",
+    "github-cli"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "gh-stack"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/gh-stack",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "files": [
+    "SKILL.md",
+    "references/**/*",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
