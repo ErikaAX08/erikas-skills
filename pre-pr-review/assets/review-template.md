@@ -1,5 +1,5 @@
 <!-- Required header, no preamble. Fill every <placeholder>; delete nothing structural. -->
-Scope: repo `<repo path>` · entry point `<A pre-PR | B pre-merge>` · base `<base ref> (confirmed via <method> | unconfirmed: detected via <method>)` · merge-base `<sha>` · head `<sha>` · PR `<number/link, state, draft?, CI <passing|failing|pending|none> | none (entry point A) | not resolved (<reason>)>` · issue `<link | none | not readable>` · local changes `<included, labeled local-only | excluded | none>` · worktree `<path, removed | none>` · date `<UTC>`.
+Scope: repo `<repo path>` · entry point `<A pre-PR | B pre-merge>` · base `<base ref> (confirmed via <method> | unconfirmed: detected via <method>)` · merge-base `<sha>` · head `<sha>` · PR `<number/link, state, draft?, CI <passing|failing|pending|none> | none (entry point A) | not resolved (<reason>)>` · issue `<link | none | not readable>` · local changes `<included, labeled local-only | excluded | none>` · worktree `<path, removed | none>` · approvals `<code owners and required reviews | none | not readable (<reason>)>` · date `<UTC>`.
 
 Sources consulted beyond the diff: <issue, logs, production queries, executed tests, base-branch files — or `none`>.
 
@@ -12,6 +12,8 @@ Next: **<author | merger | product | operations | architecture>** — <one imper
 Unblocks when: <outcome map: `<result> → <verdict>; …` covering every blocking item | `Merge now.` | `Merge now; deploy with the Deploy Plan (<n> steps).`>
 
 Reason: <one or two direct sentences, third person>.
+
+Rollback: <[rollback: safe] code-only revert is safe — <evidence> | [rollback: steps] revert needs the steps of F-n, … | [rollback: none-possible] F-n makes the change irreversible>
 
 Method: size `<S | M | L | docs-only | noise-only>` (`H` = `<n>` source lines, `H_test` = `<t>`, noise `<m>` lines spot-checked) · mode `<single agent | multi-agent>` [override: <reason>] · lenses `<activated lenses>` [added: <lens: reason>] · candidates `<N>`: confirmed `<K>`, refuted `<J>`, unresolved `<L>` [· narrow-change exception: <test citation>] [· noise promoted: <paths>] [· Untrusted instruction ignored: <citation>] · style: out of scope (linters) · trace `<RUN_ID | off>`.
 
@@ -144,6 +146,27 @@ Refuting evidence:
 - <caller ID> → F-<n>
 - <caller ID> → discarded: <reason, e.g. generic what-if with no activating condition>
 - <caller ID> → out of scope: style
+
+## Checklist
+
+<!-- Always show. One line per item, derived from this review only; an item without an anchor is not written. Groups: [before-merge] every 🔴/🟡 (anchor: F-n), every [prerequisite] (anchor: still-open <short name>), missing applicable tests/builds, required approvals (anchor: file <owned path>); [before-deploy] every 🚀 in ID order and target-environment checks; [after-deploy] one per Post-Deploy Verification flow (anchor: flow <name>). -->
+
+- [ ] [before-merge] <action> — anchor: F-<n>
+- [ ] [before-merge] Approval from <code owner or required reviewer> — anchor: file <owned path>
+- [ ] [before-deploy] <ordered deploy action> — anchor: F-<n>
+- [ ] [after-deploy] <verify the flow per Post-Deploy Verification> — anchor: flow <name>
+
+## Post-Deploy Verification
+
+<!-- Show when at least one flow was traced. A plan for whoever deploys: the review never runs these checks. Only signals that exist in the code; a traced flow without any is a ⚪ observability finding instead. -->
+
+### flow <name>
+
+- Health/endpoint: <check to call>
+- Success signal: <log line or metric> (`path:line @ <sha> (head)`)
+- Regression signal: <log line or metric> (`path:line @ <sha> (head)`)
+- Smoke test: <one step and its expected result>
+- Rollback criterion: if <signal> <condition> within <window> → revert
 
 ## Tests
 

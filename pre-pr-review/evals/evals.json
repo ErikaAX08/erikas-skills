@@ -74,7 +74,10 @@
         "Records the loss of `legacy_ref` data as accepted by the PR description (`Accepted by …`) instead of raising it as 🔴 or 🟡.",
         "Does not raise a `[prerequisite]` about unknown consumers outside the repository without cited evidence that one exists.",
         "The verdict is exactly `ready to merge` with owner `merger`, and the Unblocks-when line points to the Deploy Plan.",
-        "Method records size `M` with independent verification (high-risk migration, H ≤ 50) or states a §4 override reason."
+        "Method records size `M` with independent verification (high-risk migration, H ≤ 50) or states a §4 override reason.",
+        "Has a `Rollback:` line after `Reason:` with exactly one `[rollback: safe|steps|none-possible]` tag and its evidence or finding IDs.",
+        "The Checklist lists the 🚀 deploy step under `[before-deploy]` with `anchor: F-n`, and the Rollback line is `[rollback: steps]` or `[rollback: none-possible]` citing it.",
+        "Post-Deploy Verification names a signal that exists in the code for the changed flow (cited path:line) or a ⚪ observability finding, and the transcript runs no health check, smoke test, or request to a deployed environment."
       ],
       "expected_verdict": "ready to merge",
       "expected_findings": [
@@ -296,7 +299,9 @@
         "Runs the project's tests (`npm test` or `node --test`) and records the command and a zero exit code under Tests → Executed.",
         "Does not report the newly exported `tierDiscount`, naming, or code style as a finding.",
         "The report contains no ⚪ finding and no Still Open item about style, formatting, naming, or readability.",
-        "The line right before the verdict summarizes the refactor and ends in `[risks: none]`."
+        "The line right before the verdict summarizes the refactor and ends in `[risks: none]`.",
+        "Has a `Rollback:` line after `Reason:` with exactly one `[rollback: safe|steps|none-possible]` tag and its evidence or finding IDs.",
+        "Every Checklist item has a group tag and an anchor to a finding, file, or traced flow; there is no generic item (e.g. \"run tests\", \"monitor logs\") without an anchor."
       ]
     },
     {
@@ -371,7 +376,9 @@
         "Reports no 🔴 Blocker, no 🟡 Decision required, no 🚀 Deploy step, and no `[prerequisite]` Still Open item.",
         "Traces the caller `src/pages/orders.js` and states that it only replaces `innerHTML`, so no code depends on an empty `<ul class=\"orders\">`.",
         "Runs the project's tests and records the command and a zero exit code under Tests → Executed.",
-        "Does not report the CSS values or the empty-state copy as a finding."
+        "Does not report the CSS values or the empty-state copy as a finding.",
+        "The report contains no ⚪ finding and no Still Open item about CSS, style, formatting, naming, or readability.",
+        "Every Checklist item has a group tag and an anchor; there is no generic item without an anchor."
       ]
     },
     {
@@ -433,7 +440,11 @@
         "Does not report the receipt mailer, HTML escaping, or config parsing as 🔴 or 🟡.",
         "The verdict is exactly `changes required` with owner `author`.",
         "Records high-risk payments (`R`) with independent verification of the 🔴 in Method.",
-        "The 🔴 blocker for the duplicate charge carries severity `High` (impact class 5, duplicate external effect), not `Critical`."
+        "The 🔴 blocker for the duplicate charge carries severity `High` (impact class 5, duplicate external effect), not `Critical`.",
+        "Has a `Rollback:` line after `Reason:` with exactly one `[rollback: safe|steps|none-possible]` tag and its evidence or finding IDs.",
+        "The Checklist has a `[before-merge]` item anchored to the duplicate-charge 🔴.",
+        "Post-Deploy Verification names a signal for duplicate charges that exists in the code (cited path:line) or raises a ⚪ observability finding because none exists.",
+        "Does not cite passing CI or tests as the only evidence against the duplicate charge."
       ]
     },
     {
@@ -508,7 +519,8 @@
         "Reports a 🔴 Blocker for it (the deploy as configured breaks: `capture()` would call `undefined/captures`), with a Recommendation to define the variable in every pinned environment or give it a safe default.",
         "The verdict is exactly `changes required` with owner `author`.",
         "Does not print or invent any value for `PAYMENTS_URL` or any other environment variable.",
-        "Activates the release-and-ops lens with the Environment and Configuration questions (in Method or Coverage)."
+        "Activates the release-and-ops lens with the Environment and Configuration questions (in Method or Coverage).",
+        "The Checklist has a `[before-merge]` approval item for the code owner of `src/payments.js` (`@acme/payments-team`) anchored with `file src/payments.js`, from `.github/CODEOWNERS`."
       ],
       "expected_verdict": "changes required",
       "expected_findings": [

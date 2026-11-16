@@ -254,7 +254,16 @@ test("trace-report: under R a 🔴 needs two verifications", () => {
 });
 
 const SCOPE = "Scope: repo `r` · entry point `A pre-PR` · base `main (confirmed via user)` · merge-base `a1` · head `b2` · PR `none` · date `2026-10-22`.";
-const report = (verdict, owner, unblocks, body = "", changes = "Changes: moves auth to the router. [risks: none]") => `${SCOPE}\n\n${changes}\n\nVerdict: **${verdict}**\n\nNext: **${owner}** — act.\n\nUnblocks when: ${unblocks}\n\nReason: r.\n\n${body}`;
+// Adds the checklist items C01 requires for the body's findings and prerequisites, unless the body has its own.
+const checklistFor = (body) => {
+  if (body.includes("## Checklist")) return "";
+  const merge = [...body.matchAll(/^### (?:🔴|🟡) (F-\d+)/gmu)].map((m) => `- [ ] [before-merge] resolve ${m[1]} — anchor: ${m[1]}`);
+  const pre = [...body.matchAll(/\[prerequisite\]\s*([^(:]+?)\s*(?:\(|:)/g)].map((m) => `- [ ] [before-merge] close ${m[1]} — anchor: still-open ${m[1]}`);
+  const deploy = [...body.matchAll(/^### 🚀 (F-\d+)/gmu)].map((m) => `- [ ] [before-deploy] run ${m[1]} — anchor: ${m[1]}`);
+  const all = [...merge, ...pre, ...deploy];
+  return all.length ? `\n## Checklist\n\n${all.join("\n")}\n` : "";
+};
+const report = (verdict, owner, unblocks, body = "", changes = "Changes: moves auth to the router. [risks: none]") => `${SCOPE}\n\n${changes}\n\nVerdict: **${verdict}**\n\nNext: **${owner}** — act.\n\nUnblocks when: ${unblocks}\n\nReason: r.\n\n${body}${checklistFor(body)}`;
 const red = "### 🔴 F-1 — guard removed\n\nSeverity: Critical\n\nCertainty: Fact\n";
 const yellow = (n) => `### 🟡 F-${n} — breaking validation\n\nSeverity: High\n\nCertainty: Fact\n\nOptions:\nproduct — merging picks one.\n- A: version the endpoint → no client breaks → verdict \`changes required\`\n- B: accept the break → old clients get 400 → verdict \`ready to merge\`\n`;
 const codes = (r) => r.errors.map((e) => e.code);
@@ -316,6 +325,22 @@ test("check-report: every supplied finding has a disposition line (E01)", () => 
   assert.match(missing.errors[0].msg, /EXT-2/);
   assert.deepEqual(codes(checkReport(full, { external: ["EXT-1.a"] })), ["E01"], "IDs are matched literally, not as patterns");
   assert.deepEqual(codes(checkReport(full)), [], "without --external there is nothing to account for");
+});
+
+test("check-report: the checklist covers every blocking item and every item has an anchor (C01, C02)", () => {
+  const deploy = (n) => `### 🚀 F-${n} — step ${n}\n\nSeverity: Medium\n\nCertainty: Fact\n`;
+  const body = (list) => `${red}\n${deploy(2)}\n${deploy(3)}\n## Checklist\n\n${list.join("\n")}\n`;
+  const ok = ["- [ ] [before-merge] restore the guard — anchor: F-1", "- [ ] [before-deploy] migrate after rollout — anchor: F-2", "- [ ] [before-deploy] drop the column — anchor: F-3", "- [ ] [after-deploy] watch 403 rate on DELETE /users — anchor: flow delete-user"];
+  const run = (list) => codes(checkReport(report("changes required", "author", "F-1 fixed → ready to merge", body(list))));
+  assert.deepEqual(run(ok), []);
+  assert.deepEqual(run(ok.filter((l) => !l.includes("F-1"))), ["C01"], "🔴 without a before-merge item");
+  assert.deepEqual(run(ok.filter((l) => !l.includes("F-3"))), ["C01"], "🚀 without a before-deploy item");
+  assert.deepEqual(run([ok[0], ok[2], ok[1], ok[3]]), ["C01"], "🚀 items out of ID order");
+  assert.deepEqual(run([...ok, "- [ ] check the logs"]), ["C02"], "no group tag, no anchor");
+  assert.deepEqual(run([...ok, "- [ ] [after-deploy] check the logs"]), ["C02"], "no anchor");
+  const pre = report("verification required", "operations", "≥ 11 → ready to merge; < 11 → changes required", "## Still Open\n\n- [prerequisite] pg version (owner: **operations**): I could not verify it. Outcomes: ≥ 11 → ready to merge; < 11 → changes required.\n\n## Checklist\n\n- [ ] [before-merge] confirm the engine version — anchor: file infra/db.tf\n");
+  assert.deepEqual(codes(checkReport(pre)), ["C01"], "[prerequisite] without a still-open anchor");
+  assert.deepEqual(codes(checkReport(pre.replace("anchor: file infra/db.tf", "anchor: still-open pg version"))), []);
 });
 
 test("check-report: the trace must carry the report's verdict and owner", () => {

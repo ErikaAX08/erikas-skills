@@ -69,6 +69,13 @@ Certainty: Fact
 
 - [prerequisite] pg version (owner: **operations**): I could not verify the production PostgreSQL version — run \`SHOW server_version;\`. Outcomes: ≥ 11 → ready to merge; < 11 → changes required.
 - Not a prerequisite item
+
+## Checklist
+
+- [ ] [before-merge] restore requireAdmin — anchor: F-1
+- [ ] [before-merge] choose how to test the middleware — anchor: F-2
+- [ ] [before-merge] confirm the engine version — anchor: still-open pg version
+- [ ] [before-deploy] run the migration after the rollout — anchor: F-3
 `;
 
 test("parseVerdict reads the bold verdict key in any report language", () => {

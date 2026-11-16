@@ -137,6 +137,29 @@ export function checkReport(text, { traceEvents = null, external = null } = {}) 
     if (!lines.some((l) => new RegExp(`^\\s*[-*]\\s+\`?${esc}\`?\\s*→\\s*\\S`).test(l))) err("E01", `supplied finding \`${id}\` has no disposition line (\`- ${id} → F-n | discarded: <reason> | out of scope: style\`)`);
   }
 
+  // Checklist: `- [ ] [before-merge|before-deploy|after-deploy] <action> — anchor: <F-n | still-open <name> | file <path> | flow <name>>`.
+  const items = lines.filter((l) => /^\s*[-*]\s+\[[ xX]\]\s/.test(l));
+  for (const l of items) {
+    if (!/\[(before-merge|before-deploy|after-deploy)\]/.test(l) || !/anchor:\s*(F-\d+\b|still-open\s+\S|file\s+\S|flow\s+\S)/.test(l)) {
+      err("C02", `checklist item without a group tag or an \`anchor:\` (F-n, still-open <name>, file <path>, flow <name>): ${l.trim().slice(0, 80)}`);
+    }
+  }
+  const anchored = (group) => items.filter((l) => l.includes(`[${group}]`)).map((l) => (l.match(/anchor:\s*(.+)$/) ?? [])[1] ?? "");
+  const merge = anchored("before-merge");
+  const hasF = (list, id) => list.some((a) => new RegExp(`^${id}\\b`).test(a.trim()));
+  for (const f of findings.filter((f) => f.marker === "🔴" || f.marker === "🟡")) {
+    if (!hasF(merge, f.id)) err("C01", `${f.id} (${f.marker}) has no \`[before-merge]\` checklist item anchored to it`);
+  }
+  for (const l of prereqs) {
+    const name = (l.match(/\[prerequisite\]\s*([^(:]+?)\s*(?:\(|:)/) ?? [])[1];
+    if (name && !merge.some((a) => /^still-open\s/.test(a.trim()) && a.toLowerCase().includes(name.toLowerCase()))) err("C01", `[prerequisite] \`${name}\` has no \`[before-merge]\` checklist item anchored as \`still-open ${name}\``);
+  }
+  const deploy = anchored("before-deploy").map((a) => (a.trim().match(/^F-(\d+)\b/) ?? [])[1]).filter(Boolean).map(Number);
+  const steps = findings.filter((f) => f.marker === "🚀").map((f) => f.n);
+  for (const n of steps) if (!deploy.includes(n)) err("C01", `F-${n} (🚀) has no \`[before-deploy]\` checklist item anchored to it`);
+  const order = deploy.filter((n) => steps.includes(n));
+  if (order.some((n, k) => k && n < order[k - 1])) err("C01", "`[before-deploy]` items for 🚀 steps must follow their ID order");
+
   const p = prose(t);
   const second = p.match(/\b(you|your|yours|you're|yourself)\b/i) ?? p.match(/(?<![\p{L}])(tú|tu|tus|usted|ustedes|contigo)(?![\p{L}])/iu);
   if (second) err("S01", `second-person address (\`${second[1]}\`): write about the PR and refer to people by role`);
