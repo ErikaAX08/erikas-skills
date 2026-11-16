@@ -5,7 +5,7 @@
 // certainty labels, the [prerequisite] tag, the `Review not performed:` form — plus a
 // second-person scan in English and Spanish.
 //
-//   node check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--json]
+//   node check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--external <findings.json>] [--json]
 //     Exit 0 = no ERROR, 1 = at least one ERROR (each printed with its code), 64 = usage.
 import fs from "node:fs";
 import path from "node:path";
@@ -45,7 +45,7 @@ export function expectedVerdict({ red, prerequisites, yellow }) {
   return "ready to merge";
 }
 
-export function checkReport(text, { traceEvents = null } = {}) {
+export function checkReport(text, { traceEvents = null, external = null } = {}) {
   const errors = [];
   const err = (code, msg) => errors.push({ code, msg });
   const t = text.replace(/\r\n/g, "\n").trim();
@@ -131,6 +131,12 @@ export function checkReport(text, { traceEvents = null } = {}) {
   const expected = expectedVerdict({ red: count("🔴"), prerequisites: prereqs.length, yellow: count("🟡") });
   if (verdict && verdict !== expected) err("V05", `verdict \`${verdict}\` contradicts the findings (${count("🔴")} 🔴, ${prereqs.length} [prerequisite], ${count("🟡")} 🟡 → \`${expected}\`)`);
 
+  // Every supplied finding (assets/supplied-findings.md) needs a disposition line: `- <id> → …`.
+  for (const id of external ?? []) {
+    const esc = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (!lines.some((l) => new RegExp(`^\\s*[-*]\\s+\`?${esc}\`?\\s*→\\s*\\S`).test(l))) err("E01", `supplied finding \`${id}\` has no disposition line (\`- ${id} → F-n | discarded: <reason> | out of scope: style\`)`);
+  }
+
   const p = prose(t);
   const second = p.match(/\b(you|your|yours|you're|yourself)\b/i) ?? p.match(/(?<![\p{L}])(tú|tu|tus|usted|ustedes|contigo)(?![\p{L}])/iu);
   if (second) err("S01", `second-person address (\`${second[1]}\`): write about the PR and refer to people by role`);
@@ -154,10 +160,10 @@ function finish({ errors, verdict, owner, findings, traceEvents }) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
-  const file = args.find((a, i) => !a.startsWith("--") && !["--trace", "--run"].includes(args[i - 1]));
+  const file = args.find((a, i) => !a.startsWith("--") && !["--trace", "--run", "--external"].includes(args[i - 1]));
   const opt = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
   if (!file) {
-    console.error("usage: check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--json]");
+    console.error("usage: check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--external <findings.json>] [--json]");
     process.exit(64);
   }
   const text = fs.readFileSync(file === "-" ? 0 : file, "utf8");
@@ -166,7 +172,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const run = opt("--run");
     traceEvents = readTrace(opt("--trace")).events.filter((e) => !run || e.run === run);
   }
-  const r = checkReport(text, { traceEvents });
+  const external = opt("--external") ? JSON.parse(fs.readFileSync(opt("--external"), "utf8")).findings.map((f) => String(f.id)) : null;
+  const r = checkReport(text, { traceEvents, external });
   if (args.includes("--json")) console.log(JSON.stringify(r, null, 2));
   else {
     for (const e of r.errors) console.log(`ERROR ${e.code}: ${e.msg}`);

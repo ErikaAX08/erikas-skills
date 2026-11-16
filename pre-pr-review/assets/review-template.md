@@ -137,6 +137,14 @@ Original hypothesis:
 Refuting evidence:
 <the cited fact that disproves it, with the fixed phrase `I was wrong: …` where a prior claim is corrected>
 
+## Provided Findings
+
+<!-- Show only when the caller supplied findings (assets/supplied-findings.md); omit otherwise. One line per supplied item, in input order. -->
+
+- <caller ID> → F-<n>
+- <caller ID> → discarded: <reason, e.g. generic what-if with no activating condition>
+- <caller ID> → out of scope: style
+
 ## Tests
 
 - Executed: <command, exit code, duration, result> (one line per run; or `none — <failed Phase 6 condition, and what would enable it>`)

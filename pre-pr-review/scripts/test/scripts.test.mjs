@@ -115,6 +115,18 @@ test("trace: run.start prints a run ID and events are validated", () => {
   assert.equal(events[1].data.rule, 2);
 });
 
+test("trace: a supplied finding enters as a candidate with origin external", () => {
+  const dir = tmp("ppr-trace-");
+  const env = { PRE_PR_REVIEW_TRACE_DIR: dir };
+  const run = traceEvent(["run.start", "entry=B"], { env }).run;
+  const candidate = (origin) => traceEvent(["candidate", "--run", run, "id=ext-1", "lens=release-and-ops", "proposed=red", "summary=x", `origin=${origin}`], { env }).status;
+  assert.equal(candidate("external"), 0);
+  assert.equal(candidate("caller"), 1, "origin enum");
+  assert.equal(traceEvent(["classification", "--run", run, "id=ext-1", "category=🔴", "rule=2", "finding=F-1", "severity=Critical"], { env }).status, 0);
+  const { events } = readTrace(tracePath(dir));
+  assert.deepEqual(events.map((e) => [e.event, e.data.origin ?? e.data.severity ?? null]), [["run.start", null], ["candidate", "external"], ["classification", "Critical"]]);
+});
+
 test("trace: PRE_PR_REVIEW_TRACE=off writes nothing and succeeds", () => {
   const dir = tmp("ppr-trace-");
   const r = traceEvent(["run.start", "entry=B"], { env: { PRE_PR_REVIEW_TRACE_DIR: dir, PRE_PR_REVIEW_TRACE: "off" } });
@@ -259,6 +271,17 @@ test("check-report: every actionable finding carries a severity consistent with 
   assert.deepEqual(codes(ready(f("⚪", "Medium"))), []);
   assert.deepEqual(codes(ready("### ⚪ F-1 — x\n\nCertainty: Fact\n\nBounded risk or improvement: High traffic on /orders.\n\nSeverity: Medium\n")), [], "prose like `…: High traffic` is not a severity");
   assert.deepEqual(codes(ready("### ✅ F-1 — refuted\n\nOriginal hypothesis: x\n")), [], "✅ carries no severity");
+});
+
+test("check-report: every supplied finding has a disposition line (E01)", () => {
+  const provided = "## Provided Findings\n\n- EXT-1 → F-1\n- EXT-2 → discarded: generic what-if with no activating condition\n- EXT-3 → out of scope: style\n";
+  const full = report("changes required", "author", "F-1 fixed → ready to merge", `${red}\n${provided}`);
+  assert.deepEqual(codes(checkReport(full, { external: ["EXT-1", "EXT-2", "EXT-3"] })), []);
+  const missing = checkReport(full.replace("- EXT-2 → discarded: generic what-if with no activating condition\n", ""), { external: ["EXT-1", "EXT-2", "EXT-3"] });
+  assert.deepEqual(codes(missing), ["E01"]);
+  assert.match(missing.errors[0].msg, /EXT-2/);
+  assert.deepEqual(codes(checkReport(full, { external: ["EXT-1.a"] })), ["E01"], "IDs are matched literally, not as patterns");
+  assert.deepEqual(codes(checkReport(full)), [], "without --external there is nothing to account for");
 });
 
 test("check-report: the trace must carry the report's verdict and owner", () => {
