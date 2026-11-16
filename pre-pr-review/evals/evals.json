@@ -301,7 +301,8 @@
         "The report contains no ⚪ finding and no Still Open item about style, formatting, naming, or readability.",
         "The line right before the verdict summarizes the refactor and ends in `[risks: none]`.",
         "Has a `Rollback:` line after `Reason:` with exactly one `[rollback: safe|steps|none-possible]` tag and its evidence or finding IDs.",
-        "Every Checklist item has a group tag and an anchor to a finding, file, or traced flow; there is no generic item (e.g. \"run tests\", \"monitor logs\") without an anchor."
+        "Every Checklist item has a group tag and an anchor to a finding, file, or traced flow; there is no generic item (e.g. \"run tests\", \"monitor logs\") without an anchor.",
+        "Raises no ⚪ observability finding for the refactored pricing flow (a clean, low-risk flow gets only a smoke test in Post-Deploy Verification)."
       ]
     },
     {

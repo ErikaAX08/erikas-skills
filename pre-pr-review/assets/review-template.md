@@ -158,7 +158,7 @@ Refuting evidence:
 
 ## Post-Deploy Verification
 
-<!-- Show when at least one flow was traced. A plan for whoever deploys: the review never runs these checks. Only signals that exist in the code; a traced flow without any is a ⚪ observability finding instead. -->
+<!-- Show when at least one flow was traced. A plan for whoever deploys: the review never runs these checks. Only signals that exist in the code. A traced flow without any is a ⚪ observability finding only when it carries a 🔴/🟡/🚀 or is high-risk; otherwise list only its smoke test. -->
 
 ### flow <name>
 

@@ -673,7 +673,9 @@ review traced at least one flow, the Post-Deploy Verification section:
   call, the log or metric line that confirms success and the one that shows a regression
   (each cited `path:line @ sha (head)`), one smoke test, and a rollback criterion
   (`if <signal> <condition> within <window> → revert`). Use only signals that exist in the
-  code; a traced flow without any becomes a ⚪ observability finding instead. The review
+  code. A traced flow without any becomes a ⚪ observability finding only when it carries a
+  🔴, 🟡, or 🚀 or touches a high-risk area (§1); otherwise its entry lists only the smoke test
+  and raises no finding, so a clean PR stays free of non-gating noise. The review
   writes this plan and never executes it: no health check, smoke test, or request to a
   deployed environment is run during the review (§10).
 
