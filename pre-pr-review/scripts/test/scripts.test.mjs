@@ -71,6 +71,40 @@ test("collect-diff: changed lines add lenses and raise R where the path cannot",
   assert.match(go.out, /flow-and-state: validate\.go \(default\)/);
 });
 
+// A two-commit repo: `base` files on main, `head` files on feature (checked out).
+function miniRepo(base, head) {
+  const dir = tmp("ppr-mini-");
+  const git = (...a) => assert.equal(spawnSync("git", a, { cwd: dir, encoding: "utf8" }).status, 0, a.join(" "));
+  const write = (files) => Object.entries(files).forEach(([f, c]) => { fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true }); fs.writeFileSync(path.join(dir, f), c); });
+  git("init", "-q", "-b", "main");
+  git("config", "user.email", "t@example.invalid");
+  git("config", "user.name", "t");
+  write(base);
+  git("add", "-A");
+  git("commit", "-q", "-m", "base");
+  git("switch", "-q", "-c", "feature");
+  write(head);
+  git("add", "-A");
+  git("commit", "-q", "-m", "change");
+  return dir;
+}
+
+test("collect-diff: an environment-variable read activates release-and-ops by content", () => {
+  const base = { "src/pay.js": "export const pay = () => 1;\n" };
+  const env = collect(miniRepo(base, { "src/pay.js": "const url = process.env.PAYMENTS_URL;\nexport const pay = () => url;\n" }));
+  assert.ok(env.lenses.includes("release-and-ops"), env.out);
+  assert.match(env.out, /release-and-ops: src\/pay\.js \(content\)/);
+  const py = collect(miniRepo({ "app/pay.py": "def pay():\n    return 1\n" }, { "app/pay.py": "import os\ndef pay():\n    return os.getenv('PAYMENTS_URL')\n" }));
+  assert.match(py.out, /release-and-ops: app\/pay\.py \(content\)/);
+  const plain = collect(miniRepo(base, { "src/pay.js": "export const pay = () => 2;\n" }));
+  assert.ok(!plain.lenses.includes("release-and-ops"), "no env read, no lens");
+});
+
+test("collect-diff: pull_request_target raises R even outside CI paths", () => {
+  const r = collect(miniRepo({ "tools/ci-template.yml": "on: [pull_request]\n" }, { "tools/ci-template.yml": "on: [pull_request_target]\n" }));
+  assert.match(r.R, /^yes \(deploy-coordination\)/, r.out);
+});
+
 test("collect-diff: a lockfile-only change activates release-and-ops and is not noise-only", () => {
   const r = collect(fixture("lockfile-install-script"));
   assert.deepEqual([r.H, r.N, r.lenses, r.fastPath], [0, 1, ["release-and-ops"], "none"]);

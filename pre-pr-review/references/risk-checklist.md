@@ -22,6 +22,7 @@ Phase 7.
 - Did the request, response, status code, headers, pagination, nullability, defaults, or auth change? (OpenAPI/schema diff + code citation)
 - Who are the real consumers (named, with call sites), and do they remain compatible? (caller search, not folder inference)
 - Do OpenAPI, contractual documentation, and tests reflect the change? (doc/test citations; a doc that contradicts the code is a ⚪ candidate, a published contract that contradicts it is a 🔴 candidate)
+- Are there consumers outside this repository (other services, published SDKs, mobile clients, partners)? (consumer registry, docs, or contract tests; when the contract changes and those consumers cannot be searched, a Still Open item owned by `operations` or `architecture` that names how to enumerate them)
 
 ## Auth and Permissions
 
@@ -40,6 +41,7 @@ Phase 7.
 - Does the flag exist in code and in the relevant environment, with its default read from code? (`flag: <name> = <default> @ <env>` with file:line)
 - What is its real value in each environment, and what happens when it is absent or misspelled? (executed config read; a `[prerequisite]` only when the value lives in an environment the repository does not pin and the wrong value would be 🔴)
 - Which branch receives real traffic today, and is the OFF branch actually safe (old code path still exercised)? (traffic/flag evidence + OFF-branch trace)
+- Does a high-risk flow (auth, payments, data writes, external effects) change without a flag or kill switch while its rollback is costly or irreversible? (flow trace + rollback analysis; a ⚪ candidate naming the missing kill switch, or a 🟡 candidate with decider `architecture` when the exposure is irreversible)
 
 ## Database and Migrations
 
@@ -79,6 +81,44 @@ Phase 7.
 - Does personal, financial, or health data appear in logs, errors, URLs, analytics, or exports? (output-field audit; a hit is a 🔴 candidate unless a repository policy or config explicitly allows that field there, then a 🟡 candidate with decider `product`)
 - Are retention, redaction, and access-scope rules for that data preserved? (policy/config citation)
 - Do cross-border, third-party, or subprocessors change? (integration list; a new or changed recipient is a 🟡 candidate with decider `product`)
+
+## Environment and Configuration
+
+- Does the code read a new or renamed environment variable or config key? (changed-line citation of the read, e.g. `process.env.X`, `os.getenv`)
+- Is it defined in every environment the repository pins — `.env.example`, Helm values, Kubernetes manifests, task definitions, `tfvars`, workflow `env:` blocks? (file citations per environment; name the variable, never print its value)
+- What happens when it is absent or empty: a safe default, a crash at startup, or a silent wrong behavior? (code citation of the default or the failure path)
+- A required variable with no default that is undefined in every environment definition the repository pins is a 🔴 candidate: the deploy as configured breaks. It is a `[prerequisite]` owned by `operations`, with an outcome map, only when runtime configuration lives outside the repository (a secrets manager, a platform console) or the repository pins no environment definition. With a safe default it is a ⚪ candidate.
+
+## Containers
+
+- Did the base image or its tag change (`latest`, a floating tag, a major version)? (Dockerfile diff)
+- Does the image still run as a non-root user? (`USER` directive before and after)
+- Do exposed ports, health checks, `ENTRYPOINT`, and `CMD` still match the service configuration that runs the container? (Dockerfile + compose/Helm/task definition citations)
+- Can files copied into the image carry secrets or local state (`.env`, keys, build caches)? (`COPY` lines + `.dockerignore`; a secret in the image is a 🔴 candidate)
+- Do build stages still keep build-only tools out of the runtime image? (multi-stage citation)
+
+## CI/CD Pipelines
+
+- Was a step removed or weakened — tests, lint, scans, required approvals, `continue-on-error`? (workflow diff; a removed gate on a protected branch is a 🔴 candidate)
+- Did triggers or branch filters change, and does a fork-triggered event (`pull_request_target`, `workflow_run`) now reach secrets or a write token? (trigger + `permissions:` + secrets usage; that combination is a 🔴 candidate)
+- Did token permissions widen? (`permissions:` block before and after)
+- Are third-party actions or images pinned to an immutable reference (commit SHA or digest)? (`uses:` lines; an unpinned new action is a ⚪ candidate)
+- Did the order between migrate, build, and deploy steps change? (job dependency citations; ordering problems use the fixed phrase from `SKILL.md` §3)
+
+## Infrastructure as Code
+
+- Does the change destroy or replace a resource — a renamed resource, a changed attribute that forces replacement, a removed block? (plan output when readable; otherwise the resource diff and the provider's replacement rule)
+- Is a stateful resource (database, bucket, volume, queue) affected without deletion protection or a backup? (`prevent_destroy`, `deletion_protection`, snapshot settings; replacing stateful data is a 🔴 or 🚀 candidate per `SKILL.md` Phase 7 rule 4)
+- Do access policies, security groups, or network rules widen (`*` actions or principals, `0.0.0.0/0`)? (policy diff)
+- Did the state backend, workspace, or provider versions change? (backend/provider blocks + lockfile)
+- Without a readable plan output, the plan is always a Still Open item naming the exact command that closes it (e.g. `terraform plan -out=… && terraform show -json …` for the named workspace) — not only a Tests line or a close-out — and the impact rests on the resource diff and the provider's documented replacement rules, never on a guess.
+- Never run `terraform` or `tofu` `init`, `plan`, or `apply` in a probe: they download providers or need credentials (`SKILL.md` §10). Read the plan only when the caller supplies its output.
+
+## Cloud Permissions
+
+- Which roles, policies, or scopes are new or wider? (policy/role diff with the exact actions and resources)
+- Is each new permission the least needed by a cited call site? (code citation of the API call that needs it; an unused broad grant is a ⚪ candidate, a grant that exposes data or write access beyond the need is a 🔴 candidate)
+- Who or what assumes the role or uses the scope? (trust policy, service account binding, or workload identity citation)
 
 ## Observability and Operations
 

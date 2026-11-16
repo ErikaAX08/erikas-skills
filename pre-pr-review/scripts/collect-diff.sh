@@ -318,6 +318,10 @@ content_lenses() {
   if printf '%s' "$text" | grep -qE '\b(enqueue|publish|subscribe|consumer|producer|webhook|retry|retries|backoff|idempoten)'; then
     out="$out async-and-integrations"
   fi
+  # A read of an environment variable must be defined in every environment the repo pins.
+  if printf '%s' "$text" | grep -qE 'process\.env\b|os\.getenv\(|os\.environ\b|System\.getenv\(|ENV\[|viper\.Get|Deno\.env\.get\(|std::env::var'; then
+    out="$out release-and-ops"
+  fi
   echo "${out# }"
 }
 
@@ -329,6 +333,8 @@ content_risk() {
     echo "payments-and-billing"
   elif printf '%s' "$text" | grep -qiE '\b(api[_-]?key|secret|private[_-]?key|access[_-]?token)\b'; then
     echo "secrets-and-security"
+  elif printf '%s' "$text" | grep -qE 'pull_request_target'; then
+    echo "deploy-coordination"
   fi
 }
 

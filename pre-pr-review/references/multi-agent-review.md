@@ -61,7 +61,7 @@ show (`SKILL.md` §1, Activated lens). Each lens maps to sections of `references
 | `async-and-integrations` | Jobs, workers, queues, events, webhooks, schedulers, HTTP clients, payment providers | Jobs, Queues, and Events; External Integrations and Payments; Privacy and Data Protection (third-party part) |
 | `flow-and-state`         | Services, domain logic, state machines, transactions, caches                         | Architecture and Flow; Performance and Cost (hot-path part) |
 | `frontend`               | Components, routing, client state, API clients, analytics                            | Frontend; Privacy and Data Protection (client-data part) |
-| `release-and-ops`        | Feature flags, config, env vars, secrets handling, IaC, CI/CD, logging, metrics, deploy scripts, dependency manifests, lockfiles | Feature Flags; Security and Secrets (secret-handling part); Observability and Operations; Deployment and Rollback; Dependencies |
+| `release-and-ops`        | Feature flags, config, env vars (paths, or an environment-variable read in the changed lines), secrets handling, Dockerfiles, IaC, cloud policies, CI/CD, logging, metrics, deploy scripts, dependency manifests, lockfiles | Feature Flags; Security and Secrets (secret-handling part); Environment and Configuration; Containers; CI/CD Pipelines; Infrastructure as Code; Cloud Permissions; Observability and Operations; Deployment and Rollback; Dependencies |
 | `tests`                  | Any changed file of class functional, refactor, migration, config/flag, or dependency (`SKILL.md` Phase 1) | Phase 6 of `SKILL.md`                      |
 
 Rules:

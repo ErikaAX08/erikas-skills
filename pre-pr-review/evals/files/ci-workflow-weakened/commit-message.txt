@@ -1,0 +1,1 @@
+ci: speed up previews and let contributor PRs get preview deploys

@@ -433,6 +433,16 @@ never a finding by itself; it only lowers the certainty available to a candidate
 
 Execution policy:
 
+0. Build and typecheck before the tests: find the project's own build/compile and typecheck
+   commands (package scripts such as `build`/`typecheck`/`tsc`, Makefile targets, CI steps,
+   or README) and run them under the same conditions as step 2 below. Record each as
+   `Build: <command>, exit <n>, <duration>` / `Typecheck: …`, or `none — <failed condition or
+   "no such command">`. A definitive failure on head (the command ran and reported an error in
+   the code) is rerun at the merge base in the temporary worktree when step 2 allows it:
+   fails only on head → 🔴 candidate (impact class 1, production breakage); fails on both →
+   `pre-existing failure`. An ambiguous outcome — missing dependencies, no network, a timeout,
+   a crash of the tool itself — is recorded as `none — <condition>` and never becomes a
+   candidate.
 1. Select the tests in the same package/module as the changed files plus the tests that
    import or reference changed modules (found by search), and run them with the project's
    own command (package scripts, Makefile, CI config, or README).
@@ -598,8 +608,9 @@ possible, record it per the Phase 8 completeness rule. No sub-agent mechanism on
 Apply every section of `references/risk-checklist.md` mapped to an activated lens:
 architecture and flow; APIs and contracts; auth and permissions; security and secrets;
 feature flags; database and migrations; jobs, queues, and events; external integrations
-and payments; frontend; performance and cost; privacy and data protection; observability
-and operations; deployment and rollback; dependencies. Binding rule: each activated lens
+and payments; frontend; performance and cost; privacy and data protection; environment and
+configuration; containers; CI/CD pipelines; infrastructure as code; cloud permissions;
+observability and operations; deployment and rollback; dependencies. Binding rule: each activated lens
 must leave at least one trace in the report (Verified bullet, finding, or Still Open item),
 and the Coverage line names where each lens's trace is. A lens with no trace is an
 undeclared gap — record it as `I could not verify` instead of claiming coverage.
@@ -656,7 +667,9 @@ and every production or shared system.
   worktree remove` before emitting); test runners and frozen-lockfile installs under the
   Phase 6 conditions; scratch probe scripts (Phase 5) written and run in the scratchpad or temp
   directory against already-installed dependencies, with no network access, no external
-  systems, and no writes inside the repo; approved read-only queries under the operational data protocol.
+  systems, and no writes inside the repo (so never `terraform`/`tofu` `init`, `plan`, or
+  `apply`, nor any other tool that downloads plugins or needs cloud credentials); approved
+  read-only queries under the operational data protocol.
 - Forbidden for every agent: `git checkout/switch/stash/reset/clean/restore`,
   `push/commit/merge/rebase`, any other ref or index mutation, dependency installs that
   modify tracked files, production writes of any kind, CloudWatch mutations, `unmask`,

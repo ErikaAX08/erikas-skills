@@ -147,6 +147,8 @@ Refuting evidence:
 
 ## Tests
 
+- Build: <command>, exit <n>, <duration> | `none — <failed Phase 6 condition, or no build command>`
+- Typecheck: <command>, exit <n>, <duration> | `none — <failed Phase 6 condition, or no typecheck command>`
 - Executed: <command, exit code, duration, result> (one line per run; or `none — <failed Phase 6 condition, and what would enable it>`)
 - Inspected: <relevant coverage with file::test citations; CI checks with status>
 - Missing: <concrete applicable cases with the risk each leaves open>

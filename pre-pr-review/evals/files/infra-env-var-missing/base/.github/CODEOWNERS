@@ -1,0 +1,3 @@
+# Payments and deploy config need the platform team.
+/src/payments.js @acme/payments-team
+/deploy/ @acme/platform-team
