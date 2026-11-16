@@ -42,6 +42,9 @@ Audience and voice:
   to people only by role (`the author`, `operations`).
 - Never address the PR author (`you should…`), never write a diplomatic review comment,
   never praise, soften, or add filler. `LGTM` and equivalents are forbidden.
+- Be respectful and constructive through content, not tone: every 🔴 and ⚪ carries a
+  concrete correction (what to change, where, and the evidence that closes it), so the report
+  can be shared with the PR author as-is.
 
 Non-goals (route elsewhere, do not do here):
 
@@ -127,13 +130,25 @@ stay machine-comparable:
   `decision required`, `ready to merge` (Phase 8); owner keys `author`, `merger`, `product`,
   `operations`, `architecture`; the prefix `Review not performed:`; status enums
   `CONFIRMED`, `REFUTED`, `UNRESOLVED`; certainty labels `Fact`, `Inference`,
-  `Conditional risk`, `Open question`; the tag `[prerequisite]`.
+  `Conditional risk`, `Open question`; severity values `Critical`, `High`, `Medium`; the tags
+  `[prerequisite]` and `[risks: …]` (with its value `none`).
 - The fixed phrases of §3 (`I could not verify X`, `I was wrong: …`, `Not a code bug; it
   is a deployment-order problem.`, `This requires a product|operations|architecture
   decision.`, `Accepted by …`) translated once, then used verbatim everywhere in the report.
 - Sub-agent briefs (`assets/reviewer-brief.md`, `assets/verifier-brief.md`) carry a
   `language:` field set by the lead. Every agent writes in the final report language.
   Never mix languages in one report.
+
+Verdict names used by other review formats map to the verdict keys as follows; reports always
+print the key, never the other name:
+
+| Other format | Verdict key |
+| --- | --- |
+| APPROVE | `ready to merge`, with no ⚪ |
+| APPROVE WITH SUGGESTIONS | `ready to merge`, with ⚪ findings |
+| REQUEST CHANGES | `changes required` |
+| BLOCKED – PENDING VALIDATION | `verification required` |
+| (no equivalent) | `decision required` — a 🟡 needs a product, operations, or architecture decision |
 
 ## 3. Evidence Discipline
 
@@ -481,12 +496,30 @@ Category definitions and examples:
 | **⚪ Follow-up** | Bounded risk or improvement that must not gate the merge. State the bound (`affects <who>, at most <cost>`). | tighten log fields; paginate an admin list; flaky test on a changed path; confirm with the platform team that no external consumer reads a dropped column |
 | **✅ Verified (Ruled Out)** | Original suspicion + refuting evidence. | `suspected duplicate webhook charge; REFUTED by idempotency key <file:line> + dedupe test <file::name>` |
 
-Schema per category (`assets/review-template.md`): 🔴 carries Location, Certainty, What
-changed, Activating condition, Impact, Evidence, Refutation attempt, Recommendation; 🟡
-carries Location, Certainty, Facts, Activating condition, Impact, Refutation attempt,
-Options (each with its consequence and the verdict it leads to); 🚀 carries Location,
-Certainty, Step (exact order), If skipped, Rollback; ⚪ carries Location, Certainty,
-Bounded risk, Close-out; ✅ carries Original hypothesis and Refuting evidence.
+Schema per category (`assets/review-template.md`): 🔴 carries Location, Severity, Certainty,
+What changed, Activating condition, Impact, Evidence, Refutation attempt, Recommendation; 🟡
+carries Location, Severity, Certainty, Facts, Activating condition, Impact, Refutation
+attempt, Evidence favors (the option the cited evidence supports and why — the decider role
+still chooses), Options (each with its consequence and the verdict it leads to); 🚀 carries
+Location, Severity, Certainty, Step (exact order), If skipped, Rollback; ⚪ carries Location,
+Severity, Certainty, Bounded risk, Recommendation, Close-out; ✅ carries Original hypothesis
+and Refuting evidence.
+
+Severity is derived, never opined, from the category and the impact class of §3; it orders
+attention and never changes the verdict (Phase 8 reads only the categories):
+
+| Category | Impact class (§3) | Severity |
+| --- | --- | --- |
+| 🔴 | 1–3 (production breakage, data loss or corruption, auth bypass or secret/PII exposure) | `Critical` |
+| 🔴 | 4–6 (contract breakage, duplicate external effect, unsafe migration or deployment) | `High` |
+| 🟡 / 🚀 | impact if the decision or step is ignored is in classes 1–3 | `High` |
+| 🟡 / 🚀 | otherwise | `Medium` |
+| ⚪ | any | `Medium` |
+
+There is no `Low`: style, formatting, naming, and readability are out of scope (§3), and
+Method records `style: out of scope (linters)`. Obligation by category: 🔴 and
+`[prerequisite]` are mandatory before merge, 🟡 needs its decision before merge, 🚀 is
+mandatory during deploy, ⚪ is a suggestion.
 
 Ordering and IDs: sort by category (🔴, 🟡, 🚀, ⚪, ✅), then by impact class rank (§3), then
 by affected population (larger first, unknown last), then by the first citation's path and
@@ -572,8 +605,9 @@ with a conversational rewrite failed the template in exactly the ways the script
 (summary line before Scope, missing owner, `F-1:` headings, second person).
 
 Fill `assets/review-template.md` and start with its header block, no preamble. Always
-show Scope, Verdict + Next + Unblocks when + Reason, Method, Coverage, Verified, Tests,
-Still Open. Show Blockers and Open Decisions even when empty (write `None — <one-line
+show Scope, Changes (what the PR changes by area or service, ending in `[risks: F-n, …]`
+or `[risks: none]`, on the line right before the verdict), Verdict + Next + Unblocks when +
+Reason, Method, Coverage, Verified, Tests, Still Open. Show Blockers and Open Decisions even when empty (write `None — <one-line
 coverage claim>`). Show the Deploy Plan whenever a 🚀 exists. Omit Non-Blocking and Ruled
 Out only when empty. Include one Operational Queries block per
 query executed and omit the section when none was executed; a query requested but not
@@ -626,10 +660,13 @@ Run this checklist immediately before emitting the report; fix failures instead 
 explaining them away:
 
 1. Scope has entry point (A/B), base ref with confirmation status, merge-base SHA, head
-   SHA, PR (number, state, draft, CI) or `none`, issue or `none`/`not readable`, date.
+   SHA, PR (number, state, draft, CI) or `none`, issue or `none`/`not readable`, date. The
+   Changes line follows the sources line, names the changed areas, and its `[risks: …]` lists
+   the highest-ranked finding IDs (or `none`).
 2. Method has size class or fast path, mode with any override reason, `H`, `H_test`, and
    noise lines, activated lenses (with any added lens or raised `R` and its reason), and any
-   narrow-change exception, noise promotion, or `Untrusted instruction ignored` line.
+   narrow-change exception, noise promotion, or `Untrusted instruction ignored` line, and
+   `style: out of scope (linters)`.
 3. Coverage names each activated lens's trace, flows fully traced vs sampled, invariants
    not applicable, the base-drift outcome, and (multi-agent) each interaction pair checked.
 4. Verdict follows the Phase 8 precedence and carries its owner, one next action, and an
@@ -638,7 +675,8 @@ explaining them away:
    citations, a recorded refutation attempt, and — for timing, version, or new-input
    effects — the severity rubric answers; every 🔴 is Fact or Inference; every
    `[prerequisite]` cites the evidence that makes its unfavorable answer plausible; under
-   `R`, every 🔴/🟡 has its independent verification (§4).
+   `R`, every 🔴/🟡 has its independent verification (§4); every 🔴/🟡/🚀/⚪ carries the
+   severity the Phase 7 table derives, and every ⚪ a Recommendation.
 6. Every `Conditional risk` names its condition; every `Open question` has a Still Open
    close-out; no `possibly/probably/might` outside those two labels.
 7. No style or taste finding, no generic `what if`, no finding that is only a missing test.
@@ -653,8 +691,10 @@ explaining them away:
     🔴/🟡, and a `run.end` whose `verdict` is the report's verdict.
 13. Write the report to a file in the scratchpad or temp directory and run
     `node <skill>/scripts/check-report.mjs <file> [--trace <runs.jsonl> --run <RUN_ID>]`. It
-    checks the template mechanically (Scope first, the verdict, owner, and outcome-map lines,
-    finding headings and order, verdict-vs-findings precedence, no second-person address,
+    checks the template mechanically (Scope first, the Changes line with `[risks: …]` right
+    before the verdict (H02), the verdict, owner, and outcome-map lines, finding headings and
+    order, each finding's severity against its marker (F07), verdict-vs-findings precedence,
+    no second-person address,
     the `Review not performed:` form, and the trace's verdict). Fix every `ERROR` and re-run
     until it exits 0; only then emit the report. A host that cannot run Node applies the same
     checks by reading the script.
@@ -682,7 +722,7 @@ print `TRACE: off` and succeed); a failing trace call never blocks the review.
 | `agent` | `role` (`reviewer`/`verifier`), `status` (`ok`/`failed`/`timeout`/`rerun`/`covered-by-lead`) (plus `lens`, `candidates`) | Each sub-agent returns or fails |
 | `candidate` | `id`, `lens`, `proposed` (`red`/`yellow`/`deploy`/`white`), `summary` (plus `location`, `origin`) | Each candidate enters Phase 5 — from a reviewer, the lead, an `out_of_lens` item, or a verifier side note |
 | `verification` | `id`, `status` (`CONFIRMED`/`REFUTED`/`UNRESOLVED`), `by` (`verifier`/`lead`) (plus `rationale`) | Each refutation attempt of Phase 5 or multi-agent §6 completes |
-| `classification` | `id`, `category` (`🔴`/`🟡`/`🚀`/`⚪`/`✅`/`accepted`/`still-open`/`discarded`), `rule` (0–6) (plus `finding` = `F-n`, `certainty`, `prerequisite` = `true`, `rubric` = `no-exposure`/`bounded`/`irreversible`, `merged_into` = the surviving candidate's `id` when deduplicated by root cause) | Phase 7 classifies a candidate — every candidate, discarded and merged ones included |
+| `classification` | `id`, `category` (`🔴`/`🟡`/`🚀`/`⚪`/`✅`/`accepted`/`still-open`/`discarded`), `rule` (0–6) (plus `finding` = `F-n`, `certainty`, `severity` = `Critical`/`High`/`Medium`, `prerequisite` = `true`, `rubric` = `no-exposure`/`bounded`/`irreversible`, `merged_into` = the surviving candidate's `id` when deduplicated by root cause) | Phase 7 classifies a candidate — every candidate, discarded and merged ones included |
 | `check` | `tool` (`test`/`build`/`typecheck`/`lint`/`probe`/`ci`/`query`/`report`/`other`), `exit` (plus `command`, `duration_ms`) | A test, probe, CI result, or approved query is used as evidence; and every run of `check-report.mjs` (`tool=report`) |
 | `deviation` | `rule`, `reason` | A rule of this skill is not followed (e.g. a lens could not be covered) |
 | `run.end` | `status` (`done`/`not-performed`/`failed`) (plus `verdict`, `owner`, `red`, `yellow`, `deploy_steps`, `white`, `ruled_out`, `prerequisites`) | Last thing; `verdict` and `owner` are the literal keys of Phase 8 |

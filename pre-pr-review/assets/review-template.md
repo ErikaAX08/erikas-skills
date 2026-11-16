@@ -3,6 +3,8 @@ Scope: repo `<repo path>` · entry point `<A pre-PR | B pre-merge>` · base `<ba
 
 Sources consulted beyond the diff: <issue, logs, production queries, executed tests, base-branch files — or `none`>.
 
+Changes: <what the PR changes, by area or service, in one or two sentences, third person> [risks: <F-n of the highest-ranked findings, comma-separated | none>]
+
 Verdict: **<changes required | verification required | decision required | ready to merge>**
 
 Next: **<author | merger | product | operations | architecture>** — <one imperative action, e.g. `Restore requireAdmin on DELETE /users/:id (F-1) and re-run the review.` | `Merge now.` | `Merge, then deploy following the Deploy Plan in order.`>
@@ -11,7 +13,7 @@ Unblocks when: <outcome map: `<result> → <verdict>; …` covering every blocki
 
 Reason: <one or two direct sentences, third person>.
 
-Method: size `<S | M | L | docs-only | noise-only>` (`H` = `<n>` source lines, `H_test` = `<t>`, noise `<m>` lines spot-checked) · mode `<single agent | multi-agent>` [override: <reason>] · lenses `<activated lenses>` [added: <lens: reason>] · candidates `<N>`: confirmed `<K>`, refuted `<J>`, unresolved `<L>` [· narrow-change exception: <test citation>] [· noise promoted: <paths>] [· Untrusted instruction ignored: <citation>] · trace `<RUN_ID | off>`.
+Method: size `<S | M | L | docs-only | noise-only>` (`H` = `<n>` source lines, `H_test` = `<t>`, noise `<m>` lines spot-checked) · mode `<single agent | multi-agent>` [override: <reason>] · lenses `<activated lenses>` [added: <lens: reason>] · candidates `<N>`: confirmed `<K>`, refuted `<J>`, unresolved `<L>` [· narrow-change exception: <test citation>] [· noise promoted: <paths>] [· Untrusted instruction ignored: <citation>] · style: out of scope (linters) · trace `<RUN_ID | off>`.
 
 Coverage: lens traces `<lens → F-n | Verified | Still Open, one per activated lens>` · flows fully traced `<list>` · flows sampled `<list | none>` · invariants not applicable `<I-n, … | none>` · base drift `<none | overlapping files checked: outcome>` [· interactions `<pair: outcome, …>` (multi-agent)].
 
@@ -23,11 +25,13 @@ Coverage: lens traces `<lens → F-n | Verified | Still Open, one per activated 
 
 ## Blockers
 
-<!-- If none: write exactly `None — <one-line coverage claim, e.g. no reachable production/data/auth/contract breakage in the traced flows>`. -->
+<!-- Mandatory before merge. If none: write exactly `None — <one-line coverage claim, e.g. no reachable production/data/auth/contract breakage in the traced flows>`. -->
 
 ### 🔴 F-1 — <concrete title>
 
 Location: `path:line[-end] @ <sha> (base|head)` or `flow: <entry> → <exit>`
+
+Severity: <Critical (impact class 1–3) | High (impact class 4–6)>
 
 Certainty: <Fact | Inference>
 
@@ -51,11 +55,13 @@ Recommendation:
 
 ## Open Decisions
 
-<!-- If none: write exactly `None — <why no product/operations/architecture decision is pending>`. -->
+<!-- A decision is mandatory before merge. If none: write exactly `None — <why no product/operations/architecture decision is pending>`. -->
 
 ### 🟡 F-2 — <concrete title>
 
 Location: `path:line @ <sha> (head)` or `flow: <entry> → <exit>`
+
+Severity: <High (ignoring it leads to impact class 1–3) | Medium>
 
 Certainty: <Fact | Inference | Conditional risk>
 
@@ -71,6 +77,9 @@ Impact:
 Refutation attempt:
 <what was checked to disprove the facts and why they stand>
 
+Evidence favors:
+<option letter — the cited evidence that supports it; the decider role still chooses>
+
 Options:
 <decider role (product|operations|architecture) — why merging would choose implicitly>
 - A: <option> → <consequence> → verdict `<changes required | ready to merge>`
@@ -78,11 +87,13 @@ Options:
 
 ## Deploy Plan
 
-<!-- Show whenever a 🚀 exists; omit otherwise. Steps run in ID order. -->
+<!-- Mandatory during deploy. Show whenever a 🚀 exists; omit otherwise. Steps run in ID order. -->
 
 ### 🚀 F-3 — <concrete title>
 
 Location: `path:line @ <sha> (head)` or `flow: <entry> → <exit>`
+
+Severity: <High (skipping it leads to impact class 1–3) | Medium>
 
 Certainty: <Fact | Inference | Conditional risk>
 
@@ -97,14 +108,21 @@ Rollback:
 
 ## Non-Blocking
 
+<!-- Suggestions; they never gate the merge. No style, formatting, naming, or readability items. -->
+
 ### ⚪ F-4 — <concrete title>
 
 Location: `path:line @ <sha> (head)`
+
+Severity: Medium
 
 Certainty: <Fact | Inference | Conditional risk>
 
 Bounded risk or improvement:
 <what, for whom, at most what cost; or the improvement with file-level pointer>
+
+Recommendation:
+<the concrete change: file, behavior>
 
 Close-out:
 <test, metric, verification, or follow-up that settles it without gating the merge>

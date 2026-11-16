@@ -67,6 +67,7 @@ results:
     reasoning: <the path you traced, in two to four sentences>
     evidence: [<file:line, test, contract, commit>]
     impact_correction: <only if the real impact is larger or smaller than claimed>
+    impact_class: 1-6 | none   # SKILL.md §3 ranking of the impact as verified; the lead derives the severity (never Low)
     rubric: <only for timing/version/new-input claims: exposure; window; reversibility — each cited>
     severity_correction: <only if the rubric or the evidence moves the severity: from → to, and why>
     decisive_fact: <only for UNRESOLVED: exact fact and where it lives>

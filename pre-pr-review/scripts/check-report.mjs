@@ -17,6 +17,9 @@ export const OWNERS = ["author", "merger", "product", "operations", "architectur
 const LEGACY = /\*\*\s*(request changes|approve with conditions|approve|do not approve until [^*]+ is verified)\s*\*\*/i;
 const MARKERS = ["🔴", "🟡", "🚀", "⚪", "✅"];
 const CERTAINTY = /:\s*\**\s*(Fact|Inference|Conditional risk|Open question)\b/;
+// A whole line `<label>: <value>`, so prose such as "Impact: High traffic…" is not read as a severity.
+const SEVERITY = /^[^:\n]{1,30}:\s*\**\s*(Critical|High|Medium|Low)\s*\**\s*$/m;
+const SEVERITY_FOR = { "🔴": ["Critical", "High"], "🟡": ["High", "Medium"], "🚀": ["High", "Medium"], "⚪": ["Medium"] };
 const OWNER_FOR = {
   "changes required": ["author"],
   "verification required": ["author", "operations"],
@@ -80,6 +83,8 @@ export function checkReport(text, { traceEvents = null } = {}) {
       owner = m[1];
       if (!OWNER_FOR[verdict].includes(owner)) err("V03", `owner \`${owner}\` does not act on \`${verdict}\` (expected ${OWNER_FOR[verdict].join(" or ")})`);
     }
+    const before = lines.slice(0, verdictLines[0].i).filter((l) => l.trim()).at(-1) ?? "";
+    if (!/\[risks:\s*[^\]\n]+\]/.test(before)) err("H02", "the line right before the verdict must be the change summary ending in `[risks: F-n, …]` or `[risks: none]`");
     const unblocks = after[1] ?? "";
     if (!/^[^:\n*]{1,30}:\s*\S/.test(unblocks)) err("V04", "the third header line must be `<Unblocks-when label>: <outcome map>`");
     else if (verdict !== "ready to merge" && !unblocks.includes("→")) err("V04", "a blocked verdict needs an outcome map: `<result> → <verdict>; …` for every blocking item");
@@ -105,6 +110,9 @@ export function checkReport(text, { traceEvents = null } = {}) {
       const c = f.body.match(CERTAINTY);
       if (!c) err("F04", `${f.id} has no certainty label (Fact | Inference | Conditional risk | Open question)`);
       else if (f.marker === "🔴" && !["Fact", "Inference"].includes(c[1])) err("F05", `${f.id} is 🔴 with certainty \`${c[1]}\`; a 🔴 requires Fact or Inference`);
+      const s = f.body.match(SEVERITY);
+      if (!s) err("F07", `${f.id} has no severity (${SEVERITY_FOR[f.marker].join(" | ")})`);
+      else if (!SEVERITY_FOR[f.marker].includes(s[1])) err("F07", `${f.id} is ${f.marker} with severity \`${s[1]}\`; expected ${SEVERITY_FOR[f.marker].join(" or ")} (Low is never emitted)`);
     }
     if (f.marker === "🟡") {
       const options = f.body.split("\n").filter((l) => /^\s*[-*]\s*[A-Z]:/.test(l));

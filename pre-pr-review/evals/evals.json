@@ -16,7 +16,9 @@
         "Flags the contradiction between the declared 'No behavior change' and the removed admin guard.",
         "States that `test/users.test.js` mocks both middlewares away, so its passing result cannot evidence the authorization behavior.",
         "The verdict is exactly `changes required`, the Next line names owner `author`, and the action is to restore the admin check on DELETE /api/users/:id.",
-        "Starts with the Scope header and no preamble, writes about the PR in third person, and contains no praise or `LGTM`."
+        "Starts with the Scope header and no preamble, writes about the PR in third person, and contains no praise or `LGTM`.",
+        "The 🔴 blocker for the removed admin guard carries severity `Critical`.",
+        "The line right before the verdict summarizes what the PR changes and ends in a `[risks: …]` tag that lists the admin-guard blocker ID first."
       ],
       "expected_verdict": "changes required",
       "expected_findings": [
@@ -291,7 +293,9 @@
         "Reports no 🔴 Blocker, no 🟡 Decision required, no 🚀 Deploy step, and no `[prerequisite]` Still Open item.",
         "Compares `orderTotal` at base and head and states that rounding (`Math.round` on the discount and on the tax) and the zero discount for unknown tiers are unchanged.",
         "Runs the project's tests (`npm test` or `node --test`) and records the command and a zero exit code under Tests → Executed.",
-        "Does not report the newly exported `tierDiscount`, naming, or code style as a finding."
+        "Does not report the newly exported `tierDiscount`, naming, or code style as a finding.",
+        "The report contains no ⚪ finding and no Still Open item about style, formatting, naming, or readability.",
+        "The line right before the verdict summarizes the refactor and ends in `[risks: none]`."
       ]
     },
     {
@@ -427,7 +431,8 @@
         "States that the new checkout test only asserts success after a retry and never counts charges, so it cannot evidence the duplicate.",
         "Does not report the receipt mailer, HTML escaping, or config parsing as 🔴 or 🟡.",
         "The verdict is exactly `changes required` with owner `author`.",
-        "Records high-risk payments (`R`) with independent verification of the 🔴 in Method."
+        "Records high-risk payments (`R`) with independent verification of the 🔴 in Method.",
+        "The 🔴 blocker for the duplicate charge carries severity `High` (impact class 5, duplicate external effect), not `Critical`."
       ]
     }
   ]

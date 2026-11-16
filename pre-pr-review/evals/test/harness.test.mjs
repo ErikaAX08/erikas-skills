@@ -15,6 +15,8 @@ const EVALS = path.resolve(HERE, "..");
 
 const REPORT = `Scope: repo \`x\` · entry point \`A pre-PR\` · base \`main (confirmed via user)\` · merge-base \`a1\` · head \`b2\` · PR \`none\`
 
+Changes: moves requireAuth to router level. [risks: F-1]
+
 Verdict: **changes required**
 
 Next: **author** — restore the admin guard (F-1) and re-run the review.
@@ -29,11 +31,15 @@ Reason: the admin guard is gone.
 
 Location: \`src/routes/users.js:13 @ abc1234 (head)\`
 
+Severity: Critical
+
 Certainty: Fact
 
 ## Open Decisions
 
 ### 🟡 F-2 — Mocked middleware hides the guard
+
+Severity: High
 
 Certainty: Fact
 
@@ -45,9 +51,13 @@ Options:
 
 ### 🚀 F-3 — Run the migration after the rollout
 
+Severity: Medium
+
 Certainty: Fact
 
 ### ⚪ F-4 — Tests mock both middlewares
+
+Severity: Medium
 
 Certainty: Fact
 

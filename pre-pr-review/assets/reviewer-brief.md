@@ -70,6 +70,7 @@ candidates:
     what_changed: <before vs. now>
     activating_condition: <when it happens in the real flow>
     impact: <what breaks, for whom>
+    impact_class: 1-6 | none   # SKILL.md §3 ranking; the lead derives Critical/High/Medium from it (never Low)
     evidence: [<file:line, test, contract, commit>]
     disproof_attempts: [<what you checked that could have ruled it out>]
     status: confirmed | plausible

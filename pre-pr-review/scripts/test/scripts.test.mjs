@@ -208,15 +208,15 @@ test("trace-report: under R a 🔴 needs two verifications", () => {
 });
 
 const SCOPE = "Scope: repo `r` · entry point `A pre-PR` · base `main (confirmed via user)` · merge-base `a1` · head `b2` · PR `none` · date `2026-10-22`.";
-const report = (verdict, owner, unblocks, body = "") => `${SCOPE}\n\nVerdict: **${verdict}**\n\nNext: **${owner}** — act.\n\nUnblocks when: ${unblocks}\n\nReason: r.\n\n${body}`;
-const red = "### 🔴 F-1 — guard removed\n\nCertainty: Fact\n";
-const yellow = (n) => `### 🟡 F-${n} — breaking validation\n\nCertainty: Fact\n\nOptions:\nproduct — merging picks one.\n- A: version the endpoint → no client breaks → verdict \`changes required\`\n- B: accept the break → old clients get 400 → verdict \`ready to merge\`\n`;
+const report = (verdict, owner, unblocks, body = "", changes = "Changes: moves auth to the router. [risks: none]") => `${SCOPE}\n\n${changes}\n\nVerdict: **${verdict}**\n\nNext: **${owner}** — act.\n\nUnblocks when: ${unblocks}\n\nReason: r.\n\n${body}`;
+const red = "### 🔴 F-1 — guard removed\n\nSeverity: Critical\n\nCertainty: Fact\n";
+const yellow = (n) => `### 🟡 F-${n} — breaking validation\n\nSeverity: High\n\nCertainty: Fact\n\nOptions:\nproduct — merging picks one.\n- A: version the endpoint → no client breaks → verdict \`changes required\`\n- B: accept the break → old clients get 400 → verdict \`ready to merge\`\n`;
 const codes = (r) => r.errors.map((e) => e.code);
 
 test("check-report: a well-formed report passes and returns verdict and owner", () => {
   const r = checkReport(report("changes required", "author", "F-1 fixed → ready to merge", `## Blockers\n\n${red}\n## Open Decisions\n\n${yellow(2)}`));
   assert.deepEqual([r.ok, r.verdict, r.owner, r.findings.length], [true, "changes required", "author", 2], JSON.stringify(r.errors));
-  assert.equal(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (1 steps).", "### 🚀 F-1 — migrate after rollout\n\nCertainty: Fact\n")).ok, true);
+  assert.equal(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (1 steps).", "### 🚀 F-1 — migrate after rollout\n\nSeverity: Medium\n\nCertainty: Fact\n")).ok, true);
   assert.equal(checkReport("Review not performed: feature has no commits beyond main. Needed: commit the work on feature.").verdict, "not-performed");
 });
 
@@ -229,13 +229,36 @@ test("check-report: verdict, owner, and outcome-map errors", () => {
 });
 
 test("check-report: findings, preamble, voice, and not-performed form", () => {
-  const bad = report("changes required", "author", "F-1 → ready to merge", "### ⚪ F-2 — later\n\nCertainty: Fact\n\n### 🔴 F-1 — first\n\nCertainty: Conditional risk\n\n### 🟡 F-3 — choose\n\nCertainty: Fact\n- A: one\n");
+  const bad = report("changes required", "author", "F-1 → ready to merge", "### ⚪ F-2 — later\n\nSeverity: Medium\n\nCertainty: Fact\n\n### 🔴 F-1 — first\n\nSeverity: Critical\n\nCertainty: Conditional risk\n\n### 🟡 F-3 — choose\n\nSeverity: High\n\nCertainty: Fact\n- A: one\n");
   assert.deepEqual(codes(checkReport(bad)).sort(), ["F02", "F02", "F03", "F05", "F06"]);
   assert.ok(codes(checkReport(`# Pre-PR review\n\n${report("ready to merge", "merger", "Merge now.")}`)).includes("H01"));
   assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "You named the base, so your branch is fine."))), ["S01"]);
   assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "Tú nombraste la base."))), ["S01"]);
   assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "The test asserts `you` in a code span."))), []);
   assert.deepEqual(codes(checkReport("I didn't review anything. Review not performed: empty.")), ["R01"]);
+});
+
+test("check-report: the change summary with [risks: …] must precede the verdict (H02)", () => {
+  assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "", "Changes: moves auth to the router."))), ["H02"]);
+  assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "", "Sources consulted beyond the diff: none."))), ["H02"]);
+  assert.deepEqual(codes(checkReport(report("changes required", "author", "F-1 fixed → ready to merge", red, "Cambios: mueve auth al router. [risks: F-1]"))), []);
+});
+
+test("check-report: every actionable finding carries a severity consistent with its marker (F07)", () => {
+  const f = (marker, severity, n = 1) => `### ${marker} F-${n} — x\n\n${severity === null ? "" : `Severity: ${severity}\n\n`}Certainty: Fact\n`;
+  const ready = (body) => checkReport(report("ready to merge", "merger", "Merge now.", body));
+  const blocked = (body) => checkReport(report("changes required", "author", "F-1 fixed → ready to merge", body));
+  assert.deepEqual(codes(blocked(f("🔴", "Medium"))), ["F07"]);
+  assert.deepEqual(codes(ready(f("⚪", "Critical"))), ["F07"]);
+  assert.deepEqual(codes(ready(f("⚪", "Low"))), ["F07"]);
+  assert.deepEqual(codes(ready(f("⚪", null))), ["F07"]);
+  assert.deepEqual(codes(blocked(f("🔴", "Critical"))), []);
+  assert.deepEqual(codes(blocked(f("🔴", "High"))), []);
+  assert.deepEqual(codes(ready(f("🚀", "High"))), []);
+  assert.deepEqual(codes(ready(f("🚀", "Medium"))), []);
+  assert.deepEqual(codes(ready(f("⚪", "Medium"))), []);
+  assert.deepEqual(codes(ready("### ⚪ F-1 — x\n\nCertainty: Fact\n\nBounded risk or improvement: High traffic on /orders.\n\nSeverity: Medium\n")), [], "prose like `…: High traffic` is not a severity");
+  assert.deepEqual(codes(ready("### ✅ F-1 — refuted\n\nOriginal hypothesis: x\n")), [], "✅ carries no severity");
 });
 
 test("check-report: the trace must carry the report's verdict and owner", () => {
