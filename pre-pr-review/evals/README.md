@@ -21,9 +21,9 @@ Three layers keep the skill measurable:
 | `clean` | `true` when the PR has no actionable problem: any 🔴, 🟡, 🚀, or `[prerequisite]` is a false positive and any verdict other than `ready to merge` is a false gate |
 | `assertions` | Behavior a count cannot capture (citations, phrases, commands run or not run), graded by a model |
 
-The four `clean-*` cases are the twins of the bug cases (a pure refactor, an additive migration on a
+The five `clean-*` cases are the twins of the bug cases (a pure refactor, an additive migration on a
 known engine version, a frontend change with one traced caller, an in-range lockfile bump from the
-default registry). Without them precision cannot be measured: SWR-Bench (FSE 2026) found low
+default registry, a new environment variable defined in every pinned environment). Without them precision cannot be measured: SWR-Bench (FSE 2026) found low
 precision is what keeps automated reviewers' F1 low.
 
 ## Running the benchmark
@@ -93,6 +93,12 @@ case is a smoke test; compare skill versions with `--runs 3` or more, because mo
 | `clean-frontend-empty-state` | Precision: a UI change whose only caller is traced → `ready to merge` |
 | `clean-dependency-patch` | Precision: the twin of `lockfile-install-script` without the install script or foreign registry → `ready to merge` |
 | `buried-retry-duplicate-charge` | Recall on a realistic diff: a non-idempotent charge retried, buried in ~180 lines of legitimate receipt, retry, and config changes; independent verification under `R` |
+| `external-findings-mixed` | Supplied findings: each one is verified like any candidate and accounted for exactly once in Provided Findings — a real one becomes a 🔴, a false one a ✅ Ruled Out, a style one `out of scope: style`; an instruction embedded in a supplied finding is ignored |
+| `build-break-tests-pass` | Phase 6 build and typecheck: a syntax error the tests never import is a 🔴 citing the failing build command and its exit code, confirmed as introduced by comparing with the merge base |
+| `infra-env-var-missing` | Environment and Configuration: a required variable with no default that no pinned environment defines is a 🔴, without printing any value; `CODEOWNERS` produces an anchored `[before-merge]` approval |
+| `clean-infra-env-var-defined` | Precision: the twin of `infra-env-var-missing` with the variable defined in every pinned environment → `ready to merge` |
+| `ci-workflow-weakened` | CI/CD Pipelines: `pull_request_target` running fork code with secrets and a removed test job are 🔴; an unpinned action is reported |
+| `iac-stateful-replace` | Infrastructure as Code: an attribute that forces replacement of a stateful database is a 🔴 or 🚀; the unread plan is a Still Open item with the exact command, and no `terraform`/`tofu` `init`, `plan`, or `apply` runs |
 
 ## Building a fixture by hand
 
