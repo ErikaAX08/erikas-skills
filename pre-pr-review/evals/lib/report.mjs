@@ -1,6 +1,6 @@
 // Parses a pre-pr-review report and a `claude -p --output-format stream-json` transcript into the
 // facts the scorer needs. Pure functions: no I/O.
-import { checkReport, suppliedFindingIds, VERDICTS } from "../../scripts/check-report.mjs";
+import { checkResponse, splitResponse, suppliedFindingIds, VERDICTS } from "../../scripts/check-report.mjs";
 
 export const VERDICT_KEYS = VERDICTS;
 // Keys of the skill's earlier verdict set, read from older reports. `approve with conditions` has no
@@ -52,10 +52,10 @@ export function parsePrerequisites(text) {
   return out;
 }
 
-// Template compliance is exactly what the skill's own pre-emit check enforces (scripts/check-report.mjs),
-// including E01 when the case supplied findings.
+// Template compliance is exactly what the skill's own pre-emit check enforces on the whole response
+// (scripts/check-report.mjs: author report + audit report), including E01/A06 when the case supplied findings.
 export function isTemplateCompliant(text, external = null) {
-  return checkReport(text, { external }).ok;
+  return checkResponse(text, { external }).ok;
 }
 
 // IDs of the findings a case supplies in a ```json block of its prompt (assets/supplied-findings.md), or null.
@@ -75,11 +75,14 @@ export function claimKey(c) {
   return t.match(/^(?:F|P|X)-\d+/)?.[0] ?? t;
 }
 
+// Claims and the verdict are read from the audit report only: the author report restates the same findings
+// (assets/author-report-template.md), so parsing both would count every claim twice.
 export function parseReport(text, { external = null } = {}) {
-  const findings = parseFindings(text);
-  const prerequisites = parsePrerequisites(text);
+  const audit = splitResponse(text).audit;
+  const findings = parseFindings(audit);
+  const prerequisites = parsePrerequisites(audit);
   return {
-    verdict: parseVerdict(text),
+    verdict: parseVerdict(audit),
     templateCompliant: isTemplateCompliant(text, external),
     findings,
     prerequisites,

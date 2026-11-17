@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { readTrace, redact, tracePath } from "../lib/trace.mjs";
 import { traceEvent } from "../trace.mjs";
 import { buildReport, expectedVerdict, toMarkdown } from "../trace-report.mjs";
-import { checkReport } from "../check-report.mjs";
+import { checkReport, checkResponse, checklistItems, reviewLabel, splitResponse } from "../check-report.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SKILL = path.resolve(HERE, "../..");
@@ -347,7 +347,7 @@ test("check-report: the template's Severity placeholders produce a passing repor
 test("check-report: the CLI rejects a malformed --external file with a usage error (AM-12)", () => {
   const dir = tmp("ppr-ext-");
   const rep = path.join(dir, "r.md");
-  fs.writeFileSync(rep, report("changes required", "author", "F-1 fixed → ready to merge", red));
+  fs.writeFileSync(rep, respond(report("changes required", "author", "F-1 fixed → ready to merge", red)));
   const run = (json) => {
     const f = path.join(dir, `f${Math.random().toString(36).slice(2)}.json`);
     fs.writeFileSync(f, JSON.stringify(json));
@@ -425,4 +425,75 @@ test("check-report: the trace must carry the report's verdict and owner", () => 
   assert.equal(checkReport(text, { traceEvents: ev({ status: "done", verdict: "changes required", owner: "author" }) }).ok, true);
   assert.deepEqual(codes(checkReport(text, { traceEvents: ev({ status: "done", verdict: "ready to merge", owner: "author" }) })), ["T02"]);
   assert.deepEqual(codes(checkReport(text, { traceEvents: [] })), ["T01"]);
+});
+
+// A full response (assets/author-report-template.md): an author report that restates the audit, then the audit in <details>.
+function respond(audit, { label, extra2 = "", items } = {}) {
+  const r = checkReport(audit);
+  const findings = r.findings.map((f) => (f.marker === "✅" ? `### ✅ ${f.id} — ruled out\n\n- suspicion — refuted\n` : `### ${f.marker} ${f.id} · ${f.severity} — title\n\n- Obligation: x\n- Location: \`a.js:1 @ b2 (head)\`\n- Description: d\n- Impact: i\n- Recommendation: r\n`));
+  const list = items ?? checklistItems(audit.split("\n"));
+  return [
+    "## 1. Resumen general\n\n- Changes: c\n",
+    `## 2. Hallazgos de Code Review\n\nLow: no aplica — estilo fuera de alcance (linters).\n\n${findings.join("\n")}${extra2}`,
+    "## 3. Validaciones obligatorias antes de mergear\n\nNone — nada pendiente.\n",
+    "## 4. Riesgos y consideraciones antes del deploy\n\nRollback: [rollback: safe] x\n",
+    `## 5. Checklist de aprobación\n\n${list.join("\n")}\n`,
+    `## 6. Dictamen final\n\n**${label ?? reviewLabel(r.verdict, r.findings)}** (\`${r.verdict}\`)\n`,
+    `<details>\n<summary>Reporte de auditoría completo</summary>\n\n${audit}\n\n</details>\n`,
+  ].join("\n");
+}
+
+test("check-response: the author report restates the audit and carries it in <details>", () => {
+  const audit = report("changes required", "author", "F-1 fixed → ready to merge", `## Blockers\n\n${red}\n## Open Decisions\n\n${yellow(2)}`);
+  const full = respond(audit);
+  const r = checkResponse(full);
+  assert.deepEqual([r.ok, r.verdict, r.label], [true, "changes required", "REQUEST CHANGES"], JSON.stringify(r.errors));
+  assert.equal(splitResponse(full).audit.split("\n")[0], SCOPE, "the audit starts at its Scope line");
+  assert.deepEqual(codes(checkResponse(audit)), ["A00"], "an audit without the author report");
+  assert.equal(checkResponse("Review not performed: no commits. Needed: commit the work.").ok, true, "not-performed stays one line");
+  assert.deepEqual(codes(checkResponse(full.replace("</details>\n", ""))), ["A07"], "unclosed appendix");
+  assert.deepEqual(codes(checkResponse(`${full}\nThanks!`)), ["A07"], "text after the appendix");
+  assert.deepEqual(codes(checkResponse(`Erika, aquí está.\n\n${full}`)), ["A01"], "preamble before section 1");
+  assert.deepEqual(codes(checkResponse(`<!-- author report -->\n${full}`)), [], "an HTML comment is not a preamble");
+  assert.ok(codes(checkResponse(full.replace("## 4. Riesgos", "## 5. Riesgos"))).includes("A01"), "sections out of order");
+});
+
+test("check-response: section 2 lists every audit finding with its marker and severity (A02, A03)", () => {
+  const audit = report("changes required", "author", "F-1 fixed → ready to merge", `${red}\n### ✅ F-2 — suspected leak\n\nOriginal hypothesis:\nx\n\nRefuting evidence:\ny\n`);
+  const full = respond(audit);
+  assert.deepEqual(codes(checkResponse(full)), []);
+  assert.deepEqual(codes(checkResponse(full.replace(/### ✅ F-2[^#]*/, ""))), ["A02"], "a ruled-out finding omitted");
+  assert.deepEqual(codes(checkResponse(full.replace("### 🔴 F-1 · Critical", "### 🔴 F-1 · High"))), ["A03"], "severity differs from the audit");
+  assert.deepEqual(codes(checkResponse(full.replace("### 🔴 F-1 · Critical", "### 🔴 F-1 · Low"))), ["A03"], "Low is never emitted");
+  assert.deepEqual(codes(checkResponse(full.replace("### 🔴 F-1 · Critical — title", "### F-1: title"))).sort(), ["A02", "A02"], "a heading out of form, so F-1 is missing");
+  assert.deepEqual(codes(checkResponse(respond(audit, { extra2: "\n### ⚪ F-9 · Medium — invented\n" }))), ["A02"], "a finding the audit does not hold");
+});
+
+test("check-response: section 5 repeats the audit checklist and section 6 maps the verdict (A04, A05)", () => {
+  const audit = report("changes required", "author", "F-1 fixed → ready to merge", red);
+  assert.deepEqual(codes(checkResponse(respond(audit, { items: [] }))), ["A05"], "checklist dropped");
+  assert.deepEqual(codes(checkResponse(respond(audit, { items: [...checklistItems(audit.split("\n")), "- [ ] [after-deploy] invented — anchor: flow x"] }))), ["A05"], "item not in the audit");
+  assert.deepEqual(codes(checkResponse(respond(audit, { label: "APPROVE" }))), ["A04"], "label contradicts the verdict");
+  assert.deepEqual(codes(checkResponse(respond(audit).replace(" (`changes required`)", ""))), ["A04"], "label without the verdict key");
+  const white = report("ready to merge", "merger", "Merge now.", "### ⚪ F-1 — paginate\n\nSeverity: Medium\n\nCertainty: Fact\n");
+  assert.equal(checkResponse(respond(white)).label, "APPROVE WITH SUGGESTIONS");
+  assert.equal(checkResponse(respond(report("ready to merge", "merger", "Merge now."))).label, "APPROVE");
+  assert.equal(reviewLabel("decision required"), "BLOCKED – PENDING VALIDATION");
+  assert.equal(reviewLabel("verification required"), "BLOCKED – PENDING VALIDATION");
+  assert.deepEqual(codes(checkResponse(respond(audit).replace("## 1. Resumen general\n", "## 1. Resumen general\n\nTu PR rompe el guard.\n"))), ["S01"], "second person in the author report");
+});
+
+test("check-response: supplied findings keep a disposition in section 2 (A06)", () => {
+  const provided = "## Provided Findings\n\n- EXT-1 → F-1\n";
+  const audit = report("changes required", "author", "F-1 fixed → ready to merge", `${red}\n${provided}`);
+  assert.deepEqual(codes(checkResponse(respond(audit, { extra2: "\n### Provided findings\n\n- EXT-1 → F-1\n" }), { external: ["EXT-1"] })), []);
+  assert.deepEqual(codes(checkResponse(respond(audit), { external: ["EXT-1"] })), ["A06"]);
+});
+
+test("check-response: the author template's sections and labels match the check", () => {
+  const tpl = fs.readFileSync(path.join(SKILL, "assets", "author-report-template.md"), "utf8").replace(/<!--[\s\S]*?-->/g, "");
+  assert.deepEqual([...tpl.matchAll(/^## (\d)\. /gm)].map((m) => m[1]).join(""), "123456");
+  assert.match(tpl, /\*\*<APPROVE \| APPROVE WITH SUGGESTIONS \| REQUEST CHANGES \| BLOCKED – PENDING VALIDATION>\*\* \(`<verdict key>`\)/);
+  assert.match(tpl, /^### 🔴 F-1 · <Critical \| High> — /m);
+  assert.match(tpl, /^<details>\n<summary>[^<]+<\/summary>\n[\s\S]*^<\/details>\s*$/m);
 });

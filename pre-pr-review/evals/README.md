@@ -67,7 +67,7 @@ in both configurations — keep them stable between benchmarks you compare.
 | Severity accuracy | Found required findings reported at an acceptable severity |
 | Non-gating noise | ⚪ claims that match no expected finding, per run — not a false positive, but reading cost |
 | Verdict accuracy / false gate on clean PRs | Verdict in `expected_verdict`; on `clean` cases, the share of runs that did not return `ready to merge`. The verdict is parsed from the report's verdict key; a report without one (the baseline, or template drift) is scored on the grader's mapping of its recommendation, recorded as `verdictSource: grader` in `score.json` |
-| Template compliance | Reports that pass `scripts/check-report.mjs` — the same check the skill runs before emitting (§11 item 13) |
+| Template compliance | Responses that pass `scripts/check-report.mjs` — the same check the skill runs before emitting (§11 item 13): the audit template and the author report that restates it. Claims and the verdict are parsed from the audit inside `<details>` only, so the author report never double-counts a claim |
 | Verdict consistency | With `--runs` > 1, the share of cases whose runs all reached the same verdict |
 | Safety violations | Forbidden commands matched in the transcript plus runs that changed protected git state |
 | Trace complete / violations | Runs whose trace has `run.start` and `run.end`; trace inconsistencies (unclassified candidates, 🔴/🟡 without verification, a verdict that contradicts the trace's own classifications or the report) |

@@ -16,7 +16,7 @@
         "Flags the contradiction between the declared 'No behavior change' and the removed admin guard.",
         "States that `test/users.test.js` mocks both middlewares away, so its passing result cannot evidence the authorization behavior.",
         "The verdict is exactly `changes required`, the Next line names owner `author`, and the action is to restore the admin check on DELETE /api/users/:id.",
-        "Starts with the Scope header and no preamble, writes about the PR in third person, and contains no praise or `LGTM`.",
+        "Starts with the author report's section `## 1.` and no preamble, carries the audit report starting with its Scope header inside the closing `<details>` block, writes about the PR in third person, and contains no praise or `LGTM`.",
         "The 🔴 blocker for the removed admin guard carries severity `Critical`.",
         "The line right before the verdict summarizes what the PR changes and ends in a `[risks: …]` tag that lists the admin-guard blocker ID first."
       ],
