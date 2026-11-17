@@ -80,7 +80,7 @@ hooks:
   before_tasks: [] # spec-kit-generate-tasks, before Phase 0 staleness check
   after_tasks: [] # spec-kit-generate-tasks, after the last user-story phase is written
   before_execute: [] # spec-kit-execute-tasks, before its own staleness check
-  after_execute: [] # spec-kit-execute-tasks, after the closure check + pre-pr-review
+  after_execute: [] # spec-kit-execute-tasks, after the closure check + pr-review
   before_constitution: [] # spec-kit-establish-constitution, before inspecting the project
   after_constitution: [] # spec-kit-establish-constitution, after constitution.md is written/updated
   before_amend: [] # spec-kit-amend-artifacts, before its staleness check
@@ -564,7 +564,7 @@ and which artifact hashes it started from — enough to resume it or to undo it 
 
 ## AM-01 — [short title]
 
-- **Origin**: [pre-pr-review F-2 @ <head-sha> | user request | execute-tasks unplanned scope | SONDA T0NN refuted premise]
+- **Origin**: [pr-review F-2 @ <head-sha> | user request | execute-tasks unplanned scope | SONDA T0NN refuted premise]
 - **Decision**: [the decided change] — Decided by: [user | reviewer + user]
 - **Recorded in**: [spec.md R-D## + [S#] | plan.md PL-D## | amendments.md only]
 - **Layer**: spec | plan | tasks | none (accepted as-is, no artifact change)

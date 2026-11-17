@@ -1,18 +1,18 @@
 #!/usr/bin/env node
-// Runs the pre-pr-review evals headlessly with Claude Code, with and without the skill, and measures
+// Runs the pr-review evals headlessly with Claude Code, with and without the skill, and measures
 // what matters: precision and recall of gating findings against each case's ground truth, verdict
 // accuracy (including false gates on clean PRs), assertion pass rate, read-only safety, and cost —
 // tokens, USD, wall time, turns, tool calls, sub-agents — plus the skill's own trace (SKILL.md §12).
 //
 //   node evals/run-evals.mjs [options]
 //     --cases a,b          cases to run (default: all in evals.json)
-//     --configs skill,baseline   skill = installed pre-pr-review; baseline = same model, skills disabled
+//     --configs skill,baseline   skill = installed pr-review; baseline = same model, skills disabled
 //     --runs N             runs per case and config (default 1); >1 measures verdict consistency
-//     --out DIR            output directory (default: $TMPDIR/pre-pr-review-evals/<timestamp>)
+//     --out DIR            output directory (default: $TMPDIR/pr-review-evals/<timestamp>)
 //     --model M            model under test (default: the CLI's default)
 //     --grader-model M     model for the semantic grader (default: sonnet)
 //     --effort LEVEL       effort for the model under test
-//     --invoke slash|natural   slash prefixes the prompt with /pre-pr-review (measures the skill);
+//     --invoke slash|natural   slash prefixes the prompt with /pr-review (measures the skill);
 //                          natural sends the prompt as is (also measures triggering). Default slash.
 //     --max-budget-usd X   per-run budget passed to the CLI (default 10)
 //     --timeout-min N      per-run timeout (default 40)
@@ -71,7 +71,7 @@ export function parseArgs(argv) {
 }
 
 export function claudeArgs(config, opts, prompt) {
-  const args = ["-p", config === "skill" && opts.invoke === "slash" ? `/pre-pr-review ${prompt}` : prompt];
+  const args = ["-p", config === "skill" && opts.invoke === "slash" ? `/pr-review ${prompt}` : prompt];
   // --strict-mcp-config with no --mcp-config: no MCP servers, so none can write into the fixture (e.g. .serena/).
   args.push("--output-format", "stream-json", "--verbose", "--no-session-persistence", "--strict-mcp-config");
   args.push("--permission-mode", "dontAsk", "--allowedTools", ALLOWED_TOOLS.join(","));
@@ -332,8 +332,8 @@ async function executeRun(job, opts) {
   const build = spawnSync("bash", [path.join(HERE, "build-fixture.sh"), path.join(HERE, "files", testCase.name), repo], { encoding: "utf8" });
   if (build.status !== 0) throw new Error(`fixture ${testCase.name}: ${build.stderr}`);
   fs.writeFileSync(path.join(dir, "git-before.json"), JSON.stringify(gitState(repo), null, 2));
-  const env = { ...process.env, PRE_PR_REVIEW_TRACE_DIR: path.join(dir, "trace") };
-  delete env.PRE_PR_REVIEW_TRACE;
+  const env = { ...process.env, PR_REVIEW_TRACE_DIR: path.join(dir, "trace") };
+  delete env.PR_REVIEW_TRACE;
   const args = claudeArgs(config, opts, testCase.prompt);
   fs.writeFileSync(path.join(dir, "command.json"), JSON.stringify({ cwd: repo, args }, null, 2));
   const r = await runClaude(args, { cwd: repo, env, timeoutMs: opts.timeoutMin * 60_000, stdoutFile: path.join(dir, "transcript.jsonl"), stderrFile: path.join(dir, "stderr.log") });
@@ -392,7 +392,7 @@ export function benchmarkMarkdown(b) {
     ["Turns / tool calls / sub-agents (mean)", (a) => `${fmt(a.turns)} / ${fmt(a.toolCalls)} / ${fmt(a.subagents)}`],
     ["Runs (errors)", (a) => `${a.runs} (${a.errors})`],
   ];
-  const lines = ["# pre-pr-review benchmark", "", `**Date**: ${b.meta.date}  `, `**Model**: ${b.meta.model ?? "CLI default"} · **grader**: ${b.meta.graderModel} · **invoke**: ${b.meta.invoke} · **runs per case**: ${b.meta.runs}  `, `**Skill under test**: \`${b.meta.skillDir}\` @ ${b.meta.skillCommit}  `, `**Grader cost**: ${fmt(b.meta.graderCostUsd, "usd")}`, ""];
+  const lines = ["# pr-review benchmark", "", `**Date**: ${b.meta.date}  `, `**Model**: ${b.meta.model ?? "CLI default"} · **grader**: ${b.meta.graderModel} · **invoke**: ${b.meta.invoke} · **runs per case**: ${b.meta.runs}  `, `**Skill under test**: \`${b.meta.skillDir}\` @ ${b.meta.skillCommit}  `, `**Grader cost**: ${fmt(b.meta.graderCostUsd, "usd")}`, ""];
   lines.push(`| Metric | ${configs.join(" | ")} |`, `| --- | ${configs.map(() => "---").join(" | ")} |`);
   for (const [label, key, kind] of rows) lines.push(`| ${label} | ${configs.map((c) => (typeof key === "function" ? key(b.configs[c]) : fmt(b.configs[c][key], kind))).join(" | ")} |`);
   lines.push("", "## Per case", "", "| Config | Case | Verdicts | Precision | Recall | FP | Missed | Assertions | Cost (mean) | Seconds (mean) |", "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
@@ -416,7 +416,7 @@ export function benchmarkMarkdown(b) {
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const cases = loadCases(opts.cases);
-  const out = opts.gradeOnly ?? opts.out ?? path.join(os.tmpdir(), "pre-pr-review-evals", new Date().toISOString().replace(/[:.]/g, "-"));
+  const out = opts.gradeOnly ?? opts.out ?? path.join(os.tmpdir(), "pr-review-evals", new Date().toISOString().replace(/[:.]/g, "-"));
   const jobs = [];
   for (const config of opts.configs) for (const testCase of cases) for (let k = 1; k <= opts.runs; k++) jobs.push({ config, testCase, k, dir: path.join(out, config, testCase.name, `run-${k}`) });
 
@@ -425,7 +425,7 @@ async function main() {
     if (!jobs.length) throw new Error(`no transcripts under ${out}`);
   } else {
     if (spawnSync("claude", ["--version"]).status !== 0) throw new Error("the `claude` CLI is not on PATH");
-    const installed = path.join(os.homedir(), ".claude", "skills", "pre-pr-review");
+    const installed = path.join(os.homedir(), ".claude", "skills", "pr-review");
     const real = (p) => (fs.existsSync(p) ? fs.realpathSync(p) : null);
     if (opts.configs.includes("skill") && real(installed) !== real(SKILL_DIR)) {
       console.error(`WARN: ${installed} is not this checkout (${SKILL_DIR}); the skill config tests the installed copy.`);

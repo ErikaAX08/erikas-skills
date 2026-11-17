@@ -130,7 +130,7 @@ next action, not a menu.
 | ------------------------------------------------- | -------------------------------------------------------- |
 | `verify-before-implement`                         | Confirming any fact before it enters an artifact or code |
 | `code-architecture-explainer`                     | Deriving and explaining the architectural model          |
-| `pre-pr-review`                                   | The final review over the integrated diff                |
+| `pr-review`                                   | The final review over the integrated diff                |
 | `git-commits`                                     | Commit messages and PR descriptions                      |
 | `code-documentation`                              | Documenting new code                                     |
 | `backend-api-standards` / `frontend-architecture` | Contract shape and layering, when active                 |

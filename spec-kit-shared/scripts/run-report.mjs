@@ -96,8 +96,8 @@ function signals(report, decisions, lintChecks, amendments) {
   for (const [file, n] of Object.entries(report.records)) {
     if (file === "spec.md" && n >= 4) add("spec-churn", `spec.md recorded ${n} times`, "Are these behavior changes? Check `layer` decisions against artifact-conventions § Layer Ownership; technical changes should not version the spec.");
   }
-  const specFromReview = amendments.filter((a) => a.layer === "spec" && /pre-pr-review/i.test(a.origin));
-  if (specFromReview.length >= 2) add("late-spec-defects", `${specFromReview.length} spec-layer amendments came from pre-pr-review (${specFromReview.map((a) => a.id).join(", ")})`, "Spec defects surface only at review: strengthen generate-spec Phase 7 checks and analyze-consistency Phase 9 for this kind of finding.");
+  const specFromReview = amendments.filter((a) => a.layer === "spec" && /pr-review/i.test(a.origin));
+  if (specFromReview.length >= 2) add("late-spec-defects", `${specFromReview.length} spec-layer amendments came from pr-review (${specFromReview.map((a) => a.id).join(", ")})`, "Spec defects surface only at review: strengthen generate-spec Phase 7 checks and analyze-consistency Phase 9 for this kind of finding.");
   const refuted = decisions.filter((d) => d.data.kind === "probe" && /refuted/i.test(String(d.data.value)));
   if (refuted.length) add("refuted-premise", `${refuted.length} probe(s) refuted a planned premise (${refuted.flatMap((d) => d.data.ids ?? []).join(", ") || "no IDs"})`, "Check whether the plan recorded these premises as executed (L15, generate-plan Rule 4) or correctly as assumption.");
   const readEvidence = decisions.filter((d) => d.data.kind === "evidence" && String(d.data.value) === "read");

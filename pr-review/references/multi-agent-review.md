@@ -1,6 +1,6 @@
 # Multi-Agent Review Protocol
 
-> Loaded by `pre-pr-review` after Phase 2 when the review runs in multi-agent mode. Defines who
+> Loaded by `pr-review` after Phase 2 when the review runs in multi-agent mode. Defines who
 > does what, what each agent receives, how candidate findings are verified before they are
 > believed, and how results are merged into a single verdict.
 

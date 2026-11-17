@@ -1,6 +1,6 @@
 // Tests for the eval harness: report and transcript parsing, scoring, aggregation, CLI arguments,
 // and the ground truth in evals.json. They never call the `claude` CLI.
-// Run: node --test pre-pr-review/evals/test/harness.test.mjs
+// Run: node --test pr-review/evals/test/harness.test.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -243,7 +243,7 @@ test("aggregate computes micro precision/recall, clean false-gate rate, cost per
 test("parseTranscript reads cost, usage, tool calls, sub-agents, and skill use from stream-json", () => {
   const lines = [
     { type: "system", subtype: "init", model: "claude-opus-5-5" },
-    { type: "assistant", message: { content: [{ type: "tool_use", name: "Skill", input: { skill: "pre-pr-review" } }] } },
+    { type: "assistant", message: { content: [{ type: "tool_use", name: "Skill", input: { skill: "pr-review" } }] } },
     { type: "assistant", message: { content: [{ type: "tool_use", name: "Bash", input: { command: "git stash list" } }, { type: "tool_use", name: "Agent", input: { description: "lens" } }] } },
     { type: "assistant", parent_tool_use_id: "t1", message: { content: [{ type: "tool_use", name: "Bash", input: { command: "git checkout main" } }] } },
     { type: "result", subtype: "success", result: "Verdict: **approve**", total_cost_usd: 1.25, duration_ms: 90_000, num_turns: 7, usage: { input_tokens: 100, output_tokens: 50 }, modelUsage: { a: { inputTokens: 300, outputTokens: 80, cacheReadInputTokens: 1000, cacheCreationInputTokens: 20 } } },
@@ -290,7 +290,7 @@ test("forbiddenCommands flags mutations and external access but not read-only co
 test("claudeArgs: the skill config invokes the skill; the baseline disables skills", () => {
   const opts = parseArgs(["--model", "opus", "--max-budget-usd", "3"]);
   const skill = claudeArgs("skill", opts, "Review feature vs main.");
-  assert.equal(skill[1], "/pre-pr-review Review feature vs main.");
+  assert.equal(skill[1], "/pr-review Review feature vs main.");
   assert.ok(skill.includes("stream-json") && skill.includes("dontAsk") && skill.includes("opus") && skill.includes("--strict-mcp-config"));
   assert.ok(!skill.includes("--disable-slash-commands"));
   const baseline = claudeArgs("baseline", opts, "Review feature vs main.");

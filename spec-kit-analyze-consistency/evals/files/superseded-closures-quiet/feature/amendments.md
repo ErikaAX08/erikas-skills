@@ -2,7 +2,7 @@
 
 ## AM-01 — 429 is ambiguous, not definitive
 
-- **Origin**: pre-pr-review F-2 @ 3a1f9c2
+- **Origin**: pr-review F-2 @ 3a1f9c2
 - **Decision**: map a provider 429 to the ambiguous outcome — Decided by: user
 - **Recorded in**: amendments.md only
 - **Layer**: tasks

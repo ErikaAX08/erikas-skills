@@ -150,7 +150,7 @@ Do not reimplement what the project already has.
 | -------------------------------------------------------- | -------------------------------------- |
 | Confirming any fact before it enters an artifact or code | `verify-before-implement`              |
 | Deriving and explaining the architectural model          | `code-architecture-explainer`          |
-| Reviewing the integrated diff before it ships            | `pre-pr-review`                        |
+| Reviewing the integrated diff before it ships            | `pr-review`                        |
 | Commit messages and PR descriptions                      | `git-commits`                          |
 | Documenting new code                                     | `code-documentation`                   |
 | API contract shape and response format                   | `backend-api-standards`                |
@@ -529,7 +529,7 @@ Run what applies, and read the actual output: unit tests, integration tests, reg
 contract tests, end-to-end tests, typecheck, lint, build, static analysis. Tests must assert
 behavior, not incidental implementation.
 
-Then run `pre-pr-review` over the accumulated diff as the final safety net — unconditionally, even
+Then run `pr-review` over the accumulated diff as the final safety net — unconditionally, even
 when every task's own validation passed. Commit messages come from `git-commits`.
 
 **Exit gate:** the Definition of Done below holds for every task in the wave.

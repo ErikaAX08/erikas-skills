@@ -99,7 +99,7 @@ test("run-report aggregates runs and raises each signal from its evidence", () =
   log(a, r2, "decision", "kind=verdict-route", "value=request changes", "rationale=F-2 to amend");
   start(feature("002-b"));
   fs.appendFileSync(path.join(feature("002-b"), "runs.jsonl"), "not json\n");
-  fs.writeFileSync(path.join(a, "amendments.md"), "# Amendments\n\n## AM-01 — x\n\n- **Origin**: pre-pr-review F-1\n- **Layer**: spec\n- **Status**: verified\n\n## AM-02 — y\n\n- **Origin**: pre-pr-review F-4\n- **Layer**: spec\n- **Status**: applied\n");
+  fs.writeFileSync(path.join(a, "amendments.md"), "# Amendments\n\n## AM-01 — x\n\n- **Origin**: pr-review F-1\n- **Layer**: spec\n- **Status**: verified\n\n## AM-02 — y\n\n- **Origin**: pr-review F-4\n- **Layer**: spec\n- **Status**: applied\n");
 
   const report = buildReport(root);
   assert.equal(report.runs.total, 5);

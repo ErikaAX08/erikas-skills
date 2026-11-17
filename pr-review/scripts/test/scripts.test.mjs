@@ -1,5 +1,5 @@
 // Tests for collect-diff.sh sizing, the review trace (trace.mjs), and trace-report.mjs.
-// Run: node --test pre-pr-review/scripts/test/scripts.test.mjs
+// Run: node --test pr-review/scripts/test/scripts.test.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -128,7 +128,7 @@ test("collect-diff --trace records a sizing event without changing the inventory
   const repo = fixture("migration-lock-prerequisite");
   const dir = tmp("ppr-trace-");
   const plain = collect(repo);
-  const traced = collect(repo, ["--trace", "pr-test-1", "main"], { PRE_PR_REVIEW_TRACE_DIR: dir });
+  const traced = collect(repo, ["--trace", "pr-test-1", "main"], { PR_REVIEW_TRACE_DIR: dir });
   assert.equal(traced.out, plain.out);
   const { events, malformed } = readTrace(tracePath(dir));
   assert.deepEqual(malformed, []);
@@ -141,7 +141,7 @@ test("collect-diff --trace records a sizing event without changing the inventory
 
 test("trace: run.start prints a run ID and events are validated", () => {
   const dir = tmp("ppr-trace-");
-  const env = { PRE_PR_REVIEW_TRACE_DIR: dir };
+  const env = { PR_REVIEW_TRACE_DIR: dir };
   const start = traceEvent(["run.start", "entry=A", "request=default"], { env });
   assert.equal(start.status, 0);
   assert.match(start.lines[0], /^RUN_ID=pr-\d{8}T\d{6}Z-[0-9a-f]{4}$/);
@@ -160,7 +160,7 @@ test("trace: run.start prints a run ID and events are validated", () => {
 
 test("trace: a supplied finding enters as a candidate with origin external", () => {
   const dir = tmp("ppr-trace-");
-  const env = { PRE_PR_REVIEW_TRACE_DIR: dir };
+  const env = { PR_REVIEW_TRACE_DIR: dir };
   const run = traceEvent(["run.start", "entry=B"], { env }).run;
   const candidate = (origin) => traceEvent(["candidate", "--run", run, "id=ext-1", "lens=release-and-ops", "proposed=red", "summary=x", `origin=${origin}`], { env }).status;
   assert.equal(candidate("external"), 0);
@@ -170,11 +170,11 @@ test("trace: a supplied finding enters as a candidate with origin external", () 
   assert.deepEqual(events.map((e) => [e.event, e.data.origin ?? e.data.severity ?? null]), [["run.start", null], ["candidate", "external"], ["classification", "Critical"]]);
 });
 
-test("trace: PRE_PR_REVIEW_TRACE=off writes nothing and succeeds", () => {
+test("trace: PR_REVIEW_TRACE=off writes nothing and succeeds", () => {
   const dir = tmp("ppr-trace-");
-  const r = traceEvent(["run.start", "entry=B"], { env: { PRE_PR_REVIEW_TRACE_DIR: dir, PRE_PR_REVIEW_TRACE: "off" } });
+  const r = traceEvent(["run.start", "entry=B"], { env: { PR_REVIEW_TRACE_DIR: dir, PR_REVIEW_TRACE: "off" } });
   assert.equal(r.status, 0);
-  assert.equal(r.lines[0], "TRACE: off (PRE_PR_REVIEW_TRACE)");
+  assert.equal(r.lines[0], "TRACE: off (PR_REVIEW_TRACE)");
   assert.equal(fs.existsSync(tracePath(dir)), false);
 });
 
@@ -188,7 +188,7 @@ test("trace: redaction masks contact data, tokens, and connection strings, and k
 
 // The first event must be run.start; its generated RUN_ID is used for the rest.
 function writeRun(dir, events) {
-  const env = { PRE_PR_REVIEW_TRACE_DIR: dir };
+  const env = { PR_REVIEW_TRACE_DIR: dir };
   let run = null;
   for (const [event, ...pairs] of events) {
     const r = traceEvent(event === "run.start" ? [event, ...pairs] : [event, "--run", run, ...pairs], { env });

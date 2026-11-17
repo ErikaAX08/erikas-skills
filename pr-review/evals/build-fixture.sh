@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a disposable git repository from an eval fixture so pre-pr-review runs against a real diff.
+# Builds a disposable git repository from an eval fixture so pr-review runs against a real diff.
 #
 # Fixture layout:
 #   base/                tree committed on `main`

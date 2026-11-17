@@ -10,7 +10,7 @@ let ROOT = REPO_ROOT;
 // heading or a moved file breaks those references silently, so validation checks both.
 // Feature artifacts (spec.md, plan.md, …) are not kit files: references into them are skipped.
 const ARTIFACTS = new Set(["spec.md", "plan.md", "tasks.md", "research.md", "data-model.md", "quickstart.md", "amendments.md", "state.json", "constitution.md"]);
-const PATH_RE = /`((?:spec-kit-[a-z-]+|pre-pr-review|verify-before-implement|references|assets|scripts|templates)\/[A-Za-z0-9._/-]+\.(?:md|mjs|sh|json))`/g;
+const PATH_RE = /`((?:spec-kit-[a-z-]+|pr-review|verify-before-implement|references|assets|scripts|templates)\/[A-Za-z0-9._/-]+\.(?:md|mjs|sh|json))`/g;
 // Shared scripts run from the user's project, where spec-kit-shared/ is not; commands must anchor
 // them at <skills-root>. Group 1 is the script path when anchored, undefined for a bare command.
 const SCRIPT_RE = /\bnode\s+(?:<skills-root>\/(spec-kit-shared\/[A-Za-z0-9._/-]+\.mjs)|spec-kit-shared\/)/g;

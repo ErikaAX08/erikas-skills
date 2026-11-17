@@ -180,7 +180,7 @@ every other agent. Full rules — write triggers, staleness, economy, what never
 | Explaining a module's internals in depth                | `code-architecture-explainer` |
 | Planning, decomposing, and delegating a change          | `brain-orchestrator`          |
 | Confirming a fact immediately before writing code       | `verify-before-implement`     |
-| Reviewing the resulting diff                            | `pre-pr-review`               |
+| Reviewing the resulting diff                            | `pr-review`               |
 | Commit messages · PR descriptions                       | `git-commits` · `create-pull-request` |
 | API contract shape · frontend layering                  | `backend-api-standards` · `frontend-architecture` |
 

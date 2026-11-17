@@ -24,11 +24,13 @@ importers:
 
   frontend-design: {}
 
+  gh-stack: {}
+
   git-commits: {}
 
   latex-academic-reports: {}
 
-  pre-pr-review: {}
+  pr-review: {}
 
   project-intelligence: {}
 

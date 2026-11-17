@@ -4,7 +4,7 @@
     {
       "id": 0,
       "name": "decision-required",
-      "prompt": "Every task in the active feature is done. Run the final gate. For the pre-pr-review step, use this result instead of running it: Verdict `decision required`, Next: **operations** — choose an option for F-1, then **product** for F-2. 🟡 F-1 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s — I accept this as-is, the sweep runs from the scheduler. 🟡 F-2 (This requires a product decision): R-AC02 shows the agent the provider's raw rejection reason, which can include internal provider codes — I have not decided this yet.",
+      "prompt": "Every task in the active feature is done. Run the final gate. For the pr-review step, use this result instead of running it: Verdict `decision required`, Next: **operations** — choose an option for F-1, then **product** for F-2. 🟡 F-1 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s — I accept this as-is, the sweep runs from the scheduler. 🟡 F-2 (This requires a product decision): R-AC02 shows the agent the provider's raw rejection reason, which can include internal provider codes — I have not decided this yet.",
       "expected_output": "The verdict is matched literally as `decision required`; F-1 is recorded through spec-kit-amend-artifacts as Layer none / accepted; F-2 is presented as an open product decision with options; the feature is not reported complete and nothing is marked verified while F-2 is undecided.",
       "files": ["evals/files/decision-required"],
       "assertions": [

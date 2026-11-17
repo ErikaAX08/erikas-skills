@@ -44,7 +44,7 @@
     "gh-stack/**/*",
     "git-commits/**/*",
     "latex-academic-reports/**/*",
-    "pre-pr-review/**/*",
+    "pr-review/**/*",
     "project-intelligence/**/*",
     "project-setup/**/*",
     "spec-kit/**/*",
@@ -62,9 +62,9 @@
     "install:skills": "node ./scripts/install.mjs",
     "validate": "node ./scripts/validate.mjs",
     "sync:versions": "node ./scripts/sync-versions.mjs",
-    "test": "node ./scripts/validate.mjs && pnpm run test:cli && pnpm run test:spec-kit && pnpm run test:pre-pr-review",
+    "test": "node ./scripts/validate.mjs && pnpm run test:cli && pnpm run test:spec-kit && pnpm run test:pr-review",
     "test:cli": "node --test scripts/test/install.test.mjs scripts/test/check-marketplace.test.mjs",
     "test:spec-kit": "node --test spec-kit-shared/scripts/test/scripts.test.mjs spec-kit-shared/scripts/test/runlog.test.mjs scripts/test/check-references.test.mjs",
-    "test:pre-pr-review": "node --test pre-pr-review/scripts/test/scripts.test.mjs pre-pr-review/evals/test/harness.test.mjs"
+    "test:pr-review": "node --test pr-review/scripts/test/scripts.test.mjs pr-review/evals/test/harness.test.mjs"
   }
 }

@@ -138,7 +138,7 @@ binding before any real operation:
 | `code-architecture-explainer`                     | Explaining one module's internals in depth        |
 | `brain-orchestrator`                              | Planning, decomposing, and delegating a change    |
 | `verify-before-implement`                         | Confirming a fact immediately before writing code |
-| `pre-pr-review`                                   | Reviewing the resulting diff                      |
+| `pr-review`                                   | Reviewing the resulting diff                      |
 | `git-commits` / `create-pull-request`             | Commit messages and PR descriptions               |
 | `backend-api-standards` / `frontend-architecture` | Contract shape and layering, when active          |
 

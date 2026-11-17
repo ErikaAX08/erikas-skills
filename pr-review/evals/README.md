@@ -1,4 +1,4 @@
-# pre-pr-review evals
+# pr-review evals
 
 `evals.json` follows the skill-creator schema used by `code-documentation/evals/evals.json`, plus
 the ground truth the harness scores against. Every case needs a real git repository, so `files[0]`
@@ -8,7 +8,7 @@ Three layers keep the skill measurable:
 
 | Layer | What it checks | How to run |
 | --- | --- | --- |
-| Script and harness tests | `collect-diff.sh` sizing and lenses, the trace, the trace report, report parsing, scoring | `pnpm run test:pre-pr-review` (also in CI); no model calls |
+| Script and harness tests | `collect-diff.sh` sizing and lenses, the trace, the trace report, report parsing, scoring | `pnpm run test:pr-review` (also in CI); no model calls |
 | Benchmark | The skill's behavior on every case, with and without the skill: precision, recall, verdicts, safety, cost | `node evals/run-evals.mjs` (calls the `claude` CLI; costs money) |
 | Review trace | Why each review decided what it did, across real reviews and eval runs | `node scripts/trace-report.mjs [<dir or runs.jsonl>]` |
 
@@ -40,8 +40,8 @@ For every case, configuration, and run the harness:
 1. Builds the fixture with `build-fixture.sh` (fixed author and dates, so SHAs are reproducible) and
    snapshots the protected git state: HEAD, branch, working tree and index, stash, refs, worktrees.
 2. Runs `claude -p` in the fixture with `--output-format stream-json`, `--permission-mode dontAsk`
-   and a fixed tool allowlist, a per-run budget, and `PRE_PR_REVIEW_TRACE_DIR` pointing at the run's
-   `trace/` directory. `skill` prefixes the prompt with `/pre-pr-review` (or, with
+   and a fixed tool allowlist, a per-run budget, and `PR_REVIEW_TRACE_DIR` pointing at the run's
+   `trace/` directory. `skill` prefixes the prompt with `/pr-review` (or, with
    `--invoke natural`, leaves it as is to also measure triggering); `baseline` runs the same model
    with `--disable-slash-commands`, so the difference between the two is the skill's contribution.
 3. Snapshots git again and parses the transcript: final report, verdict, findings and
@@ -54,7 +54,7 @@ For every case, configuration, and run the harness:
 5. Writes `benchmark.md` / `benchmark.json` (per configuration and per case) and
    `trace-report.md` (the skill's own trace across all runs).
 
-The skill config tests the copy installed at `~/.claude/skills/pre-pr-review`; the harness warns
+The skill config tests the copy installed at `~/.claude/skills/pr-review`; the harness warns
 when that is not this checkout. User-level `CLAUDE.md`, hooks, and other installed skills still load
 in both configurations — keep them stable between benchmarks you compare.
 
@@ -103,7 +103,7 @@ case is a smoke test; compare skill versions with `--runs 3` or more, because mo
 ## Building a fixture by hand
 
 ```bash
-bash evals/build-fixture.sh evals/files/<name> /tmp/pre-pr-review-evals/<name>
+bash evals/build-fixture.sh evals/files/<name> /tmp/pr-review-evals/<name>
 ```
 
 The script commits `base/` on `main`, commits `head/` on `feature` (when present), copies `local/`

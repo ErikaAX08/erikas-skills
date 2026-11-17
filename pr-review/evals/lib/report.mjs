@@ -1,4 +1,4 @@
-// Parses a pre-pr-review report and a `claude -p --output-format stream-json` transcript into the
+// Parses a pr-review report and a `claude -p --output-format stream-json` transcript into the
 // facts the scorer needs. Pure functions: no I/O.
 import { checkResponse, splitResponse, suppliedFindingIds, VERDICTS } from "../../scripts/check-report.mjs";
 
@@ -143,7 +143,7 @@ export function parseTranscript(lines) {
   const answered = results.filter((r) => typeof r.result === "string" && r.result.trim() && !r.is_error && !r.api_error);
   const result = answered.at(-1) ?? results.at(-1) ?? null;
   const maxOf = (k) => (results.length ? Math.max(...results.map((r) => r[k] ?? 0)) : null);
-  const skillCall = toolCalls.find((c) => c.name === "Skill" && /pre-pr-review/.test(JSON.stringify(c.input)));
+  const skillCall = toolCalls.find((c) => c.name === "Skill" && /pr-review/.test(JSON.stringify(c.input)));
   const usage = result?.usage ?? {};
   return {
     model: init?.model ?? null,

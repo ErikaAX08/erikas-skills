@@ -1,5 +1,5 @@
 ---
-name: pre-pr-review
+name: pr-review
 description: >-
   Review any pull request with evidence — your own local diff before opening it, or anyone's open PR before merging — to decide whether it is safe to merge and deploy. Use when asked to review a PR, audit a diff against develop/main or another base, find production risks, prepare a merge decision, or analyze changes involving backend, frontend, jobs, APIs, auth, databases, migrations, events, queues, external integrations, payments, feature flags, dependencies, infrastructure, CloudWatch, operational logs, or critical product flows. Produces an author-ready report (summary, findings by severity, mandatory validations, deploy risks, approval checklist, verdict) backed by an evidence audit and a post-deploy verification plan. Scales to a parallel multi-agent review with adversarial verification for large or high-risk diffs. Not for writing PR descriptions (use create-pull-request), style-only linting, generating code, executing post-deploy checks, or investigating production incidents.
 ---
@@ -827,8 +827,8 @@ Write events only with `node <skill>/scripts/trace.mjs <event> --run <RUN_ID> ke
 (lists are comma-separated; quote a pair whose value has spaces, e.g.
 `"verdict=changes required"`). Start with `trace.mjs run.start entry=<A|B>`, which prints the
 `RUN_ID` every later call passes; end with `run.end`, also when the run stops early. The
-trace goes to `$PRE_PR_REVIEW_TRACE_DIR/runs.jsonl` or `~/.local/state/pre-pr-review/runs.jsonl`
-— never inside the reviewed repository. `PRE_PR_REVIEW_TRACE=off` disables it (the commands
+trace goes to `$PR_REVIEW_TRACE_DIR/runs.jsonl` or `~/.local/state/pr-review/runs.jsonl`
+— never inside the reviewed repository. `PR_REVIEW_TRACE=off` disables it (the commands
 print `TRACE: off` and succeed); a failing trace call never blocks the review.
 
 | Event | Required data | Record it when |
