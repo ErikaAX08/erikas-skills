@@ -42,7 +42,7 @@ function prose(text) {
 // Indices of lines inside a matched code fence, markers included: an opener of three or more backticks or
 // tildes (a backtick opener's info string has no backtick) and a later closer of the same character, at least
 // as long, with nothing after it. An opener without a closer fences nothing, so it cannot hide what follows.
-export function fenceRanges(lines) {
+export function fenceRanges(lines, unclosed = []) {
   const ranges = [];
   for (let i = 0; i < lines.length; i++) {
     const o = lines[i].match(/^\s*(`{3,}|~{3,})(.*)$/);
@@ -50,7 +50,10 @@ export function fenceRanges(lines) {
     const close = new RegExp(`^\\s*\\${o[1][0]}{${o[1].length},}\\s*$`);
     let j = i + 1;
     while (j < lines.length && !close.test(lines[j])) j++;
-    if (j === lines.length) continue;
+    if (j === lines.length) {
+      unclosed.push(i);
+      continue;
+    }
     ranges.push([i, j]);
     i = j;
   }
@@ -172,14 +175,14 @@ export function checkReport(text, { traceEvents = null, external = null } = {}) 
   // Task-list lines inside fenced code (quoted evidence) are not checklist items.
   const fenced = fencedLines(lines);
   const items = lines.filter((l, i) => !fenced.has(i) && /^\s*[-*]\s+\[[ xX]\]\s/.test(l));
-  // A fence that swallows a section heading and then report structure (a checklist line or a finding heading)
-  // was left unclosed: CommonMark pairs it with a later fence, and everything between renders as code.
-  for (const [i, j] of fenceRanges(lines)) {
-    const h = lines.findIndex((l, k) => k > i && k < j && /^##\s/.test(l));
-    if (h < 0) continue;
-    if (lines.slice(h + 1, j).some((l) => /^\s*[-*]\s+\[[ xX]\]\s/.test(l) || /^###\s*(🔴|🟡|🚀|⚪|✅)/u.test(l))) {
-      err("C03", `the code fence opened on report line ${i + 1} runs past the section heading on line ${h + 1}; close the fence before the heading`);
-    }
+  // A fence that is never closed renders every later section as code (CommonMark), including the Checklist.
+  // A closed fence never raises C03, so quoting Markdown with headings stays valid; two fences that pair by
+  // accident cannot be told apart from an intentional quote and are a known limit.
+  const unclosed = [];
+  fenceRanges(lines, unclosed);
+  for (const i of unclosed) {
+    const h = lines.findIndex((l, k) => k > i && /^##\s/.test(l));
+    if (h >= 0) err("C03", `the code fence opened on report line ${i + 1} is never closed, so everything from the section heading on line ${h + 1} renders as code; close it`);
   }
   for (const l of items) {
     if (!/\[(before-merge|before-deploy|after-deploy)\]/.test(l) || !/anchor:\s*(F-\d+\b|still-open\s+\S|file\s+\S|flow\s+\S)/.test(l)) {

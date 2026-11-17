@@ -395,7 +395,7 @@ test("check-report: C01 and C02 accept emphasis, fenced evidence, and repeated d
   const fence = report("ready to merge", "merger", "Merge now.", "## Verified\n\n- The PR template gains a box:\n\n```md\n- [ ] I have tested this\n```\n");
   assert.deepEqual(codes(checkReport(fence)), [], "task-list lines inside fenced code are evidence, not checklist items");
   const open = report("ready to merge", "merger", "Merge now.", "## Verified\n\n- Evidence:\n\n```js\nconst x = 1;\n\n## Checklist\n\n- [ ] check the logs\n");
-  assert.deepEqual(codes(checkReport(open)), ["C02"], "an unclosed fence does not hide later items (AM-09)");
+  assert.deepEqual(codes(checkReport(open)).sort(), ["C02", "C03"], "an unclosed fence does not hide later items (AM-09) and is reported (AM-13)");
   const inline = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```foo``` is called twice.\n\n## Checklist\n\n- [ ] check the logs\n");
   assert.deepEqual(codes(checkReport(inline)), ["C02"], "inline triple-backtick code is not a fence (AM-09)");
   const after = (block) => codes(checkReport(report("ready to merge", "merger", "Merge now.", `## Checklist\n\n${block}\n\n- [ ] untagged\n`)));
@@ -406,9 +406,11 @@ test("check-report: C01 and C02 accept emphasis, fenced evidence, and repeated d
   assert.deepEqual(quoted("```diff {1}\n- [ ] x\n```"), [], "info string with attributes (AM-11)");
   const covered = report("changes required", "author", "F-1 fixed → ready to merge", "### 🔴 F-1 — x\n\nSeverity: High\n\nCertainty: Fact\n\n## Checklist\n\n```bash\n# reproduce\ncurl x\n```\n\n- [ ] [before-merge] fix — anchor: F-1\n");
   assert.deepEqual(codes(checkReport(covered)), [], "an item after a fenced # comment still covers its finding (AM-11)");
-  const crossing = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```diff\n+ x\n\n## Checklist\n\n- [ ] untagged\n\n## Operational Queries\n\n```sql\nselect 1;\n```\n");
-  assert.deepEqual(codes(checkReport(crossing)), ["C03"], "a fence left open across sections is reported (AM-12)");
-  assert.match(checkReport(crossing).errors[0].msg, /line \d+.*line \d+/);
+  const neverClosed = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```js\nconst a = 1;\n\n## Checklist\n\n- [ ] [after-deploy] watch the logs — anchor: flow checkout\n");
+  assert.deepEqual(codes(checkReport(neverClosed)), ["C03"], "a fence never closed before a section is reported (AM-13)");
+  assert.match(checkReport(neverClosed).errors[0].msg, /line \d+.*line \d+/);
+  const quotedTemplate = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```md\n## Checklist\n\n- [ ] I ran the tests\n```\n");
+  assert.deepEqual(codes(checkReport(quotedTemplate)), [], "a closed fence quoting a PR template is valid (AM-13)");
   assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "## Verified\n\n```md\n## Steps\n- a\n```\n"))), [], "a quoted heading inside a closed fence is not C03 (AM-12)");
   const deploy = (n) => `### 🚀 F-${n} — step ${n}\n\nSeverity: Medium\n\nCertainty: Fact\n`;
   const steps = (list) => codes(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (2 steps).", `${deploy(1)}\n${deploy(2)}\n## Checklist\n\n${list.join("\n")}\n`)));

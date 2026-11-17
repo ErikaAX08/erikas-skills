@@ -772,10 +772,13 @@ explaining them away:
     checks the template mechanically (Scope first, the Changes line with `[risks: …]` right
     before the verdict (H02), the verdict, owner, and outcome-map lines, finding headings and
     order, each finding's severity against its marker (F07), checklist coverage of every
-    🔴/🟡/`[prerequisite]`/🚀 and an anchor on every item (C01, C02), verdict-vs-findings precedence,
-    no second-person address,
+    🔴/🟡/`[prerequisite]`/🚀 and an anchor on every item (C01, C02), a code fence left open
+    before a later section (C03 — everything after it renders as code), verdict-vs-findings
+    precedence, no second-person address,
     the `Review not performed:` form, and the trace's verdict). Fix every `ERROR` and re-run
-    until it exits 0; only then emit the report. A host that cannot run Node applies the same
+    until it exits 0; only then emit the report. Exit 64 with `--external` means the file does
+    not follow `assets/supplied-findings.md` (a `findings` array with an `id` on every item):
+    normalize it and re-run. A host that cannot run Node applies the same
     checks by reading the script.
 
 ## 12. Run Trace
