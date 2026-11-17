@@ -1,0 +1,10 @@
+{
+  "name": "invoice-service",
+  "version": "2.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --check src/server.js && node --check src/invoice.js && node --check src/export.js",
+    "test": "node --test"
+  }
+}

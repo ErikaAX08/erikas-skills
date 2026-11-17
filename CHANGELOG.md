@@ -7,6 +7,12 @@ All notable changes to this project are documented here. Format based on [Keep a
 ### Added
 - `gh-stack` skill (`@erikaax/gh-stack`, in the `workflow` plugin): GitHub's skill for stacked PRs with the `gh stack` CLI extension, vendored unmodified from github/gh-stack under its MIT license.
 - Claude Code plugin marketplace (`.claude-plugin/marketplace.json`): the skills install as six plugins — `frontend`, `backend`, `workflow`, `docs`, `orchestration`, `spec-kit` — with `/plugin install <plugin> --marketplace ErikaAX08/erikas-skills`. `pnpm run validate` checks that every skill is in exactly one plugin.
+- `pre-pr-review` covers the full tech-lead review:
+  - Every report opens with what the PR changes and its main risks, and every finding carries a severity (`Critical`, `High`, `Medium`) derived from its category and impact, plus a concrete recommendation.
+  - Findings supplied by another reviewer or tool are verified like any other candidate and each one is accounted for: confirmed, discarded with a reason, or out of scope.
+  - Build and typecheck run alongside the tests, and environment configuration, containers, CI/CD pipelines, infrastructure as code, cloud permissions, external consumers, and missing kill switches are reviewed with evidence.
+  - Reports end with a rollback statement, required approvals from `CODEOWNERS` and branch protection, a checklist anchored to findings (before merge, before deploy, after deploy), and a written post-deploy verification plan that the skill never executes. A green CI run never refutes a deploy-order, configuration, real-data, or rollout risk on its own.
+  - Style, formatting, and naming stay out of scope (linters own them).
 
 ### Changed
 - Releases publish with npm trusted publishing (OIDC) instead of an `NPM_TOKEN` secret, after running the full test suite and checking that the tag matches the version; versions already on npm are skipped.

@@ -33,7 +33,7 @@ const ENUMS = {
   sizing: { R: ["yes", "no"], size: ["S", "M", "L", "none", "docs-only", "noise-only"], verification: ["standard", "independent"] },
   decision: { kind: DECISION_KINDS },
   agent: { role: ["reviewer", "verifier"], status: ["ok", "failed", "timeout", "rerun", "covered-by-lead"] },
-  candidate: { proposed: ["red", "yellow", "deploy", "white"], origin: ["reviewer", "lead", "out-of-lens", "side-note", "verifier"] },
+  candidate: { proposed: ["red", "yellow", "deploy", "white"], origin: ["reviewer", "lead", "out-of-lens", "side-note", "verifier", "external"] },
   verification: { status: ["CONFIRMED", "REFUTED", "UNRESOLVED"], by: ["verifier", "lead"] },
   classification: { category: CATEGORIES, rule: [0, 1, 2, 3, 4, 5, 6], certainty: ["Fact", "Inference", "Conditional risk", "Open question"], rubric: ["no-exposure", "bounded", "irreversible"] },
   check: { tool: ["test", "build", "typecheck", "lint", "probe", "ci", "query", "report", "other"] },

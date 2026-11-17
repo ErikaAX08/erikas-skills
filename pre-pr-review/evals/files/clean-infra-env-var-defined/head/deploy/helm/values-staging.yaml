@@ -1,0 +1,5 @@
+env:
+  PORT: "3000"
+  DATABASE_URL:
+    secretKeyRef: orders-db-url
+  PAYMENTS_URL: "https://payments.staging.internal.example"

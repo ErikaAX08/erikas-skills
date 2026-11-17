@@ -15,3 +15,5 @@ node_modules
 spec-kit/spec-kit-*
 spec-kit/spec-kit-shared
 spec-kit/README.md
+# spec-kit working artifacts (local only)
+.speckit/

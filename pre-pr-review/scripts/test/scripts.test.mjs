@@ -71,6 +71,49 @@ test("collect-diff: changed lines add lenses and raise R where the path cannot",
   assert.match(go.out, /flow-and-state: validate\.go \(default\)/);
 });
 
+// A two-commit repo: `base` files on main, `head` files on feature (checked out).
+function miniRepo(base, head) {
+  const dir = tmp("ppr-mini-");
+  const git = (...a) => assert.equal(spawnSync("git", a, { cwd: dir, encoding: "utf8" }).status, 0, a.join(" "));
+  const write = (files) => Object.entries(files).forEach(([f, c]) => { fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true }); fs.writeFileSync(path.join(dir, f), c); });
+  git("init", "-q", "-b", "main");
+  git("config", "user.email", "t@example.invalid");
+  git("config", "user.name", "t");
+  write(base);
+  git("add", "-A");
+  git("commit", "-q", "-m", "base");
+  git("switch", "-q", "-c", "feature");
+  write(head);
+  git("add", "-A");
+  git("commit", "-q", "-m", "change");
+  return dir;
+}
+
+test("collect-diff: an environment-variable read activates release-and-ops by content", () => {
+  const base = { "src/pay.js": "export const pay = () => 1;\n" };
+  const env = collect(miniRepo(base, { "src/pay.js": "const url = process.env.PAYMENTS_URL;\nexport const pay = () => url;\n" }));
+  assert.ok(env.lenses.includes("release-and-ops"), env.out);
+  assert.match(env.out, /release-and-ops: src\/pay\.js \(content\)/);
+  const py = collect(miniRepo({ "app/pay.py": "def pay():\n    return 1\n" }, { "app/pay.py": "import os\ndef pay():\n    return os.getenv('PAYMENTS_URL')\n" }));
+  assert.match(py.out, /release-and-ops: app\/pay\.py \(content\)/);
+  const plain = collect(miniRepo(base, { "src/pay.js": "export const pay = () => 2;\n" }));
+  assert.ok(!plain.lenses.includes("release-and-ops"), "no env read, no lens");
+});
+
+test("collect-diff: content signals keep an early match in a large file and cover more env reads (AM-06)", () => {
+  const big = `const url = process.env.PAYMENTS_URL;\n${Array.from({ length: 6000 }, (_, i) => `const v${i} = "aaaaaaaaaaaaaaaaaaaa";`).join("\n")}\n`;
+  const large = collect(miniRepo({ "src/keep.js": "export const k = 1;\n" }, { "src/big.js": big }));
+  assert.match(large.out, /release-and-ops: src\/big\.js \(content\)/, "a match on line 1 of >64 KB of changed text is not lost");
+  const reads = collect(miniRepo({ "src/keep.js": "export const k = 1;\n" }, { "cmd/main.go": "package main\nimport \"os\"\nvar u = os.Getenv(\"PAYMENTS_URL\")\n", "web/api.ts": "export const base = import.meta.env.VITE_API_URL;\n" }));
+  assert.match(reads.out, /release-and-ops: .*cmd\/main\.go \(content\)/, reads.out);
+  assert.match(reads.out, /web\/api\.ts \(content\)/, reads.out);
+});
+
+test("collect-diff: pull_request_target raises R even outside CI paths", () => {
+  const r = collect(miniRepo({ "tools/ci-template.yml": "on: [pull_request]\n" }, { "tools/ci-template.yml": "on: [pull_request_target]\n" }));
+  assert.match(r.R, /^yes \(deploy-coordination\)/, r.out);
+});
+
 test("collect-diff: a lockfile-only change activates release-and-ops and is not noise-only", () => {
   const r = collect(fixture("lockfile-install-script"));
   assert.deepEqual([r.H, r.N, r.lenses, r.fastPath], [0, 1, ["release-and-ops"], "none"]);
@@ -113,6 +156,18 @@ test("trace: run.start prints a run ID and events are validated", () => {
   const { events } = readTrace(tracePath(dir));
   assert.deepEqual(events.map((e) => e.event), ["run.start", "classification"]);
   assert.equal(events[1].data.rule, 2);
+});
+
+test("trace: a supplied finding enters as a candidate with origin external", () => {
+  const dir = tmp("ppr-trace-");
+  const env = { PRE_PR_REVIEW_TRACE_DIR: dir };
+  const run = traceEvent(["run.start", "entry=B"], { env }).run;
+  const candidate = (origin) => traceEvent(["candidate", "--run", run, "id=ext-1", "lens=release-and-ops", "proposed=red", "summary=x", `origin=${origin}`], { env }).status;
+  assert.equal(candidate("external"), 0);
+  assert.equal(candidate("caller"), 1, "origin enum");
+  assert.equal(traceEvent(["classification", "--run", run, "id=ext-1", "category=🔴", "rule=2", "finding=F-1", "severity=Critical"], { env }).status, 0);
+  const { events } = readTrace(tracePath(dir));
+  assert.deepEqual(events.map((e) => [e.event, e.data.origin ?? e.data.severity ?? null]), [["run.start", null], ["candidate", "external"], ["classification", "Critical"]]);
 });
 
 test("trace: PRE_PR_REVIEW_TRACE=off writes nothing and succeeds", () => {
@@ -208,15 +263,24 @@ test("trace-report: under R a 🔴 needs two verifications", () => {
 });
 
 const SCOPE = "Scope: repo `r` · entry point `A pre-PR` · base `main (confirmed via user)` · merge-base `a1` · head `b2` · PR `none` · date `2026-10-22`.";
-const report = (verdict, owner, unblocks, body = "") => `${SCOPE}\n\nVerdict: **${verdict}**\n\nNext: **${owner}** — act.\n\nUnblocks when: ${unblocks}\n\nReason: r.\n\n${body}`;
-const red = "### 🔴 F-1 — guard removed\n\nCertainty: Fact\n";
-const yellow = (n) => `### 🟡 F-${n} — breaking validation\n\nCertainty: Fact\n\nOptions:\nproduct — merging picks one.\n- A: version the endpoint → no client breaks → verdict \`changes required\`\n- B: accept the break → old clients get 400 → verdict \`ready to merge\`\n`;
+// Adds the checklist items C01 requires for the body's findings and prerequisites, unless the body has its own.
+const checklistFor = (body) => {
+  if (body.includes("## Checklist")) return "";
+  const merge = [...body.matchAll(/^### (?:🔴|🟡) (F-\d+)/gmu)].map((m) => `- [ ] [before-merge] resolve ${m[1]} — anchor: ${m[1]}`);
+  const pre = [...body.matchAll(/\[prerequisite\]\s*([^(:]+?)\s*(?:\(|:)/g)].map((m) => `- [ ] [before-merge] close ${m[1]} — anchor: still-open ${m[1]}`);
+  const deploy = [...body.matchAll(/^### 🚀 (F-\d+)/gmu)].map((m) => `- [ ] [before-deploy] run ${m[1]} — anchor: ${m[1]}`);
+  const all = [...merge, ...pre, ...deploy];
+  return all.length ? `\n## Checklist\n\n${all.join("\n")}\n` : "";
+};
+const report = (verdict, owner, unblocks, body = "", changes = "Changes: moves auth to the router. [risks: none]") => `${SCOPE}\n\n${changes}\n\nVerdict: **${verdict}**\n\nNext: **${owner}** — act.\n\nUnblocks when: ${unblocks}\n\nReason: r.\n\n${body}${checklistFor(body)}`;
+const red = "### 🔴 F-1 — guard removed\n\nSeverity: Critical\n\nCertainty: Fact\n";
+const yellow = (n) => `### 🟡 F-${n} — breaking validation\n\nSeverity: High\n\nCertainty: Fact\n\nOptions:\nproduct — merging picks one.\n- A: version the endpoint → no client breaks → verdict \`changes required\`\n- B: accept the break → old clients get 400 → verdict \`ready to merge\`\n`;
 const codes = (r) => r.errors.map((e) => e.code);
 
 test("check-report: a well-formed report passes and returns verdict and owner", () => {
   const r = checkReport(report("changes required", "author", "F-1 fixed → ready to merge", `## Blockers\n\n${red}\n## Open Decisions\n\n${yellow(2)}`));
   assert.deepEqual([r.ok, r.verdict, r.owner, r.findings.length], [true, "changes required", "author", 2], JSON.stringify(r.errors));
-  assert.equal(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (1 steps).", "### 🚀 F-1 — migrate after rollout\n\nCertainty: Fact\n")).ok, true);
+  assert.equal(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (1 steps).", "### 🚀 F-1 — migrate after rollout\n\nSeverity: Medium\n\nCertainty: Fact\n")).ok, true);
   assert.equal(checkReport("Review not performed: feature has no commits beyond main. Needed: commit the work on feature.").verdict, "not-performed");
 });
 
@@ -229,13 +293,130 @@ test("check-report: verdict, owner, and outcome-map errors", () => {
 });
 
 test("check-report: findings, preamble, voice, and not-performed form", () => {
-  const bad = report("changes required", "author", "F-1 → ready to merge", "### ⚪ F-2 — later\n\nCertainty: Fact\n\n### 🔴 F-1 — first\n\nCertainty: Conditional risk\n\n### 🟡 F-3 — choose\n\nCertainty: Fact\n- A: one\n");
+  const bad = report("changes required", "author", "F-1 → ready to merge", "### ⚪ F-2 — later\n\nSeverity: Medium\n\nCertainty: Fact\n\n### 🔴 F-1 — first\n\nSeverity: Critical\n\nCertainty: Conditional risk\n\n### 🟡 F-3 — choose\n\nSeverity: High\n\nCertainty: Fact\n- A: one\n");
   assert.deepEqual(codes(checkReport(bad)).sort(), ["F02", "F02", "F03", "F05", "F06"]);
   assert.ok(codes(checkReport(`# Pre-PR review\n\n${report("ready to merge", "merger", "Merge now.")}`)).includes("H01"));
   assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "You named the base, so your branch is fine."))), ["S01"]);
   assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "Tú nombraste la base."))), ["S01"]);
   assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "The test asserts `you` in a code span."))), []);
   assert.deepEqual(codes(checkReport("I didn't review anything. Review not performed: empty.")), ["R01"]);
+});
+
+test("check-report: the change summary with [risks: …] must precede the verdict (H02)", () => {
+  assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "", "Changes: moves auth to the router."))), ["H02"]);
+  assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "", "Sources consulted beyond the diff: none."))), ["H02"]);
+  assert.deepEqual(codes(checkReport(report("changes required", "author", "F-1 fixed → ready to merge", red, "Cambios: mueve auth al router. [risks: F-1]"))), []);
+});
+
+test("check-report: every actionable finding carries a severity consistent with its marker (F07)", () => {
+  const f = (marker, severity, n = 1) => `### ${marker} F-${n} — x\n\n${severity === null ? "" : `Severity: ${severity}\n\n`}Certainty: Fact\n`;
+  const ready = (body) => checkReport(report("ready to merge", "merger", "Merge now.", body));
+  const blocked = (body) => checkReport(report("changes required", "author", "F-1 fixed → ready to merge", body));
+  assert.deepEqual(codes(blocked(f("🔴", "Medium"))), ["F07"]);
+  assert.deepEqual(codes(ready(f("⚪", "Critical"))), ["F07"]);
+  assert.deepEqual(codes(ready(f("⚪", "Low"))), ["F07"]);
+  assert.deepEqual(codes(ready(f("⚪", null))), ["F07"]);
+  assert.deepEqual(codes(blocked(f("🔴", "Critical"))), []);
+  assert.deepEqual(codes(blocked(f("🔴", "High"))), []);
+  assert.deepEqual(codes(ready(f("🚀", "High"))), []);
+  assert.deepEqual(codes(ready(f("🚀", "Medium"))), []);
+  assert.deepEqual(codes(ready(f("⚪", "Medium"))), []);
+  assert.deepEqual(codes(ready("### ⚪ F-1 — x\n\nCertainty: Fact\n\nBounded risk or improvement: High traffic on /orders.\n\nSeverity: Medium\n")), [], "prose like `…: High traffic` is not a severity");
+  assert.deepEqual(codes(ready("### ✅ F-1 — refuted\n\nOriginal hypothesis: x\n")), [], "✅ carries no severity");
+});
+
+test("check-report: F07 reads only a severity value that stands alone on its line (AM-11)", () => {
+  const blocked = (body) => codes(checkReport(report("changes required", "author", "F-1 fixed → ready to merge", `### 🔴 F-1 — x\n\n${body}\n\nCertainty: Fact\n`)));
+  const ready = (body) => codes(checkReport(report("ready to merge", "merger", "Merge now.", `### ⚪ F-1 — x\n\n${body}\n\nCertainty: Fact\n`)));
+  assert.deepEqual(blocked("Severity: High."), [], "a final period is allowed");
+  assert.deepEqual(blocked("Severity: **Critical**"), []);
+  assert.deepEqual(blocked("Impact: High (3 tenants)"), ["F07"], "prose with a count is not a severity");
+  assert.deepEqual(blocked("Impact: High (all tenants)"), ["F07"], "prose with an annotation is not a severity");
+  assert.deepEqual(blocked("Exposure: High — public endpoint\n\nSeverity: Medium"), ["F07"], "the real Severity line is read");
+  assert.deepEqual(blocked("Severity: Critical (impact class 3)"), ["F07"], "annotated values are not accepted; the template shows the value alone");
+  assert.deepEqual(ready("Likelihood: Medium — rare"), ["F07"], "⚪ without a Severity line");
+  assert.deepEqual(ready("Impact: High (logs)\n\nSeverity: Medium"), [], "prose above a valid Severity line");
+});
+
+test("check-report: the template's Severity placeholders produce a passing report when filled", () => {
+  const tpl = fs.readFileSync(path.join(SKILL, "assets", "review-template.md"), "utf8");
+  const values = [...tpl.matchAll(/^Severity: <([^>]+)>$/gm)].map((m) => m[1]);
+  assert.deepEqual(values, ["Critical | High", "High | Medium", "High | Medium"], "placeholders list bare values only");
+});
+
+test("check-report: the CLI rejects a malformed --external file with a usage error (AM-12)", () => {
+  const dir = tmp("ppr-ext-");
+  const rep = path.join(dir, "r.md");
+  fs.writeFileSync(rep, report("changes required", "author", "F-1 fixed → ready to merge", red));
+  const run = (json) => {
+    const f = path.join(dir, `f${Math.random().toString(36).slice(2)}.json`);
+    fs.writeFileSync(f, JSON.stringify(json));
+    return spawnSync(process.execPath, [path.join(SKILL, "scripts", "check-report.mjs"), rep, "--external", f], { encoding: "utf8" }).status;
+  };
+  assert.equal(run([{ id: "EXT-1" }]), 64, "a bare array");
+  assert.equal(run({ items: [{ id: "EXT-1" }] }), 64, "another key");
+  assert.equal(run({ findings: [{ title: "t" }] }), 64, "an item without id");
+  assert.equal(run({ findings: [{ id: "EXT-1" }] }), 1, "a well-formed file still reaches E01");
+  assert.equal(run({ findings: [] }), 0, "an empty list has nothing to account for");
+});
+
+test("check-report: every supplied finding has a disposition line (E01)", () => {
+  const provided = "## Provided Findings\n\n- EXT-1 → F-1\n- EXT-2 → discarded: generic what-if with no activating condition\n- EXT-3 → out of scope: style\n";
+  const full = report("changes required", "author", "F-1 fixed → ready to merge", `${red}\n${provided}`);
+  assert.deepEqual(codes(checkReport(full, { external: ["EXT-1", "EXT-2", "EXT-3"] })), []);
+  const missing = checkReport(full.replace("- EXT-2 → discarded: generic what-if with no activating condition\n", ""), { external: ["EXT-1", "EXT-2", "EXT-3"] });
+  assert.deepEqual(codes(missing), ["E01"]);
+  assert.match(missing.errors[0].msg, /EXT-2/);
+  assert.deepEqual(codes(checkReport(full, { external: ["EXT-1.a"] })), ["E01"], "IDs are matched literally, not as patterns");
+  assert.deepEqual(codes(checkReport(full)), [], "without --external there is nothing to account for");
+  assert.deepEqual(codes(checkReport(full.replace("- EXT-1 → F-1", "- **EXT-1** → F-1"), { external: ["EXT-1"] })), [], "a bold ID still counts (AM-05)");
+});
+
+test("check-report: the checklist covers every blocking item and every item has an anchor (C01, C02)", () => {
+  const deploy = (n) => `### 🚀 F-${n} — step ${n}\n\nSeverity: Medium\n\nCertainty: Fact\n`;
+  const body = (list) => `${red}\n${deploy(2)}\n${deploy(3)}\n## Checklist\n\n${list.join("\n")}\n`;
+  const ok = ["- [ ] [before-merge] restore the guard — anchor: F-1", "- [ ] [before-deploy] migrate after rollout — anchor: F-2", "- [ ] [before-deploy] drop the column — anchor: F-3", "- [ ] [after-deploy] watch 403 rate on DELETE /users — anchor: flow delete-user"];
+  const run = (list) => codes(checkReport(report("changes required", "author", "F-1 fixed → ready to merge", body(list))));
+  assert.deepEqual(run(ok), []);
+  assert.deepEqual(run(ok.filter((l) => !l.includes("F-1"))), ["C01"], "🔴 without a before-merge item");
+  assert.deepEqual(run(ok.filter((l) => !l.includes("F-3"))), ["C01"], "🚀 without a before-deploy item");
+  assert.deepEqual(run([ok[0], ok[2], ok[1], ok[3]]), ["C01"], "🚀 items out of ID order");
+  assert.deepEqual(run([...ok, "- [ ] check the logs"]), ["C02"], "no group tag, no anchor");
+  assert.deepEqual(run([...ok, "- [ ] [after-deploy] check the logs"]), ["C02"], "no anchor");
+  const pre = report("verification required", "operations", "≥ 11 → ready to merge; < 11 → changes required", "## Still Open\n\n- [prerequisite] pg version (owner: **operations**): I could not verify it. Outcomes: ≥ 11 → ready to merge; < 11 → changes required.\n\n## Checklist\n\n- [ ] [before-merge] confirm the engine version — anchor: file infra/db.tf\n");
+  assert.deepEqual(codes(checkReport(pre)), ["C01"], "[prerequisite] without a still-open anchor");
+  assert.deepEqual(codes(checkReport(pre.replace("anchor: file infra/db.tf", "anchor: still-open pg version"))), []);
+});
+
+test("check-report: C01 and C02 accept emphasis, fenced evidence, and repeated deploy anchors (AM-05)", () => {
+  const pre = (name) => report("verification required", "operations", "≥ 11 → ready to merge; < 11 → changes required", `## Still Open\n\n- [prerequisite] ${name} (owner: **operations**): I could not verify it. Outcomes: ≥ 11 → ready to merge; < 11 → changes required.\n\n## Checklist\n\n- [ ] [before-merge] confirm the engine version — anchor: still-open pg version\n`);
+  assert.deepEqual(codes(checkReport(pre("**pg version**"))), [], "bold name");
+  assert.deepEqual(codes(checkReport(pre("`pg version`"))), [], "backticked name");
+  const fence = report("ready to merge", "merger", "Merge now.", "## Verified\n\n- The PR template gains a box:\n\n```md\n- [ ] I have tested this\n```\n");
+  assert.deepEqual(codes(checkReport(fence)), [], "task-list lines inside fenced code are evidence, not checklist items");
+  const open = report("ready to merge", "merger", "Merge now.", "## Verified\n\n- Evidence:\n\n```js\nconst x = 1;\n\n## Checklist\n\n- [ ] check the logs\n");
+  assert.deepEqual(codes(checkReport(open)).sort(), ["C02", "C03"], "an unclosed fence does not hide later items (AM-09) and is reported (AM-13)");
+  const inline = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```foo``` is called twice.\n\n## Checklist\n\n- [ ] check the logs\n");
+  assert.deepEqual(codes(checkReport(inline)), ["C02"], "inline triple-backtick code is not a fence (AM-09)");
+  const after = (block) => codes(checkReport(report("ready to merge", "merger", "Merge now.", `## Checklist\n\n${block}\n\n- [ ] untagged\n`)));
+  assert.deepEqual(after("```python\n# check\nprint(1)\n```"), ["C02"], "a # comment inside a closed fence does not hide later items (AM-11)");
+  assert.deepEqual(after("```md\n## Steps\n- a\n```"), ["C02"], "a quoted heading inside a fence does not hide later items (AM-11)");
+  const quoted = (block) => codes(checkReport(report("ready to merge", "merger", "Merge now.", `## Verified\n\n${block}\n`)));
+  assert.deepEqual(quoted("````md\n```\n- [ ] I have tested this\n```\n````"), [], "four-backtick fence (AM-11)");
+  assert.deepEqual(quoted("```diff {1}\n- [ ] x\n```"), [], "info string with attributes (AM-11)");
+  const covered = report("changes required", "author", "F-1 fixed → ready to merge", "### 🔴 F-1 — x\n\nSeverity: High\n\nCertainty: Fact\n\n## Checklist\n\n```bash\n# reproduce\ncurl x\n```\n\n- [ ] [before-merge] fix — anchor: F-1\n");
+  assert.deepEqual(codes(checkReport(covered)), [], "an item after a fenced # comment still covers its finding (AM-11)");
+  const neverClosed = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```js\nconst a = 1;\n\n## Checklist\n\n- [ ] [after-deploy] watch the logs — anchor: flow checkout\n");
+  assert.deepEqual(codes(checkReport(neverClosed)), ["C03"], "a fence never closed before a section is reported (AM-13)");
+  assert.match(checkReport(neverClosed).errors[0].msg, /line \d+.*line \d+/);
+  const quotedTemplate = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```md\n## Checklist\n\n- [ ] I ran the tests\n```\n");
+  assert.deepEqual(codes(checkReport(quotedTemplate)), [], "a closed fence quoting a PR template is valid (AM-13)");
+  assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "## Verified\n\n```md\n## Steps\n- a\n```\n"))), [], "a quoted heading inside a closed fence is not C03 (AM-12)");
+  const deploy = (n) => `### 🚀 F-${n} — step ${n}\n\nSeverity: Medium\n\nCertainty: Fact\n`;
+  const steps = (list) => codes(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (2 steps).", `${deploy(1)}\n${deploy(2)}\n## Checklist\n\n${list.join("\n")}\n`)));
+  assert.deepEqual(steps(["- [ ] [before-deploy] migrate — anchor: F-1", "- [ ] [before-deploy] roll out — anchor: F-2", "- [ ] [before-deploy] confirm DB_URL in production — anchor: F-1"]), [], "an environment check anchored to an earlier step");
+  assert.deepEqual(steps(["- [ ] [before-deploy] roll out — anchor: F-2", "- [ ] [before-deploy] migrate — anchor: F-1"]), ["C01"], "steps still follow their ID order");
+  assert.deepEqual(steps(["- [ ] [before-deploy] migrate — anchor: F-1"]), ["C01"], "a step without an item");
 });
 
 test("check-report: the trace must carry the report's verdict and owner", () => {

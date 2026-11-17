@@ -5,7 +5,7 @@
 // certainty labels, the [prerequisite] tag, the `Review not performed:` form — plus a
 // second-person scan in English and Spanish.
 //
-//   node check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--json]
+//   node check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--external <findings.json>] [--json]
 //     Exit 0 = no ERROR, 1 = at least one ERROR (each printed with its code), 64 = usage.
 import fs from "node:fs";
 import path from "node:path";
@@ -17,6 +17,10 @@ export const OWNERS = ["author", "merger", "product", "operations", "architectur
 const LEGACY = /\*\*\s*(request changes|approve with conditions|approve|do not approve until [^*]+ is verified)\s*\*\*/i;
 const MARKERS = ["🔴", "🟡", "🚀", "⚪", "✅"];
 const CERTAINTY = /:\s*\**\s*(Fact|Inference|Conditional risk|Open question)\b/;
+// A whole line `<label>: <value>` (an optional final period allowed), so prose such as "Impact: High traffic…"
+// or "Impact: High (3 tenants)" is never read as a severity. The template shows the value alone for that reason.
+const SEVERITY = /^[^:\n]{1,30}:\s*\**\s*(Critical|High|Medium|Low)\s*\**\s*\.?\s*$/m;
+const SEVERITY_FOR = { "🔴": ["Critical", "High"], "🟡": ["High", "Medium"], "🚀": ["High", "Medium"], "⚪": ["Medium"] };
 const OWNER_FOR = {
   "changes required": ["author"],
   "verification required": ["author", "operations"],
@@ -35,6 +39,39 @@ function prose(text) {
     .join("\n");
 }
 
+// Indices of lines inside a matched code fence, markers included: an opener of three or more backticks or
+// tildes (a backtick opener's info string has no backtick) and a later closer of the same character, at least
+// as long, with nothing after it. An opener without a closer fences nothing, so it cannot hide what follows.
+export function fenceRanges(lines, unclosed = []) {
+  const ranges = [];
+  for (let i = 0; i < lines.length; i++) {
+    const o = lines[i].match(/^\s*(`{3,}|~{3,})(.*)$/);
+    if (!o || (o[1][0] === "`" && o[2].includes("`"))) continue;
+    const close = new RegExp(`^\\s*\\${o[1][0]}{${o[1].length},}\\s*$`);
+    let j = i + 1;
+    while (j < lines.length && !close.test(lines[j])) j++;
+    if (j === lines.length) {
+      unclosed.push(i);
+      continue;
+    }
+    ranges.push([i, j]);
+    i = j;
+  }
+  return ranges;
+}
+
+export function fencedLines(lines) {
+  const inside = new Set();
+  for (const [i, j] of fenceRanges(lines)) for (let k = i; k <= j; k++) inside.add(k);
+  return inside;
+}
+
+// The supplied findings' IDs (assets/supplied-findings.md) as text, for E01; shared with the eval harness.
+export function suppliedFindingIds(json) {
+  const found = json?.findings;
+  return (Array.isArray(found) ? found : []).map((f) => String(f?.id ?? "").trim()).filter(Boolean);
+}
+
 export function expectedVerdict({ red, prerequisites, yellow }) {
   if (red) return "changes required";
   if (prerequisites) return "verification required";
@@ -42,7 +79,7 @@ export function expectedVerdict({ red, prerequisites, yellow }) {
   return "ready to merge";
 }
 
-export function checkReport(text, { traceEvents = null } = {}) {
+export function checkReport(text, { traceEvents = null, external = null } = {}) {
   const errors = [];
   const err = (code, msg) => errors.push({ code, msg });
   const t = text.replace(/\r\n/g, "\n").trim();
@@ -80,6 +117,8 @@ export function checkReport(text, { traceEvents = null } = {}) {
       owner = m[1];
       if (!OWNER_FOR[verdict].includes(owner)) err("V03", `owner \`${owner}\` does not act on \`${verdict}\` (expected ${OWNER_FOR[verdict].join(" or ")})`);
     }
+    const before = lines.slice(0, verdictLines[0].i).filter((l) => l.trim()).at(-1) ?? "";
+    if (!/\[risks:\s*[^\]\n]+\]/.test(before)) err("H02", "the line right before the verdict must be the change summary ending in `[risks: F-n, …]` or `[risks: none]`");
     const unblocks = after[1] ?? "";
     if (!/^[^:\n*]{1,30}:\s*\S/.test(unblocks)) err("V04", "the third header line must be `<Unblocks-when label>: <outcome map>`");
     else if (verdict !== "ready to merge" && !unblocks.includes("→")) err("V04", "a blocked verdict needs an outcome map: `<result> → <verdict>; …` for every blocking item");
@@ -105,6 +144,9 @@ export function checkReport(text, { traceEvents = null } = {}) {
       const c = f.body.match(CERTAINTY);
       if (!c) err("F04", `${f.id} has no certainty label (Fact | Inference | Conditional risk | Open question)`);
       else if (f.marker === "🔴" && !["Fact", "Inference"].includes(c[1])) err("F05", `${f.id} is 🔴 with certainty \`${c[1]}\`; a 🔴 requires Fact or Inference`);
+      const s = f.body.match(SEVERITY);
+      if (!s) err("F07", `${f.id} has no severity (${SEVERITY_FOR[f.marker].join(" | ")})`);
+      else if (!SEVERITY_FOR[f.marker].includes(s[1])) err("F07", `${f.id} is ${f.marker} with severity \`${s[1]}\`; expected ${SEVERITY_FOR[f.marker].join(" or ")} (Low is never emitted)`);
     }
     if (f.marker === "🟡") {
       const options = f.body.split("\n").filter((l) => /^\s*[-*]\s*[A-Z]:/.test(l));
@@ -122,6 +164,48 @@ export function checkReport(text, { traceEvents = null } = {}) {
   const count = (mk) => findings.filter((f) => f.marker === mk).length;
   const expected = expectedVerdict({ red: count("🔴"), prerequisites: prereqs.length, yellow: count("🟡") });
   if (verdict && verdict !== expected) err("V05", `verdict \`${verdict}\` contradicts the findings (${count("🔴")} 🔴, ${prereqs.length} [prerequisite], ${count("🟡")} 🟡 → \`${expected}\`)`);
+
+  // Every supplied finding (assets/supplied-findings.md) needs a disposition line: `- <id> → …`.
+  for (const id of external ?? []) {
+    const esc = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (!lines.some((l) => new RegExp(`^\\s*[-*]\\s+(?:\\*\\*)?\`?${esc}\`?(?:\\*\\*)?\\s*→\\s*\\S`).test(l))) err("E01", `supplied finding \`${id}\` has no disposition line (\`- ${id} → F-n | discarded: <reason> | out of scope: style\`)`);
+  }
+
+  // Checklist: `- [ ] [before-merge|before-deploy|after-deploy] <action> — anchor: <F-n | still-open <name> | file <path> | flow <name>>`.
+  // Task-list lines inside fenced code (quoted evidence) are not checklist items.
+  const fenced = fencedLines(lines);
+  const items = lines.filter((l, i) => !fenced.has(i) && /^\s*[-*]\s+\[[ xX]\]\s/.test(l));
+  // A fence that is never closed renders every later section as code (CommonMark), including the Checklist.
+  // A closed fence never raises C03, so quoting Markdown with headings stays valid; two fences that pair by
+  // accident cannot be told apart from an intentional quote and are a known limit.
+  const unclosed = [];
+  fenceRanges(lines, unclosed);
+  for (const i of unclosed) {
+    const h = lines.findIndex((l, k) => k > i && /^##\s/.test(l));
+    if (h >= 0) err("C03", `the code fence opened on report line ${i + 1} is never closed, so everything from the section heading on line ${h + 1} renders as code; close it`);
+  }
+  for (const l of items) {
+    if (!/\[(before-merge|before-deploy|after-deploy)\]/.test(l) || !/anchor:\s*(F-\d+\b|still-open\s+\S|file\s+\S|flow\s+\S)/.test(l)) {
+      err("C02", `checklist item without a group tag or an \`anchor:\` (F-n, still-open <name>, file <path>, flow <name>): ${l.trim().slice(0, 80)}`);
+    }
+  }
+  const anchored = (group) => items.filter((l) => l.includes(`[${group}]`)).map((l) => (l.match(/anchor:\s*(.+)$/) ?? [])[1] ?? "");
+  const merge = anchored("before-merge");
+  const hasF = (list, id) => list.some((a) => new RegExp(`^${id}\\b`).test(a.trim()));
+  for (const f of findings.filter((f) => f.marker === "🔴" || f.marker === "🟡")) {
+    if (!hasF(merge, f.id)) err("C01", `${f.id} (${f.marker}) has no \`[before-merge]\` checklist item anchored to it`);
+  }
+  for (const l of prereqs) {
+    const plain = (x) => x.replace(/[*`]/g, "").trim().toLowerCase();
+    const name = (l.match(/\[prerequisite\]\s*([^(:]+?)\s*(?:\(|:)/) ?? [])[1];
+    if (name && !merge.some((a) => /^still-open\s/.test(plain(a)) && plain(a).includes(plain(name)))) err("C01", `[prerequisite] \`${name}\` has no \`[before-merge]\` checklist item anchored as \`still-open ${name}\``);
+  }
+  const deploy = anchored("before-deploy").map((a) => (a.trim().match(/^F-(\d+)\b/) ?? [])[1]).filter(Boolean).map(Number);
+  const steps = findings.filter((f) => f.marker === "🚀").map((f) => f.n);
+  for (const n of steps) if (!deploy.includes(n)) err("C01", `F-${n} (🚀) has no \`[before-deploy]\` checklist item anchored to it`);
+  // Order is checked on the first item anchored to each 🚀; later items for the same step (environment checks) may follow anywhere.
+  const order = [...new Set(deploy.filter((n) => steps.includes(n)))];
+  if (order.some((n, k) => k && n < order[k - 1])) err("C01", "`[before-deploy]` items for 🚀 steps must follow their ID order");
 
   const p = prose(t);
   const second = p.match(/\b(you|your|yours|you're|yourself)\b/i) ?? p.match(/(?<![\p{L}])(tú|tu|tus|usted|ustedes|contigo)(?![\p{L}])/iu);
@@ -146,10 +230,10 @@ function finish({ errors, verdict, owner, findings, traceEvents }) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
-  const file = args.find((a, i) => !a.startsWith("--") && !["--trace", "--run"].includes(args[i - 1]));
+  const file = args.find((a, i) => !a.startsWith("--") && !["--trace", "--run", "--external"].includes(args[i - 1]));
   const opt = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
   if (!file) {
-    console.error("usage: check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--json]");
+    console.error("usage: check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--external <findings.json>] [--json]");
     process.exit(64);
   }
   const text = fs.readFileSync(file === "-" ? 0 : file, "utf8");
@@ -158,7 +242,18 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const run = opt("--run");
     traceEvents = readTrace(opt("--trace")).events.filter((e) => !run || e.run === run);
   }
-  const r = checkReport(text, { traceEvents });
+  let external = null;
+  if (opt("--external")) {
+    // The lead normalizes supplied findings to this shape (assets/supplied-findings.md); anything else is a usage error,
+    // so a malformed file can never turn E01 into a silent pass.
+    const json = JSON.parse(fs.readFileSync(opt("--external"), "utf8"));
+    if (!Array.isArray(json?.findings) || json.findings.some((f) => !String(f?.id ?? "").trim())) {
+      console.error('usage: --external needs {"findings": [{"id": "<id>", …}, …]} with an id on every item (assets/supplied-findings.md)');
+      process.exit(64);
+    }
+    external = suppliedFindingIds(json);
+  }
+  const r = checkReport(text, { traceEvents, external });
   if (args.includes("--json")) console.log(JSON.stringify(r, null, 2));
   else {
     for (const e of r.errors) console.log(`ERROR ${e.code}: ${e.msg}`);

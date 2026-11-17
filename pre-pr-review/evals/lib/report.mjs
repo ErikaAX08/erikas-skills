@@ -1,6 +1,6 @@
 // Parses a pre-pr-review report and a `claude -p --output-format stream-json` transcript into the
 // facts the scorer needs. Pure functions: no I/O.
-import { checkReport, VERDICTS } from "../../scripts/check-report.mjs";
+import { checkReport, suppliedFindingIds, VERDICTS } from "../../scripts/check-report.mjs";
 
 export const VERDICT_KEYS = VERDICTS;
 // Keys of the skill's earlier verdict set, read from older reports. `approve with conditions` has no
@@ -52,9 +52,21 @@ export function parsePrerequisites(text) {
   return out;
 }
 
-// Template compliance is exactly what the skill's own pre-emit check enforces (scripts/check-report.mjs).
-export function isTemplateCompliant(text) {
-  return checkReport(text).ok;
+// Template compliance is exactly what the skill's own pre-emit check enforces (scripts/check-report.mjs),
+// including E01 when the case supplied findings.
+export function isTemplateCompliant(text, external = null) {
+  return checkReport(text, { external }).ok;
+}
+
+// IDs of the findings a case supplies in a ```json block of its prompt (assets/supplied-findings.md), or null.
+export function suppliedIds(prompt) {
+  for (const m of String(prompt ?? "").matchAll(/```json\s*\n([\s\S]*?)```/g)) {
+    try {
+      const ids = suppliedFindingIds(JSON.parse(m[1])); // the same normalization as check-report.mjs --external
+      if (ids.length) return ids;
+    } catch {}
+  }
+  return null;
 }
 
 // The grader sometimes echoes a claim's title after its id ("F-1 SQL injection…"); key by the id.
@@ -63,12 +75,12 @@ export function claimKey(c) {
   return t.match(/^(?:F|P|X)-\d+/)?.[0] ?? t;
 }
 
-export function parseReport(text) {
+export function parseReport(text, { external = null } = {}) {
   const findings = parseFindings(text);
   const prerequisites = parsePrerequisites(text);
   return {
     verdict: parseVerdict(text),
-    templateCompliant: isTemplateCompliant(text),
+    templateCompliant: isTemplateCompliant(text, external),
     findings,
     prerequisites,
     // Ruled-out items are refuted suspicions, not claims; they are never scored.

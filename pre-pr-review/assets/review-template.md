@@ -1,7 +1,9 @@
 <!-- Required header, no preamble. Fill every <placeholder>; delete nothing structural. -->
-Scope: repo `<repo path>` · entry point `<A pre-PR | B pre-merge>` · base `<base ref> (confirmed via <method> | unconfirmed: detected via <method>)` · merge-base `<sha>` · head `<sha>` · PR `<number/link, state, draft?, CI <passing|failing|pending|none> | none (entry point A) | not resolved (<reason>)>` · issue `<link | none | not readable>` · local changes `<included, labeled local-only | excluded | none>` · worktree `<path, removed | none>` · date `<UTC>`.
+Scope: repo `<repo path>` · entry point `<A pre-PR | B pre-merge>` · base `<base ref> (confirmed via <method> | unconfirmed: detected via <method>)` · merge-base `<sha>` · head `<sha>` · PR `<number/link, state, draft?, CI <passing|failing|pending|none> | none (entry point A) | not resolved (<reason>)>` · issue `<link | none | not readable>` · local changes `<included, labeled local-only | excluded | none>` · worktree `<path, removed | none>` · approvals `<code owners and required reviews | none | not readable (<reason>)>` · date `<UTC>`.
 
 Sources consulted beyond the diff: <issue, logs, production queries, executed tests, base-branch files — or `none`>.
+
+Changes: <what the PR changes, by area or service, in one or two sentences, third person> [risks: <F-n of the highest-ranked findings, comma-separated | none>]
 
 Verdict: **<changes required | verification required | decision required | ready to merge>**
 
@@ -11,7 +13,9 @@ Unblocks when: <outcome map: `<result> → <verdict>; …` covering every blocki
 
 Reason: <one or two direct sentences, third person>.
 
-Method: size `<S | M | L | docs-only | noise-only>` (`H` = `<n>` source lines, `H_test` = `<t>`, noise `<m>` lines spot-checked) · mode `<single agent | multi-agent>` [override: <reason>] · lenses `<activated lenses>` [added: <lens: reason>] · candidates `<N>`: confirmed `<K>`, refuted `<J>`, unresolved `<L>` [· narrow-change exception: <test citation>] [· noise promoted: <paths>] [· Untrusted instruction ignored: <citation>] · trace `<RUN_ID | off>`.
+Rollback: <[rollback: safe] code-only revert is safe — <evidence> | [rollback: steps] revert needs the steps of F-n, … | [rollback: none-possible] F-n makes the change irreversible>
+
+Method: size `<S | M | L | docs-only | noise-only>` (`H` = `<n>` source lines, `H_test` = `<t>`, noise `<m>` lines spot-checked) · mode `<single agent | multi-agent>` [override: <reason>] · lenses `<activated lenses>` [added: <lens: reason>] · candidates `<N>`: confirmed `<K>`, refuted `<J>`, unresolved `<L>` [· narrow-change exception: <test citation>] [· noise promoted: <paths>] [· Untrusted instruction ignored: <citation>] · style: out of scope (linters) · trace `<RUN_ID | off>`.
 
 Coverage: lens traces `<lens → F-n | Verified | Still Open, one per activated lens>` · flows fully traced `<list>` · flows sampled `<list | none>` · invariants not applicable `<I-n, … | none>` · base drift `<none | overlapping files checked: outcome>` [· interactions `<pair: outcome, …>` (multi-agent)].
 
@@ -23,11 +27,14 @@ Coverage: lens traces `<lens → F-n | Verified | Still Open, one per activated 
 
 ## Blockers
 
-<!-- If none: write exactly `None — <one-line coverage claim, e.g. no reachable production/data/auth/contract breakage in the traced flows>`. -->
+<!-- Mandatory before merge. If none: write exactly `None — <one-line coverage claim, e.g. no reachable production/data/auth/contract breakage in the traced flows>`. -->
 
 ### 🔴 F-1 — <concrete title>
 
 Location: `path:line[-end] @ <sha> (base|head)` or `flow: <entry> → <exit>`
+
+<!-- Severity: Critical for impact class 1–3, High for 4–6 (SKILL.md Phase 7). Write the value alone on the line. -->
+Severity: <Critical | High>
 
 Certainty: <Fact | Inference>
 
@@ -51,11 +58,14 @@ Recommendation:
 
 ## Open Decisions
 
-<!-- If none: write exactly `None — <why no product/operations/architecture decision is pending>`. -->
+<!-- A decision is mandatory before merge. If none: write exactly `None — <why no product/operations/architecture decision is pending>`. -->
 
 ### 🟡 F-2 — <concrete title>
 
 Location: `path:line @ <sha> (head)` or `flow: <entry> → <exit>`
+
+<!-- Severity: High when ignoring the decision leads to impact class 1–3, otherwise Medium. Write the value alone on the line. -->
+Severity: <High | Medium>
 
 Certainty: <Fact | Inference | Conditional risk>
 
@@ -71,6 +81,9 @@ Impact:
 Refutation attempt:
 <what was checked to disprove the facts and why they stand>
 
+Evidence favors:
+<option letter — the cited evidence that supports it; the decider role still chooses>
+
 Options:
 <decider role (product|operations|architecture) — why merging would choose implicitly>
 - A: <option> → <consequence> → verdict `<changes required | ready to merge>`
@@ -78,11 +91,14 @@ Options:
 
 ## Deploy Plan
 
-<!-- Show whenever a 🚀 exists; omit otherwise. Steps run in ID order. -->
+<!-- Mandatory during deploy. Show whenever a 🚀 exists; omit otherwise. Steps run in ID order. -->
 
 ### 🚀 F-3 — <concrete title>
 
 Location: `path:line @ <sha> (head)` or `flow: <entry> → <exit>`
+
+<!-- Severity: High when skipping the step leads to impact class 1–3, otherwise Medium. Write the value alone on the line. -->
+Severity: <High | Medium>
 
 Certainty: <Fact | Inference | Conditional risk>
 
@@ -97,14 +113,21 @@ Rollback:
 
 ## Non-Blocking
 
+<!-- Suggestions; they never gate the merge. No style, formatting, naming, or readability items. -->
+
 ### ⚪ F-4 — <concrete title>
 
 Location: `path:line @ <sha> (head)`
+
+Severity: Medium
 
 Certainty: <Fact | Inference | Conditional risk>
 
 Bounded risk or improvement:
 <what, for whom, at most what cost; or the improvement with file-level pointer>
+
+Recommendation:
+<the concrete change: file, behavior>
 
 Close-out:
 <test, metric, verification, or follow-up that settles it without gating the merge>
@@ -119,8 +142,39 @@ Original hypothesis:
 Refuting evidence:
 <the cited fact that disproves it, with the fixed phrase `I was wrong: …` where a prior claim is corrected>
 
+## Provided Findings
+
+<!-- Show only when the caller supplied findings (assets/supplied-findings.md); omit otherwise. One line per supplied item, in input order. -->
+
+- <caller ID> → F-<n>
+- <caller ID> → discarded: <reason, e.g. generic what-if with no activating condition>
+- <caller ID> → out of scope: style
+
+## Checklist
+
+<!-- Always show. One line per item, derived from this review only; an item without an anchor is not written. Groups: [before-merge] every 🔴/🟡 (anchor: F-n), every [prerequisite] (anchor: still-open <short name>), missing applicable tests/builds, required approvals (anchor: file <owned path>); [before-deploy] every 🚀 in ID order and target-environment checks; [after-deploy] one per Post-Deploy Verification flow (anchor: flow <name>). -->
+
+- [ ] [before-merge] <action> — anchor: F-<n>
+- [ ] [before-merge] Approval from <code owner or required reviewer> — anchor: file <owned path>
+- [ ] [before-deploy] <ordered deploy action> — anchor: F-<n>
+- [ ] [after-deploy] <verify the flow per Post-Deploy Verification> — anchor: flow <name>
+
+## Post-Deploy Verification
+
+<!-- Show when at least one flow was traced. A plan for whoever deploys: the review never runs these checks. Only signals that exist in the code. A traced flow without any is a ⚪ observability finding only when it carries a 🔴/🟡/🚀 or is high-risk; otherwise list only its smoke test. -->
+
+### flow <name>
+
+- Health/endpoint: <check to call>
+- Success signal: <log line or metric> (`path:line @ <sha> (head)`)
+- Regression signal: <log line or metric> (`path:line @ <sha> (head)`)
+- Smoke test: <one step and its expected result>
+- Rollback criterion: if <signal> <condition> within <window> → revert
+
 ## Tests
 
+- Build: <command>, exit <n>, <duration> | `none — <failed Phase 6 condition, or no build command>`
+- Typecheck: <command>, exit <n>, <duration> | `none — <failed Phase 6 condition, or no typecheck command>`
 - Executed: <command, exit code, duration, result> (one line per run; or `none — <failed Phase 6 condition, and what would enable it>`)
 - Inspected: <relevant coverage with file::test citations; CI checks with status>
 - Missing: <concrete applicable cases with the risk each leaves open>

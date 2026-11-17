@@ -2,18 +2,23 @@
 // and the ground truth in evals.json. They never call the `claude` CLI.
 // Run: node --test pre-pr-review/evals/test/harness.test.mjs
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { claimKey, forbiddenCommands, isTemplateCompliant, parseReport, parseTranscript, parseVerdict, totalTokens } from "../lib/report.mjs";
+import { claimKey, forbiddenCommands, isTemplateCompliant, parseReport, parseTranscript, parseVerdict, suppliedIds, totalTokens } from "../lib/report.mjs";
 import { aggregate, scoreRun } from "../lib/score.mjs";
-import { benchmarkMarkdown, claudeArgs, parseArgs } from "../run-evals.mjs";
+import { benchmarkMarkdown, claudeArgs, graderPrompt, parseArgs } from "../run-evals.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+const writeTmp = (text) => { const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "ppr-ext-")), "f.json"); fs.writeFileSync(f, text); return f; };
 const EVALS = path.resolve(HERE, "..");
 
 const REPORT = `Scope: repo \`x\` · entry point \`A pre-PR\` · base \`main (confirmed via user)\` · merge-base \`a1\` · head \`b2\` · PR \`none\`
+
+Changes: moves requireAuth to router level. [risks: F-1]
 
 Verdict: **changes required**
 
@@ -29,11 +34,15 @@ Reason: the admin guard is gone.
 
 Location: \`src/routes/users.js:13 @ abc1234 (head)\`
 
+Severity: Critical
+
 Certainty: Fact
 
 ## Open Decisions
 
 ### 🟡 F-2 — Mocked middleware hides the guard
+
+Severity: High
 
 Certainty: Fact
 
@@ -45,9 +54,13 @@ Options:
 
 ### 🚀 F-3 — Run the migration after the rollout
 
+Severity: Medium
+
 Certainty: Fact
 
 ### ⚪ F-4 — Tests mock both middlewares
+
+Severity: Medium
 
 Certainty: Fact
 
@@ -59,6 +72,13 @@ Certainty: Fact
 
 - [prerequisite] pg version (owner: **operations**): I could not verify the production PostgreSQL version — run \`SHOW server_version;\`. Outcomes: ≥ 11 → ready to merge; < 11 → changes required.
 - Not a prerequisite item
+
+## Checklist
+
+- [ ] [before-merge] restore requireAdmin — anchor: F-1
+- [ ] [before-merge] choose how to test the middleware — anchor: F-2
+- [ ] [before-merge] confirm the engine version — anchor: still-open pg version
+- [ ] [before-deploy] run the migration after the rollout — anchor: F-3
 `;
 
 test("parseVerdict reads the bold verdict key in any report language", () => {
@@ -87,6 +107,30 @@ test("isTemplateCompliant is the skill's own pre-emit check", () => {
   assert.equal(isTemplateCompliant(REPORT), true);
   assert.equal(isTemplateCompliant("# Pre-PR review\n\n**Verdict: ready to merge.** Looks fine.\n"), false);
   assert.equal(isTemplateCompliant("Review not performed: empty diff. Needed: commits."), true);
+});
+
+test("template compliance checks supplied-finding dispositions when the case supplies findings (AM-07)", () => {
+  const spec = JSON.parse(fs.readFileSync(path.join(HERE, "..", "evals.json"), "utf8"));
+  const mixed = spec.evals.find((c) => c.name === "external-findings-mixed");
+  const ids = suppliedIds(mixed.prompt);
+  assert.deepEqual(ids, ["EXT-1", "EXT-2", "EXT-3"]);
+  assert.equal(suppliedIds(spec.evals.find((c) => c.name === "auth-guard-removed").prompt), null, "a case without supplied findings");
+  const provided = "\n## Provided Findings\n\n- EXT-1 → F-1\n- EXT-2 → discarded: claim about code outside this diff\n- EXT-3 → out of scope: style\n";
+  assert.equal(isTemplateCompliant(`${REPORT}${provided}`, ids), true, "all three dispositions");
+  assert.equal(isTemplateCompliant(`${REPORT}${provided.replace("- EXT-3 → out of scope: style\n", "")}`, ids), false, "EXT-3 has no disposition line");
+  assert.equal(parseReport(REPORT).templateCompliant, isTemplateCompliant(REPORT), "without supplied findings, scoring is unchanged");
+  assert.deepEqual(suppliedIds('```json\n{"findings":[{"id":1},{"id":""},{"id":"EXT-9"}]}\n```'), ["1", "EXT-9"], "IDs as text, like --external (AM-09)");
+  const json = { findings: [{ id: "EXT-1" }, { id: 2 }, { id: " EXT-3 " }] };
+  const viaCli = spawnSync(process.execPath, [path.join(HERE, "..", "..", "scripts", "check-report.mjs"), "-", "--external", writeTmp(JSON.stringify(json)), "--json"], { input: REPORT, encoding: "utf8" });
+  const missing = JSON.parse(viaCli.stdout).errors.filter((e) => e.code === "E01").map((e) => e.msg.match(/`([^`]+)`/)[1]);
+  assert.deepEqual(missing, suppliedIds(`\`\`\`json\n${JSON.stringify(json)}\n\`\`\``), "the CLI and the harness normalize supplied IDs the same way (AM-11)");
+  assert.equal(suppliedIds('```json\n{"findings":[{"id":null}]}\n```'), null, "the harness stays lenient where the CLI exits 64 (AM-12)");
+});
+
+test("the grader never extracts the post-deploy plan as a claim (AM-14)", () => {
+  const prompt = graderPrompt({ name: "c", prompt: "p", expected_output: "o", assertions: [], expected_findings: [] }, { toolCalls: [], finalText: REPORT }, parseReport(REPORT), { forbidden: [], gitChanged: false });
+  assert.match(prompt, /\[after-deploy\]` items and the Post-Deploy Verification section are a verification plan/);
+  assert.match(prompt, /never extract them, and never treat them as `deploy`/);
 });
 
 test("parseReport extracts findings by severity and prerequisite items as claims", () => {
