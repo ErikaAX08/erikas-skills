@@ -2,7 +2,9 @@
 // and the ground truth in evals.json. They never call the `claude` CLI.
 // Run: node --test pre-pr-review/evals/test/harness.test.mjs
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -11,6 +13,7 @@ import { aggregate, scoreRun } from "../lib/score.mjs";
 import { benchmarkMarkdown, claudeArgs, parseArgs } from "../run-evals.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+const writeTmp = (text) => { const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "ppr-ext-")), "f.json"); fs.writeFileSync(f, text); return f; };
 const EVALS = path.resolve(HERE, "..");
 
 const REPORT = `Scope: repo \`x\` · entry point \`A pre-PR\` · base \`main (confirmed via user)\` · merge-base \`a1\` · head \`b2\` · PR \`none\`
@@ -117,6 +120,10 @@ test("template compliance checks supplied-finding dispositions when the case sup
   assert.equal(isTemplateCompliant(`${REPORT}${provided.replace("- EXT-3 → out of scope: style\n", "")}`, ids), false, "EXT-3 has no disposition line");
   assert.equal(parseReport(REPORT).templateCompliant, isTemplateCompliant(REPORT), "without supplied findings, scoring is unchanged");
   assert.deepEqual(suppliedIds('```json\n{"findings":[{"id":1},{"id":""},{"id":"EXT-9"}]}\n```'), ["1", "EXT-9"], "IDs as text, like --external (AM-09)");
+  const json = { findings: [{ id: "EXT-1" }, { id: 2 }, { id: null }, { id: " EXT-3 " }] };
+  const viaCli = spawnSync(process.execPath, [path.join(HERE, "..", "..", "scripts", "check-report.mjs"), "-", "--external", writeTmp(JSON.stringify(json)), "--json"], { input: REPORT, encoding: "utf8" });
+  const missing = JSON.parse(viaCli.stdout).errors.filter((e) => e.code === "E01").map((e) => e.msg.match(/`([^`]+)`/)[1]);
+  assert.deepEqual(missing, suppliedIds(`\`\`\`json\n${JSON.stringify(json)}\n\`\`\``), "the CLI and the harness normalize supplied IDs the same way (AM-11)");
 });
 
 test("parseReport extracts findings by severity and prerequisite items as claims", () => {

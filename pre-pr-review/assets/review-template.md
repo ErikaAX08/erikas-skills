@@ -33,7 +33,8 @@ Coverage: lens traces `<lens → F-n | Verified | Still Open, one per activated 
 
 Location: `path:line[-end] @ <sha> (base|head)` or `flow: <entry> → <exit>`
 
-Severity: <Critical (impact class 1–3) | High (impact class 4–6)>
+<!-- Severity: Critical for impact class 1–3, High for 4–6 (SKILL.md Phase 7). Write the value alone on the line. -->
+Severity: <Critical | High>
 
 Certainty: <Fact | Inference>
 
@@ -63,7 +64,8 @@ Recommendation:
 
 Location: `path:line @ <sha> (head)` or `flow: <entry> → <exit>`
 
-Severity: <High (ignoring it leads to impact class 1–3) | Medium>
+<!-- Severity: High when ignoring the decision leads to impact class 1–3, otherwise Medium. Write the value alone on the line. -->
+Severity: <High | Medium>
 
 Certainty: <Fact | Inference | Conditional risk>
 
@@ -95,7 +97,8 @@ Options:
 
 Location: `path:line @ <sha> (head)` or `flow: <entry> → <exit>`
 
-Severity: <High (skipping it leads to impact class 1–3) | Medium>
+<!-- Severity: High when skipping the step leads to impact class 1–3, otherwise Medium. Write the value alone on the line. -->
+Severity: <High | Medium>
 
 Certainty: <Fact | Inference | Conditional risk>
 

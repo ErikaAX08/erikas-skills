@@ -325,25 +325,23 @@ test("check-report: every actionable finding carries a severity consistent with 
   assert.deepEqual(codes(ready("### ✅ F-1 — refuted\n\nOriginal hypothesis: x\n")), [], "✅ carries no severity");
 });
 
-test("check-report: F07 accepts a severity value followed by an annotation or a period (AM-05)", () => {
-  const blocked = (sev) => checkReport(report("changes required", "author", "F-1 fixed → ready to merge", `### 🔴 F-1 — x\n\nSeverity: ${sev}\n\nCertainty: Fact\n`));
-  assert.deepEqual(codes(blocked("Critical (impact class 3)")), []);
-  assert.deepEqual(codes(blocked("High.")), []);
-  assert.deepEqual(codes(blocked("High — impact class 5")), []);
-  assert.deepEqual(codes(blocked("Medium (impact class 6)")), ["F07"], "the annotated value is still checked against the marker");
-  const prose = checkReport(report("ready to merge", "merger", "Merge now.", "### ⚪ F-1 — x\n\nCertainty: Fact\n\nImpact: High traffic on checkout\n"));
-  assert.deepEqual(codes(prose), ["F07"], "prose such as `Impact: High traffic` is not a severity");
-});
-
-test("check-report: an annotated prose line never stands in for the Severity line (AM-09)", () => {
+test("check-report: F07 reads only a severity value that stands alone on its line (AM-11)", () => {
   const blocked = (body) => codes(checkReport(report("changes required", "author", "F-1 fixed → ready to merge", `### 🔴 F-1 — x\n\n${body}\n\nCertainty: Fact\n`)));
   const ready = (body) => codes(checkReport(report("ready to merge", "merger", "Merge now.", `### ⚪ F-1 — x\n\n${body}\n\nCertainty: Fact\n`)));
-  assert.deepEqual(blocked("Impact: High (all tenants)"), ["F07"], "🔴 without a Severity line");
-  assert.deepEqual(blocked("Exposure: High — public endpoint\n\nSeverity: Medium"), ["F07"], "the real Severity line is read, not the prose above it");
+  assert.deepEqual(blocked("Severity: High."), [], "a final period is allowed");
+  assert.deepEqual(blocked("Severity: **Critical**"), []);
+  assert.deepEqual(blocked("Impact: High (3 tenants)"), ["F07"], "prose with a count is not a severity");
+  assert.deepEqual(blocked("Impact: High (all tenants)"), ["F07"], "prose with an annotation is not a severity");
+  assert.deepEqual(blocked("Exposure: High — public endpoint\n\nSeverity: Medium"), ["F07"], "the real Severity line is read");
+  assert.deepEqual(blocked("Severity: Critical (impact class 3)"), ["F07"], "annotated values are not accepted; the template shows the value alone");
   assert.deepEqual(ready("Likelihood: Medium — rare"), ["F07"], "⚪ without a Severity line");
   assert.deepEqual(ready("Impact: High (logs)\n\nSeverity: Medium"), [], "prose above a valid Severity line");
-  assert.deepEqual(blocked("Severity: Critical (impact class 3)"), []);
-  assert.deepEqual(blocked("Severity: High."), []);
+});
+
+test("check-report: the template's Severity placeholders produce a passing report when filled", () => {
+  const tpl = fs.readFileSync(path.join(SKILL, "assets", "review-template.md"), "utf8");
+  const values = [...tpl.matchAll(/^Severity: <([^>]+)>$/gm)].map((m) => m[1]);
+  assert.deepEqual(values, ["Critical | High", "High | Medium", "High | Medium"], "placeholders list bare values only");
 });
 
 test("check-report: every supplied finding has a disposition line (E01)", () => {
@@ -384,6 +382,14 @@ test("check-report: C01 and C02 accept emphasis, fenced evidence, and repeated d
   assert.deepEqual(codes(checkReport(open)), ["C02"], "an unclosed fence does not hide later items (AM-09)");
   const inline = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```foo``` is called twice.\n\n## Checklist\n\n- [ ] check the logs\n");
   assert.deepEqual(codes(checkReport(inline)), ["C02"], "inline triple-backtick code is not a fence (AM-09)");
+  const after = (block) => codes(checkReport(report("ready to merge", "merger", "Merge now.", `## Checklist\n\n${block}\n\n- [ ] untagged\n`)));
+  assert.deepEqual(after("```python\n# check\nprint(1)\n```"), ["C02"], "a # comment inside a closed fence does not hide later items (AM-11)");
+  assert.deepEqual(after("```md\n## Steps\n- a\n```"), ["C02"], "a quoted heading inside a fence does not hide later items (AM-11)");
+  const quoted = (block) => codes(checkReport(report("ready to merge", "merger", "Merge now.", `## Verified\n\n${block}\n`)));
+  assert.deepEqual(quoted("````md\n```\n- [ ] I have tested this\n```\n````"), [], "four-backtick fence (AM-11)");
+  assert.deepEqual(quoted("```diff {1}\n- [ ] x\n```"), [], "info string with attributes (AM-11)");
+  const covered = report("changes required", "author", "F-1 fixed → ready to merge", "### 🔴 F-1 — x\n\nSeverity: High\n\nCertainty: Fact\n\n## Checklist\n\n```bash\n# reproduce\ncurl x\n```\n\n- [ ] [before-merge] fix — anchor: F-1\n");
+  assert.deepEqual(codes(checkReport(covered)), [], "an item after a fenced # comment still covers its finding (AM-11)");
   const deploy = (n) => `### 🚀 F-${n} — step ${n}\n\nSeverity: Medium\n\nCertainty: Fact\n`;
   const steps = (list) => codes(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (2 steps).", `${deploy(1)}\n${deploy(2)}\n## Checklist\n\n${list.join("\n")}\n`)));
   assert.deepEqual(steps(["- [ ] [before-deploy] migrate — anchor: F-1", "- [ ] [before-deploy] roll out — anchor: F-2", "- [ ] [before-deploy] confirm DB_URL in production — anchor: F-1"]), [], "an environment check anchored to an earlier step");

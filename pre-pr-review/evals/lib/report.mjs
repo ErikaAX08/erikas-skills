@@ -1,6 +1,6 @@
 // Parses a pre-pr-review report and a `claude -p --output-format stream-json` transcript into the
 // facts the scorer needs. Pure functions: no I/O.
-import { checkReport, VERDICTS } from "../../scripts/check-report.mjs";
+import { checkReport, suppliedFindingIds, VERDICTS } from "../../scripts/check-report.mjs";
 
 export const VERDICT_KEYS = VERDICTS;
 // Keys of the skill's earlier verdict set, read from older reports. `approve with conditions` has no
@@ -62,9 +62,7 @@ export function isTemplateCompliant(text, external = null) {
 export function suppliedIds(prompt) {
   for (const m of String(prompt ?? "").matchAll(/```json\s*\n([\s\S]*?)```/g)) {
     try {
-      const found = JSON.parse(m[1])?.findings;
-      // Same normalization as check-report.mjs --external: every ID as text, empty ones dropped.
-      const ids = (Array.isArray(found) ? found : []).map((f) => (f?.id == null ? "" : String(f.id).trim())).filter(Boolean);
+      const ids = suppliedFindingIds(JSON.parse(m[1])); // the same normalization as check-report.mjs --external
       if (ids.length) return ids;
     } catch {}
   }

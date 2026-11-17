@@ -17,12 +17,9 @@ export const OWNERS = ["author", "merger", "product", "operations", "architectur
 const LEGACY = /\*\*\s*(request changes|approve with conditions|approve|do not approve until [^*]+ is verified)\s*\*\*/i;
 const MARKERS = ["🔴", "🟡", "🚀", "⚪", "✅"];
 const CERTAINTY = /:\s*\**\s*(Fact|Inference|Conditional risk|Open question)\b/;
-// A `<label>: <value>` line whose value stands alone (optionally ending in a period), so prose such as
-// "Impact: High traffic…" is not read as a severity. Only when no such line exists, a value annotated
-// with its impact class (`High (impact class 4–6)`, `Critical — impact class 3`) counts, so an annotated
-// prose line ("Impact: High (all tenants)") never stands in for the Severity line.
+// A whole line `<label>: <value>` (an optional final period allowed), so prose such as "Impact: High traffic…"
+// or "Impact: High (3 tenants)" is never read as a severity. The template shows the value alone for that reason.
 const SEVERITY = /^[^:\n]{1,30}:\s*\**\s*(Critical|High|Medium|Low)\s*\**\s*\.?\s*$/m;
-const SEVERITY_ANNOTATED = /^[^:\n]{1,30}:\s*\**\s*(Critical|High|Medium|Low)\s*\**\s*(?:\(|—|–|-\s)[^\n]*[1-6][^\n]*$/m;
 const SEVERITY_FOR = { "🔴": ["Critical", "High"], "🟡": ["High", "Medium"], "🚀": ["High", "Medium"], "⚪": ["Medium"] };
 const OWNER_FOR = {
   "changes required": ["author"],
@@ -40,6 +37,30 @@ function prose(text) {
     .split("\n")
     .filter((l) => !/^\s*>/.test(l))
     .join("\n");
+}
+
+// Indices of lines inside a matched code fence, markers included: an opener of three or more backticks or
+// tildes (a backtick opener's info string has no backtick) and a later closer of the same character, at least
+// as long, with nothing after it. An opener without a closer fences nothing, so it cannot hide what follows.
+export function fencedLines(lines) {
+  const inside = new Set();
+  for (let i = 0; i < lines.length; i++) {
+    const o = lines[i].match(/^\s*(`{3,}|~{3,})(.*)$/);
+    if (!o || (o[1][0] === "`" && o[2].includes("`"))) continue;
+    const close = new RegExp(`^\\s*\\${o[1][0]}{${o[1].length},}\\s*$`);
+    let j = i + 1;
+    while (j < lines.length && !close.test(lines[j])) j++;
+    if (j === lines.length) continue;
+    for (let k = i; k <= j; k++) inside.add(k);
+    i = j;
+  }
+  return inside;
+}
+
+// The supplied findings' IDs (assets/supplied-findings.md) as text, for E01; shared with the eval harness.
+export function suppliedFindingIds(json) {
+  const found = json?.findings;
+  return (Array.isArray(found) ? found : []).map((f) => String(f?.id ?? "").trim()).filter(Boolean);
 }
 
 export function expectedVerdict({ red, prerequisites, yellow }) {
@@ -114,7 +135,7 @@ export function checkReport(text, { traceEvents = null, external = null } = {}) 
       const c = f.body.match(CERTAINTY);
       if (!c) err("F04", `${f.id} has no certainty label (Fact | Inference | Conditional risk | Open question)`);
       else if (f.marker === "🔴" && !["Fact", "Inference"].includes(c[1])) err("F05", `${f.id} is 🔴 with certainty \`${c[1]}\`; a 🔴 requires Fact or Inference`);
-      const s = f.body.match(SEVERITY) ?? f.body.match(SEVERITY_ANNOTATED);
+      const s = f.body.match(SEVERITY);
       if (!s) err("F07", `${f.id} has no severity (${SEVERITY_FOR[f.marker].join(" | ")})`);
       else if (!SEVERITY_FOR[f.marker].includes(s[1])) err("F07", `${f.id} is ${f.marker} with severity \`${s[1]}\`; expected ${SEVERITY_FOR[f.marker].join(" or ")} (Low is never emitted)`);
     }
@@ -143,12 +164,8 @@ export function checkReport(text, { traceEvents = null, external = null } = {}) 
 
   // Checklist: `- [ ] [before-merge|before-deploy|after-deploy] <action> — anchor: <F-n | still-open <name> | file <path> | flow <name>>`.
   // Task-list lines inside fenced code (quoted evidence) are not checklist items.
-  let fenced = false;
-  const items = lines.filter((l) => {
-    if (/^\s*(```|~~~)[\w-]*\s*$/.test(l)) fenced = !fenced;
-    else if (/^#{1,6}\s/.test(l)) fenced = false; // a report heading ends an unclosed fence, so later items are still checked
-    return !fenced && /^\s*[-*]\s+\[[ xX]\]\s/.test(l);
-  });
+  const fenced = fencedLines(lines);
+  const items = lines.filter((l, i) => !fenced.has(i) && /^\s*[-*]\s+\[[ xX]\]\s/.test(l));
   for (const l of items) {
     if (!/\[(before-merge|before-deploy|after-deploy)\]/.test(l) || !/anchor:\s*(F-\d+\b|still-open\s+\S|file\s+\S|flow\s+\S)/.test(l)) {
       err("C02", `checklist item without a group tag or an \`anchor:\` (F-n, still-open <name>, file <path>, flow <name>): ${l.trim().slice(0, 80)}`);
@@ -207,7 +224,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const run = opt("--run");
     traceEvents = readTrace(opt("--trace")).events.filter((e) => !run || e.run === run);
   }
-  const external = opt("--external") ? JSON.parse(fs.readFileSync(opt("--external"), "utf8")).findings.map((f) => String(f.id)) : null;
+  const external = opt("--external") ? suppliedFindingIds(JSON.parse(fs.readFileSync(opt("--external"), "utf8"))) : null;
   const r = checkReport(text, { traceEvents, external });
   if (args.includes("--json")) console.log(JSON.stringify(r, null, 2));
   else {
