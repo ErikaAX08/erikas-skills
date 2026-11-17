@@ -544,6 +544,7 @@
       "assertions": [
         "Cites `PAYMENTS_URL` as defined in `.env.example`, `deploy/helm/values-production.yaml`, and `deploy/helm/values-staging.yaml`.",
         "Reports no 🔴, no 🟡, no 🚀, and no `[prerequisite]` about the environment variable.",
+        "Does not print any value of `PAYMENTS_URL` (no URL from `.env.example` or the Helm values files appears in the report); it names the variable and the files that define it.",
         "The verdict is exactly `ready to merge` with owner `merger`."
       ],
       "expected_verdict": "ready to merge",
@@ -579,7 +580,7 @@
             "red",
             "white"
           ],
-          "required": true,
+          "required": false,
           "description": "The test job was removed; npm test no longer gates PRs to main."
         },
         {

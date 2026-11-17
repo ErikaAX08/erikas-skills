@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { claimKey, forbiddenCommands, isTemplateCompliant, parseReport, parseTranscript, parseVerdict, totalTokens } from "../lib/report.mjs";
+import { claimKey, forbiddenCommands, isTemplateCompliant, parseReport, parseTranscript, parseVerdict, suppliedIds, totalTokens } from "../lib/report.mjs";
 import { aggregate, scoreRun } from "../lib/score.mjs";
 import { benchmarkMarkdown, claudeArgs, parseArgs } from "../run-evals.mjs";
 
@@ -104,6 +104,18 @@ test("isTemplateCompliant is the skill's own pre-emit check", () => {
   assert.equal(isTemplateCompliant(REPORT), true);
   assert.equal(isTemplateCompliant("# Pre-PR review\n\n**Verdict: ready to merge.** Looks fine.\n"), false);
   assert.equal(isTemplateCompliant("Review not performed: empty diff. Needed: commits."), true);
+});
+
+test("template compliance checks supplied-finding dispositions when the case supplies findings (AM-07)", () => {
+  const spec = JSON.parse(fs.readFileSync(path.join(HERE, "..", "evals.json"), "utf8"));
+  const mixed = spec.evals.find((c) => c.name === "external-findings-mixed");
+  const ids = suppliedIds(mixed.prompt);
+  assert.deepEqual(ids, ["EXT-1", "EXT-2", "EXT-3"]);
+  assert.equal(suppliedIds(spec.evals.find((c) => c.name === "auth-guard-removed").prompt), null, "a case without supplied findings");
+  const provided = "\n## Provided Findings\n\n- EXT-1 → F-1\n- EXT-2 → discarded: claim about code outside this diff\n- EXT-3 → out of scope: style\n";
+  assert.equal(isTemplateCompliant(`${REPORT}${provided}`, ids), true, "all three dispositions");
+  assert.equal(isTemplateCompliant(`${REPORT}${provided.replace("- EXT-3 → out of scope: style\n", "")}`, ids), false, "EXT-3 has no disposition line");
+  assert.equal(parseReport(REPORT).templateCompliant, isTemplateCompliant(REPORT), "without supplied findings, scoring is unchanged");
 });
 
 test("parseReport extracts findings by severity and prerequisite items as claims", () => {

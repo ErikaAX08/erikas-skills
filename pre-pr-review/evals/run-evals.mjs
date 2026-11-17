@@ -34,7 +34,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildReport as buildTraceReport, summarizeRun, toMarkdown as traceMarkdown } from "../scripts/trace-report.mjs";
 import { readTrace } from "../scripts/lib/trace.mjs";
-import { claimKey, forbiddenCommands, parseReport, parseTranscript, totalTokens } from "./lib/report.mjs";
+import { claimKey, forbiddenCommands, parseReport, parseTranscript, suppliedIds, totalTokens } from "./lib/report.mjs";
 import { aggregate, perCase, scoreRun } from "./lib/score.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -169,7 +169,7 @@ function analyzeRun(dir, testCase, config) {
   const transcriptLines = fs.existsSync(path.join(dir, "transcript.jsonl")) ? fs.readFileSync(path.join(dir, "transcript.jsonl"), "utf8").split("\n") : [];
   const t = parseTranscript(transcriptLines);
   fs.writeFileSync(path.join(dir, "report.md"), t.finalText);
-  const report = parseReport(t.finalText);
+  const report = parseReport(t.finalText, { external: suppliedIds(testCase.prompt) });
   const before = readJson(path.join(dir, "git-before.json"));
   const after = readJson(path.join(dir, "git-after.json"));
   const forbidden = forbiddenCommands(t.toolCalls);
