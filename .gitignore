@@ -14,5 +14,6 @@ node_modules
 # spec-kit prepack artifacts (temporarily copied for publish)
 spec-kit/spec-kit-*
 spec-kit/spec-kit-shared
-spec-kit/README.md# spec-kit working artifacts (local only)
+spec-kit/README.md
+# spec-kit working artifacts (local only)
 .speckit/
