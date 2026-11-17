@@ -335,6 +335,17 @@ test("check-report: F07 accepts a severity value followed by an annotation or a 
   assert.deepEqual(codes(prose), ["F07"], "prose such as `Impact: High traffic` is not a severity");
 });
 
+test("check-report: an annotated prose line never stands in for the Severity line (AM-09)", () => {
+  const blocked = (body) => codes(checkReport(report("changes required", "author", "F-1 fixed → ready to merge", `### 🔴 F-1 — x\n\n${body}\n\nCertainty: Fact\n`)));
+  const ready = (body) => codes(checkReport(report("ready to merge", "merger", "Merge now.", `### ⚪ F-1 — x\n\n${body}\n\nCertainty: Fact\n`)));
+  assert.deepEqual(blocked("Impact: High (all tenants)"), ["F07"], "🔴 without a Severity line");
+  assert.deepEqual(blocked("Exposure: High — public endpoint\n\nSeverity: Medium"), ["F07"], "the real Severity line is read, not the prose above it");
+  assert.deepEqual(ready("Likelihood: Medium — rare"), ["F07"], "⚪ without a Severity line");
+  assert.deepEqual(ready("Impact: High (logs)\n\nSeverity: Medium"), [], "prose above a valid Severity line");
+  assert.deepEqual(blocked("Severity: Critical (impact class 3)"), []);
+  assert.deepEqual(blocked("Severity: High."), []);
+});
+
 test("check-report: every supplied finding has a disposition line (E01)", () => {
   const provided = "## Provided Findings\n\n- EXT-1 → F-1\n- EXT-2 → discarded: generic what-if with no activating condition\n- EXT-3 → out of scope: style\n";
   const full = report("changes required", "author", "F-1 fixed → ready to merge", `${red}\n${provided}`);
@@ -369,6 +380,10 @@ test("check-report: C01 and C02 accept emphasis, fenced evidence, and repeated d
   assert.deepEqual(codes(checkReport(pre("`pg version`"))), [], "backticked name");
   const fence = report("ready to merge", "merger", "Merge now.", "## Verified\n\n- The PR template gains a box:\n\n```md\n- [ ] I have tested this\n```\n");
   assert.deepEqual(codes(checkReport(fence)), [], "task-list lines inside fenced code are evidence, not checklist items");
+  const open = report("ready to merge", "merger", "Merge now.", "## Verified\n\n- Evidence:\n\n```js\nconst x = 1;\n\n## Checklist\n\n- [ ] check the logs\n");
+  assert.deepEqual(codes(checkReport(open)), ["C02"], "an unclosed fence does not hide later items (AM-09)");
+  const inline = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```foo``` is called twice.\n\n## Checklist\n\n- [ ] check the logs\n");
+  assert.deepEqual(codes(checkReport(inline)), ["C02"], "inline triple-backtick code is not a fence (AM-09)");
   const deploy = (n) => `### 🚀 F-${n} — step ${n}\n\nSeverity: Medium\n\nCertainty: Fact\n`;
   const steps = (list) => codes(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (2 steps).", `${deploy(1)}\n${deploy(2)}\n## Checklist\n\n${list.join("\n")}\n`)));
   assert.deepEqual(steps(["- [ ] [before-deploy] migrate — anchor: F-1", "- [ ] [before-deploy] roll out — anchor: F-2", "- [ ] [before-deploy] confirm DB_URL in production — anchor: F-1"]), [], "an environment check anchored to an earlier step");

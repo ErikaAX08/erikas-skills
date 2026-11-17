@@ -116,6 +116,7 @@ test("template compliance checks supplied-finding dispositions when the case sup
   assert.equal(isTemplateCompliant(`${REPORT}${provided}`, ids), true, "all three dispositions");
   assert.equal(isTemplateCompliant(`${REPORT}${provided.replace("- EXT-3 → out of scope: style\n", "")}`, ids), false, "EXT-3 has no disposition line");
   assert.equal(parseReport(REPORT).templateCompliant, isTemplateCompliant(REPORT), "without supplied findings, scoring is unchanged");
+  assert.deepEqual(suppliedIds('```json\n{"findings":[{"id":1},{"id":""},{"id":"EXT-9"}]}\n```'), ["1", "EXT-9"], "IDs as text, like --external (AM-09)");
 });
 
 test("parseReport extracts findings by severity and prerequisite items as claims", () => {

@@ -17,9 +17,12 @@ export const OWNERS = ["author", "merger", "product", "operations", "architectur
 const LEGACY = /\*\*\s*(request changes|approve with conditions|approve|do not approve until [^*]+ is verified)\s*\*\*/i;
 const MARKERS = ["🔴", "🟡", "🚀", "⚪", "✅"];
 const CERTAINTY = /:\s*\**\s*(Fact|Inference|Conditional risk|Open question)\b/;
-// A `<label>: <value>` line whose value stands alone or is followed only by a period or an annotation
-// (`(impact class 3)`, `— note`), so prose such as "Impact: High traffic…" is not read as a severity.
-const SEVERITY = /^[^:\n]{1,30}:\s*\**\s*(Critical|High|Medium|Low)\s*\**\s*(?:[.;]|(?:\(|—|–|-\s)[^\n]*)?\s*$/m;
+// A `<label>: <value>` line whose value stands alone (optionally ending in a period), so prose such as
+// "Impact: High traffic…" is not read as a severity. Only when no such line exists, a value annotated
+// with its impact class (`High (impact class 4–6)`, `Critical — impact class 3`) counts, so an annotated
+// prose line ("Impact: High (all tenants)") never stands in for the Severity line.
+const SEVERITY = /^[^:\n]{1,30}:\s*\**\s*(Critical|High|Medium|Low)\s*\**\s*\.?\s*$/m;
+const SEVERITY_ANNOTATED = /^[^:\n]{1,30}:\s*\**\s*(Critical|High|Medium|Low)\s*\**\s*(?:\(|—|–|-\s)[^\n]*[1-6][^\n]*$/m;
 const SEVERITY_FOR = { "🔴": ["Critical", "High"], "🟡": ["High", "Medium"], "🚀": ["High", "Medium"], "⚪": ["Medium"] };
 const OWNER_FOR = {
   "changes required": ["author"],
@@ -111,7 +114,7 @@ export function checkReport(text, { traceEvents = null, external = null } = {}) 
       const c = f.body.match(CERTAINTY);
       if (!c) err("F04", `${f.id} has no certainty label (Fact | Inference | Conditional risk | Open question)`);
       else if (f.marker === "🔴" && !["Fact", "Inference"].includes(c[1])) err("F05", `${f.id} is 🔴 with certainty \`${c[1]}\`; a 🔴 requires Fact or Inference`);
-      const s = f.body.match(SEVERITY);
+      const s = f.body.match(SEVERITY) ?? f.body.match(SEVERITY_ANNOTATED);
       if (!s) err("F07", `${f.id} has no severity (${SEVERITY_FOR[f.marker].join(" | ")})`);
       else if (!SEVERITY_FOR[f.marker].includes(s[1])) err("F07", `${f.id} is ${f.marker} with severity \`${s[1]}\`; expected ${SEVERITY_FOR[f.marker].join(" or ")} (Low is never emitted)`);
     }
@@ -142,7 +145,8 @@ export function checkReport(text, { traceEvents = null, external = null } = {}) 
   // Task-list lines inside fenced code (quoted evidence) are not checklist items.
   let fenced = false;
   const items = lines.filter((l) => {
-    if (/^\s*(```|~~~)/.test(l)) fenced = !fenced;
+    if (/^\s*(```|~~~)[\w-]*\s*$/.test(l)) fenced = !fenced;
+    else if (/^#{1,6}\s/.test(l)) fenced = false; // a report heading ends an unclosed fence, so later items are still checked
     return !fenced && /^\s*[-*]\s+\[[ xX]\]\s/.test(l);
   });
   for (const l of items) {

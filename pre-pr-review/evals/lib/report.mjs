@@ -62,7 +62,9 @@ export function isTemplateCompliant(text, external = null) {
 export function suppliedIds(prompt) {
   for (const m of String(prompt ?? "").matchAll(/```json\s*\n([\s\S]*?)```/g)) {
     try {
-      const ids = (JSON.parse(m[1]).findings ?? []).map((f) => f?.id).filter((id) => typeof id === "string" && id);
+      const found = JSON.parse(m[1])?.findings;
+      // Same normalization as check-report.mjs --external: every ID as text, empty ones dropped.
+      const ids = (Array.isArray(found) ? found : []).map((f) => (f?.id == null ? "" : String(f.id).trim())).filter(Boolean);
       if (ids.length) return ids;
     } catch {}
   }
