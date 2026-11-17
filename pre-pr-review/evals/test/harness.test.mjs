@@ -10,7 +10,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { claimKey, forbiddenCommands, isTemplateCompliant, parseReport, parseTranscript, parseVerdict, suppliedIds, totalTokens } from "../lib/report.mjs";
 import { aggregate, scoreRun } from "../lib/score.mjs";
-import { benchmarkMarkdown, claudeArgs, parseArgs } from "../run-evals.mjs";
+import { benchmarkMarkdown, claudeArgs, graderPrompt, parseArgs } from "../run-evals.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const writeTmp = (text) => { const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "ppr-ext-")), "f.json"); fs.writeFileSync(f, text); return f; };
@@ -125,6 +125,12 @@ test("template compliance checks supplied-finding dispositions when the case sup
   const missing = JSON.parse(viaCli.stdout).errors.filter((e) => e.code === "E01").map((e) => e.msg.match(/`([^`]+)`/)[1]);
   assert.deepEqual(missing, suppliedIds(`\`\`\`json\n${JSON.stringify(json)}\n\`\`\``), "the CLI and the harness normalize supplied IDs the same way (AM-11)");
   assert.equal(suppliedIds('```json\n{"findings":[{"id":null}]}\n```'), null, "the harness stays lenient where the CLI exits 64 (AM-12)");
+});
+
+test("the grader never extracts the post-deploy plan as a claim (AM-14)", () => {
+  const prompt = graderPrompt({ name: "c", prompt: "p", expected_output: "o", assertions: [], expected_findings: [] }, { toolCalls: [], finalText: REPORT }, parseReport(REPORT), { forbidden: [], gitChanged: false });
+  assert.match(prompt, /\[after-deploy\]` items and the Post-Deploy Verification section are a verification plan/);
+  assert.match(prompt, /never extract them, and never treat them as `deploy`/);
 });
 
 test("parseReport extracts findings by severity and prerequisite items as claims", () => {
