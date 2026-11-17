@@ -309,17 +309,17 @@ changed_lines() {
 # changes a permission guard, so the changed lines can add lenses and raise R.
 content_lenses() {
   local text="$1" out=""
-  if printf '%s' "$text" | grep -qE 'request\.(args|json|get_json|form|params|body|query|values)|req\.(body|params|query|headers)|@(app|bp|blueprint|router|api)\.(get|post|put|patch|delete|route)\b|\b(router|app)\.(get|post|put|patch|delete|use)\(|@(Get|Post|Put|Patch|Delete|Request)Mapping|requireAuth|requireAdmin|login_required|@PreAuthorize|authorize\('; then
+  if grep -qE 'request\.(args|json|get_json|form|params|body|query|values)|req\.(body|params|query|headers)|@(app|bp|blueprint|router|api)\.(get|post|put|patch|delete|route)\b|\b(router|app)\.(get|post|put|patch|delete|use)\(|@(Get|Post|Put|Patch|Delete|Request)Mapping|requireAuth|requireAdmin|login_required|@PreAuthorize|authorize\(' <<<"$text"; then
     out="$out contracts-and-access"
   fi
-  if printf '%s' "$text" | grep -qiE '\b(select .+ from|insert into|update [a-z_."]+ set|delete from|alter table|create table|drop (table|column)|order by)\b|\.(execute|executemany|raw|query)\('; then
+  if grep -qiE '\b(select .+ from|insert into|update [a-z_."]+ set|delete from|alter table|create table|drop (table|column)|order by)\b|\.(execute|executemany|raw|query)\(' <<<"$text"; then
     out="$out data-and-migrations"
   fi
-  if printf '%s' "$text" | grep -qE '\b(enqueue|publish|subscribe|consumer|producer|webhook|retry|retries|backoff|idempoten)'; then
+  if grep -qE '\b(enqueue|publish|subscribe|consumer|producer|webhook|retry|retries|backoff|idempoten)' <<<"$text"; then
     out="$out async-and-integrations"
   fi
   # A read of an environment variable must be defined in every environment the repo pins.
-  if printf '%s' "$text" | grep -qE 'process\.env\b|os\.getenv\(|os\.environ\b|System\.getenv\(|ENV\[|viper\.Get|Deno\.env\.get\(|std::env::var'; then
+  if grep -qE 'process\.env\b|os\.getenv\(|os\.environ\b|System\.getenv\(|ENV\[|viper\.Get|Deno\.env\.get\(|std::env::var|os\.Getenv\(|import\.meta\.env\b|\benv::var\(|\bgetenv\(|GetEnvironmentVariable\(' <<<"$text"; then
     out="$out release-and-ops"
   fi
   echo "${out# }"
@@ -327,13 +327,13 @@ content_lenses() {
 
 content_risk() {
   local text="$1"
-  if printf '%s' "$text" | grep -qE 'requireAdmin|requireAuth|isAdmin|hasRole|hasPermission|login_required|@PreAuthorize|authorize\(|password|passwd|bcrypt|jwt|session\[|set-cookie'; then
+  if grep -qE 'requireAdmin|requireAuth|isAdmin|hasRole|hasPermission|login_required|@PreAuthorize|authorize\(|password|passwd|bcrypt|jwt|session\[|set-cookie' <<<"$text"; then
     echo "auth-and-permissions"
-  elif printf '%s' "$text" | grep -qiE '\b(charge|refund|payment_intent|stripe|invoice)\b'; then
+  elif grep -qiE '\b(charge|refund|payment_intent|stripe|invoice)\b' <<<"$text"; then
     echo "payments-and-billing"
-  elif printf '%s' "$text" | grep -qiE '\b(api[_-]?key|secret|private[_-]?key|access[_-]?token)\b'; then
+  elif grep -qiE '\b(api[_-]?key|secret|private[_-]?key|access[_-]?token)\b' <<<"$text"; then
     echo "secrets-and-security"
-  elif printf '%s' "$text" | grep -qE 'pull_request_target'; then
+  elif grep -qE 'pull_request_target' <<<"$text"; then
     echo "deploy-coordination"
   fi
 }

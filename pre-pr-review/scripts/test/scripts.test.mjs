@@ -100,6 +100,15 @@ test("collect-diff: an environment-variable read activates release-and-ops by co
   assert.ok(!plain.lenses.includes("release-and-ops"), "no env read, no lens");
 });
 
+test("collect-diff: content signals keep an early match in a large file and cover more env reads (AM-06)", () => {
+  const big = `const url = process.env.PAYMENTS_URL;\n${Array.from({ length: 6000 }, (_, i) => `const v${i} = "aaaaaaaaaaaaaaaaaaaa";`).join("\n")}\n`;
+  const large = collect(miniRepo({ "src/keep.js": "export const k = 1;\n" }, { "src/big.js": big }));
+  assert.match(large.out, /release-and-ops: src\/big\.js \(content\)/, "a match on line 1 of >64 KB of changed text is not lost");
+  const reads = collect(miniRepo({ "src/keep.js": "export const k = 1;\n" }, { "cmd/main.go": "package main\nimport \"os\"\nvar u = os.Getenv(\"PAYMENTS_URL\")\n", "web/api.ts": "export const base = import.meta.env.VITE_API_URL;\n" }));
+  assert.match(reads.out, /release-and-ops: .*cmd\/main\.go \(content\)/, reads.out);
+  assert.match(reads.out, /web\/api\.ts \(content\)/, reads.out);
+});
+
 test("collect-diff: pull_request_target raises R even outside CI paths", () => {
   const r = collect(miniRepo({ "tools/ci-template.yml": "on: [pull_request]\n" }, { "tools/ci-template.yml": "on: [pull_request_target]\n" }));
   assert.match(r.R, /^yes \(deploy-coordination\)/, r.out);
@@ -316,6 +325,16 @@ test("check-report: every actionable finding carries a severity consistent with 
   assert.deepEqual(codes(ready("### ✅ F-1 — refuted\n\nOriginal hypothesis: x\n")), [], "✅ carries no severity");
 });
 
+test("check-report: F07 accepts a severity value followed by an annotation or a period (AM-05)", () => {
+  const blocked = (sev) => checkReport(report("changes required", "author", "F-1 fixed → ready to merge", `### 🔴 F-1 — x\n\nSeverity: ${sev}\n\nCertainty: Fact\n`));
+  assert.deepEqual(codes(blocked("Critical (impact class 3)")), []);
+  assert.deepEqual(codes(blocked("High.")), []);
+  assert.deepEqual(codes(blocked("High — impact class 5")), []);
+  assert.deepEqual(codes(blocked("Medium (impact class 6)")), ["F07"], "the annotated value is still checked against the marker");
+  const prose = checkReport(report("ready to merge", "merger", "Merge now.", "### ⚪ F-1 — x\n\nCertainty: Fact\n\nImpact: High traffic on checkout\n"));
+  assert.deepEqual(codes(prose), ["F07"], "prose such as `Impact: High traffic` is not a severity");
+});
+
 test("check-report: every supplied finding has a disposition line (E01)", () => {
   const provided = "## Provided Findings\n\n- EXT-1 → F-1\n- EXT-2 → discarded: generic what-if with no activating condition\n- EXT-3 → out of scope: style\n";
   const full = report("changes required", "author", "F-1 fixed → ready to merge", `${red}\n${provided}`);
@@ -325,6 +344,7 @@ test("check-report: every supplied finding has a disposition line (E01)", () => 
   assert.match(missing.errors[0].msg, /EXT-2/);
   assert.deepEqual(codes(checkReport(full, { external: ["EXT-1.a"] })), ["E01"], "IDs are matched literally, not as patterns");
   assert.deepEqual(codes(checkReport(full)), [], "without --external there is nothing to account for");
+  assert.deepEqual(codes(checkReport(full.replace("- EXT-1 → F-1", "- **EXT-1** → F-1"), { external: ["EXT-1"] })), [], "a bold ID still counts (AM-05)");
 });
 
 test("check-report: the checklist covers every blocking item and every item has an anchor (C01, C02)", () => {
@@ -341,6 +361,19 @@ test("check-report: the checklist covers every blocking item and every item has 
   const pre = report("verification required", "operations", "≥ 11 → ready to merge; < 11 → changes required", "## Still Open\n\n- [prerequisite] pg version (owner: **operations**): I could not verify it. Outcomes: ≥ 11 → ready to merge; < 11 → changes required.\n\n## Checklist\n\n- [ ] [before-merge] confirm the engine version — anchor: file infra/db.tf\n");
   assert.deepEqual(codes(checkReport(pre)), ["C01"], "[prerequisite] without a still-open anchor");
   assert.deepEqual(codes(checkReport(pre.replace("anchor: file infra/db.tf", "anchor: still-open pg version"))), []);
+});
+
+test("check-report: C01 and C02 accept emphasis, fenced evidence, and repeated deploy anchors (AM-05)", () => {
+  const pre = (name) => report("verification required", "operations", "≥ 11 → ready to merge; < 11 → changes required", `## Still Open\n\n- [prerequisite] ${name} (owner: **operations**): I could not verify it. Outcomes: ≥ 11 → ready to merge; < 11 → changes required.\n\n## Checklist\n\n- [ ] [before-merge] confirm the engine version — anchor: still-open pg version\n`);
+  assert.deepEqual(codes(checkReport(pre("**pg version**"))), [], "bold name");
+  assert.deepEqual(codes(checkReport(pre("`pg version`"))), [], "backticked name");
+  const fence = report("ready to merge", "merger", "Merge now.", "## Verified\n\n- The PR template gains a box:\n\n```md\n- [ ] I have tested this\n```\n");
+  assert.deepEqual(codes(checkReport(fence)), [], "task-list lines inside fenced code are evidence, not checklist items");
+  const deploy = (n) => `### 🚀 F-${n} — step ${n}\n\nSeverity: Medium\n\nCertainty: Fact\n`;
+  const steps = (list) => codes(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (2 steps).", `${deploy(1)}\n${deploy(2)}\n## Checklist\n\n${list.join("\n")}\n`)));
+  assert.deepEqual(steps(["- [ ] [before-deploy] migrate — anchor: F-1", "- [ ] [before-deploy] roll out — anchor: F-2", "- [ ] [before-deploy] confirm DB_URL in production — anchor: F-1"]), [], "an environment check anchored to an earlier step");
+  assert.deepEqual(steps(["- [ ] [before-deploy] roll out — anchor: F-2", "- [ ] [before-deploy] migrate — anchor: F-1"]), ["C01"], "steps still follow their ID order");
+  assert.deepEqual(steps(["- [ ] [before-deploy] migrate — anchor: F-1"]), ["C01"], "a step without an item");
 });
 
 test("check-report: the trace must carry the report's verdict and owner", () => {
