@@ -344,6 +344,22 @@ test("check-report: the template's Severity placeholders produce a passing repor
   assert.deepEqual(values, ["Critical | High", "High | Medium", "High | Medium"], "placeholders list bare values only");
 });
 
+test("check-report: the CLI rejects a malformed --external file with a usage error (AM-12)", () => {
+  const dir = tmp("ppr-ext-");
+  const rep = path.join(dir, "r.md");
+  fs.writeFileSync(rep, report("changes required", "author", "F-1 fixed → ready to merge", red));
+  const run = (json) => {
+    const f = path.join(dir, `f${Math.random().toString(36).slice(2)}.json`);
+    fs.writeFileSync(f, JSON.stringify(json));
+    return spawnSync(process.execPath, [path.join(SKILL, "scripts", "check-report.mjs"), rep, "--external", f], { encoding: "utf8" }).status;
+  };
+  assert.equal(run([{ id: "EXT-1" }]), 64, "a bare array");
+  assert.equal(run({ items: [{ id: "EXT-1" }] }), 64, "another key");
+  assert.equal(run({ findings: [{ title: "t" }] }), 64, "an item without id");
+  assert.equal(run({ findings: [{ id: "EXT-1" }] }), 1, "a well-formed file still reaches E01");
+  assert.equal(run({ findings: [] }), 0, "an empty list has nothing to account for");
+});
+
 test("check-report: every supplied finding has a disposition line (E01)", () => {
   const provided = "## Provided Findings\n\n- EXT-1 → F-1\n- EXT-2 → discarded: generic what-if with no activating condition\n- EXT-3 → out of scope: style\n";
   const full = report("changes required", "author", "F-1 fixed → ready to merge", `${red}\n${provided}`);
@@ -390,6 +406,10 @@ test("check-report: C01 and C02 accept emphasis, fenced evidence, and repeated d
   assert.deepEqual(quoted("```diff {1}\n- [ ] x\n```"), [], "info string with attributes (AM-11)");
   const covered = report("changes required", "author", "F-1 fixed → ready to merge", "### 🔴 F-1 — x\n\nSeverity: High\n\nCertainty: Fact\n\n## Checklist\n\n```bash\n# reproduce\ncurl x\n```\n\n- [ ] [before-merge] fix — anchor: F-1\n");
   assert.deepEqual(codes(checkReport(covered)), [], "an item after a fenced # comment still covers its finding (AM-11)");
+  const crossing = report("ready to merge", "merger", "Merge now.", "## Verified\n\n```diff\n+ x\n\n## Checklist\n\n- [ ] untagged\n\n## Operational Queries\n\n```sql\nselect 1;\n```\n");
+  assert.deepEqual(codes(checkReport(crossing)), ["C03"], "a fence left open across sections is reported (AM-12)");
+  assert.match(checkReport(crossing).errors[0].msg, /line \d+.*line \d+/);
+  assert.deepEqual(codes(checkReport(report("ready to merge", "merger", "Merge now.", "## Verified\n\n```md\n## Steps\n- a\n```\n"))), [], "a quoted heading inside a closed fence is not C03 (AM-12)");
   const deploy = (n) => `### 🚀 F-${n} — step ${n}\n\nSeverity: Medium\n\nCertainty: Fact\n`;
   const steps = (list) => codes(checkReport(report("ready to merge", "merger", "Merge now; deploy with the Deploy Plan (2 steps).", `${deploy(1)}\n${deploy(2)}\n## Checklist\n\n${list.join("\n")}\n`)));
   assert.deepEqual(steps(["- [ ] [before-deploy] migrate — anchor: F-1", "- [ ] [before-deploy] roll out — anchor: F-2", "- [ ] [before-deploy] confirm DB_URL in production — anchor: F-1"]), [], "an environment check anchored to an earlier step");

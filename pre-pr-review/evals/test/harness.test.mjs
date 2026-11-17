@@ -120,10 +120,11 @@ test("template compliance checks supplied-finding dispositions when the case sup
   assert.equal(isTemplateCompliant(`${REPORT}${provided.replace("- EXT-3 → out of scope: style\n", "")}`, ids), false, "EXT-3 has no disposition line");
   assert.equal(parseReport(REPORT).templateCompliant, isTemplateCompliant(REPORT), "without supplied findings, scoring is unchanged");
   assert.deepEqual(suppliedIds('```json\n{"findings":[{"id":1},{"id":""},{"id":"EXT-9"}]}\n```'), ["1", "EXT-9"], "IDs as text, like --external (AM-09)");
-  const json = { findings: [{ id: "EXT-1" }, { id: 2 }, { id: null }, { id: " EXT-3 " }] };
+  const json = { findings: [{ id: "EXT-1" }, { id: 2 }, { id: " EXT-3 " }] };
   const viaCli = spawnSync(process.execPath, [path.join(HERE, "..", "..", "scripts", "check-report.mjs"), "-", "--external", writeTmp(JSON.stringify(json)), "--json"], { input: REPORT, encoding: "utf8" });
   const missing = JSON.parse(viaCli.stdout).errors.filter((e) => e.code === "E01").map((e) => e.msg.match(/`([^`]+)`/)[1]);
   assert.deepEqual(missing, suppliedIds(`\`\`\`json\n${JSON.stringify(json)}\n\`\`\``), "the CLI and the harness normalize supplied IDs the same way (AM-11)");
+  assert.equal(suppliedIds('```json\n{"findings":[{"id":null}]}\n```'), null, "the harness stays lenient where the CLI exits 64 (AM-12)");
 });
 
 test("parseReport extracts findings by severity and prerequisite items as claims", () => {
