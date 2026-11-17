@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-// Mechanical check of a review report against assets/review-template.md and SKILL.md Phase 7–8,
-// run by the skill before it emits the report (SKILL.md §11 item 13). It checks only what is
-// invariant across report languages: verdict and owner keys, severity markers, finding IDs,
-// certainty labels, the [prerequisite] tag, the `Review not performed:` form — plus a
-// second-person scan in English and Spanish.
+// Mechanical check of a review response, run by the skill before it emits it (SKILL.md §11 item 13).
+// A response is the author report (assets/author-report-template.md) followed by the audit report
+// (assets/review-template.md) inside <details>; `checkReport` checks the audit against SKILL.md Phase 7–8,
+// `checkResponse` checks both and that the author report agrees with the audit. Only what is invariant
+// across report languages is checked: verdict and owner keys, severity markers and values, finding IDs,
+// certainty labels, the [prerequisite] tag, section numbers, review-format verdict labels, the
+// `Review not performed:` form — plus a second-person scan in English and Spanish.
 //
-//   node check-report.mjs <report.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--external <findings.json>] [--json]
+//   node check-report.mjs <response.md | -> [--trace <runs.jsonl> --run <RUN_ID>] [--external <findings.json>] [--json]
 //     Exit 0 = no ERROR, 1 = at least one ERROR (each printed with its code), 64 = usage.
 import fs from "node:fs";
 import path from "node:path";
@@ -135,7 +137,8 @@ export function checkReport(text, { traceEvents = null, external = null } = {}) 
     }
     const body = [];
     for (let j = i + 1; j < lines.length && !/^#{1,5}\s/.test(lines[j]); j++) body.push(lines[j]);
-    findings.push({ marker: m[1], id: m[2], n: Number(m[3]), line: i + 1, body: body.join("\n") });
+    const text = body.join("\n");
+    findings.push({ marker: m[1], id: m[2], n: Number(m[3]), line: i + 1, body: text, severity: (text.match(SEVERITY) ?? [])[1] ?? null });
   });
   findings.forEach((f, k) => {
     if (f.n !== k + 1) err("F02", `finding IDs must run F-1, F-2, … in report order; found ${f.id} at position ${k + 1}`);
@@ -215,6 +218,131 @@ export function checkReport(text, { traceEvents = null, external = null } = {}) 
   return finish({ errors, verdict, owner, findings, traceEvents });
 }
 
+// Review-format verdict labels printed by the author report (SKILL.md §2). `decision required` has no
+// equivalent of its own: the merge waits on a decision, so it prints the pending-validation label.
+export const LABELS = ["APPROVE", "APPROVE WITH SUGGESTIONS", "REQUEST CHANGES", "BLOCKED – PENDING VALIDATION"];
+export function reviewLabel(verdict, findings = []) {
+  if (verdict === "changes required") return "REQUEST CHANGES";
+  if (verdict === "verification required" || verdict === "decision required") return "BLOCKED – PENDING VALIDATION";
+  if (verdict === "ready to merge") return findings.some((f) => f.marker === "⚪") ? "APPROVE WITH SUGGESTIONS" : "APPROVE";
+  return null;
+}
+
+// Checklist items outside fenced code, trimmed.
+export function checklistItems(lines) {
+  const fenced = fencedLines(lines);
+  return lines.filter((l, i) => !fenced.has(i) && /^\s*[-*]\s+\[[ xX]\]\s/.test(l)).map((l) => l.trim());
+}
+
+// Splits a response into the author report and the audit report it carries in a <details> block: the first one
+// after the author report's `## 6.` section, closed by the last `</details>`, so a <details> quoted inside the
+// audit never splits it. A text without that block is all audit (an older report, or one without the author report).
+export function splitResponse(text) {
+  const t = text.replace(/\r\n/g, "\n");
+  const lines = t.split("\n");
+  const six = Math.max(0, lines.findIndex((l) => /^##\s+6\.\s+\S/.test(l)));
+  const open = lines.findIndex((l, i) => i >= six && /^<details>$/.test(l.trim()));
+  if (open < 0) return { author: null, audit: t, closed: false, trailing: "" };
+  let k = open + 1;
+  while (k < lines.length && !lines[k].trim()) k++;
+  if (/^<summary>.*<\/summary>$/.test((lines[k] ?? "").trim())) k++;
+  const close = lines.findLastIndex((l, i) => i > open && l.trim() === "</details>");
+  return {
+    author: lines.slice(0, open).join("\n"),
+    audit: lines.slice(k, close < 0 ? undefined : close).join("\n").replace(/^(\s*<!--[\s\S]*?-->)+/, "").trim(),
+    closed: close >= 0,
+    trailing: close < 0 ? "" : lines.slice(close + 1).join("\n").trim(),
+  };
+}
+
+// The author report's six numbered sections, in order; every one of them restates the audit, never adds to it.
+export function checkAuthorReport(author, audit, { external = null } = {}) {
+  const errors = [];
+  const err = (code, msg) => errors.push({ code, msg });
+  // HTML comments render as nothing; blank them out, keeping line numbers.
+  const lines = author.replace(/\r\n/g, "\n").replace(/<!--[\s\S]*?-->/g, (c) => c.replace(/[^\n]/g, "")).split("\n");
+  const fenced = fencedLines(lines);
+  const heads = lines.map((l, i) => ({ i, m: !fenced.has(i) && l.match(/^##\s+(\d+)\.\s+\S/) })).filter((x) => x.m);
+  const first = lines.findIndex((l) => l.trim());
+  if (!heads.length || heads[0].i !== first) err("A01", "the response must open with the author report's `## 1. <summary heading>`, no preamble");
+  const numbers = heads.map((h) => Number(h.m[1]));
+  if (numbers.join(",") !== "1,2,3,4,5,6") err("A01", `the author report needs sections \`## 1.\` … \`## 6.\` once each, in order; found ${numbers.join(", ") || "none"}`);
+  const section = (n) => {
+    const h = heads.find((x) => Number(x.m[1]) === n);
+    if (!h) return [];
+    const end = heads.find((x) => x.i > h.i)?.i ?? lines.length;
+    return lines.slice(h.i + 1, end).map((l, k) => ({ l, i: h.i + 1 + k }));
+  };
+
+  // Section 2 lists every audit finding, ✅ included, with the audit's marker and severity: `### <marker> F-n · <severity> — <title>`.
+  const listed = new Map();
+  for (const { l, i } of section(2)) {
+    if (fenced.has(i) || !/^#{3,5}\s/.test(l) || !/F-\d+/.test(l)) continue;
+    const m = l.match(/^###\s*(🔴|🟡|🚀|⚪|✅)\s*(F-\d+)\s*(?:·\s*(Critical|High|Medium|Low)\s*)?—\s*\S/u);
+    if (!m) err("A02", `author finding heading not in the form \`### <marker> F-n · <severity> — <title>\`: ${l.trim().slice(0, 80)}`);
+    else if (listed.has(m[2])) err("A02", `${m[2]} is listed twice in section 2`);
+    else listed.set(m[2], { marker: m[1], severity: m[3] ?? null });
+  }
+  for (const f of audit.findings) {
+    const a = listed.get(f.id);
+    if (!a) err("A02", `${f.id} (${f.marker}) from the audit report is missing from section 2`);
+    else if (a.marker !== f.marker) err("A02", `${f.id} is ${a.marker} in section 2 but ${f.marker} in the audit report`);
+    else if (f.marker !== "✅" && a.severity !== f.severity) err("A03", `${f.id} carries severity \`${a.severity ?? "none"}\` in section 2 but \`${f.severity}\` in the audit report`);
+  }
+  for (const id of listed.keys()) if (!audit.findings.some((f) => f.id === id)) err("A02", `${id} is in section 2 but not in the audit report`);
+  for (const id of external ?? []) {
+    const esc = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (!section(2).some(({ l }) => new RegExp(`^\\s*[-*]\\s+(?:\\*\\*)?\`?${esc}\`?(?:\\*\\*)?\\s*→\\s*\\S`).test(l))) err("A06", `supplied finding \`${id}\` has no disposition line in section 2`);
+  }
+
+  // Section 5 is the audit's Checklist, item for item.
+  const mine = checklistItems(section(5).map(({ l }) => l)).sort();
+  const theirs = checklistItems(audit.lines).sort();
+  if (mine.join("\n") !== theirs.join("\n")) {
+    const missing = theirs.filter((x) => !mine.includes(x)).length;
+    const extra = mine.filter((x) => !theirs.includes(x)).length;
+    err("A05", `section 5 must repeat the audit Checklist verbatim (${missing} item(s) missing, ${extra} not in the audit)`);
+  }
+
+  // Section 6 prints exactly one review-format label, mapped from the audit verdict, with the verdict key.
+  const expected = reviewLabel(audit.verdict, audit.findings);
+  const labelRe = /\*\*\s*(APPROVE WITH SUGGESTIONS|APPROVE|REQUEST CHANGES|BLOCKED\s*[–—-]\s*PENDING VALIDATION)\s*\*\*/;
+  const labelled = section(6).filter(({ l }) => labelRe.test(l));
+  let label = null;
+  if (labelled.length !== 1) err("A04", `section 6 needs exactly one bold label (${LABELS.join(" | ")}); found ${labelled.length}`);
+  else {
+    label = labelled[0].l.match(labelRe)[1].replace(/\s*[–—-]\s*/, " – ");
+    if (expected && label !== expected) err("A04", `label \`${label}\` does not match the audit verdict \`${audit.verdict}\` (expected \`${expected}\`)`);
+    if (audit.verdict && !labelled[0].l.includes(`\`${audit.verdict}\``)) err("A04", `the label line must carry the verdict key in backticks: \`${audit.verdict}\``);
+  }
+
+  const p = prose(lines.join("\n"));
+  const second = p.match(/\b(you|your|yours|you're|yourself)\b/i) ?? p.match(/(?<![\p{L}])(tú|tu|tus|usted|ustedes|contigo)(?![\p{L}])/iu);
+  if (second) err("S01", `second-person address in the author report (\`${second[1]}\`): write about the PR and refer to people by role`);
+  if (/\bLGTM\b/i.test(p)) err("S02", "`LGTM` and equivalents are forbidden");
+  return { errors, label };
+}
+
+// The emitted response: author report + audit report in <details>, or the one-line `Review not performed:`.
+export function checkResponse(text, opts = {}) {
+  const t = text.replace(/\r\n/g, "\n").trim();
+  if (/^Review not performed/.test(t)) return checkReport(t, opts);
+  const { author, audit, closed, trailing } = splitResponse(t);
+  const r = checkReport(audit, opts);
+  const extra = [];
+  if (author === null) extra.push({ code: "A00", msg: "the response needs the author report (assets/author-report-template.md) followed by the audit report inside `<details>`" });
+  else {
+    if (!closed) extra.push({ code: "A07", msg: "the audit report's `<details>` block is never closed with `</details>`" });
+    if (trailing) extra.push({ code: "A07", msg: "nothing may follow the closing `</details>` of the audit report" });
+    const a = checkAuthorReport(author, { ...r, lines: audit.split("\n") }, opts);
+    extra.push(...a.errors);
+    r.label = a.label;
+  }
+  r.errors = [...extra, ...r.errors];
+  r.ok = r.errors.length === 0;
+  return r;
+}
+
 function finish({ errors, verdict, owner, findings, traceEvents }) {
   if (traceEvents) {
     const end = traceEvents.filter((e) => e.event === "run.end").at(-1);
@@ -225,7 +353,7 @@ function finish({ errors, verdict, owner, findings, traceEvents }) {
       if (verdict !== "not-performed" && end.data.owner && end.data.owner !== owner) errors.push({ code: "T03", msg: `trace owner \`${end.data.owner}\` ≠ report owner \`${owner}\`` });
     }
   }
-  return { ok: errors.length === 0, errors, verdict, owner, findings: findings.map(({ marker, id }) => ({ marker, id })) };
+  return { ok: errors.length === 0, errors, verdict, owner, findings: findings.map(({ marker, id, severity }) => ({ marker, id, severity })) };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -253,11 +381,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     }
     external = suppliedFindingIds(json);
   }
-  const r = checkReport(text, { traceEvents, external });
+  const r = checkResponse(text, { traceEvents, external });
   if (args.includes("--json")) console.log(JSON.stringify(r, null, 2));
   else {
     for (const e of r.errors) console.log(`ERROR ${e.code}: ${e.msg}`);
-    console.log(r.ok ? `OK: verdict \`${r.verdict}\`, owner \`${r.owner ?? "-"}\`, ${r.findings.length} finding(s)` : `${r.errors.length} error(s) — fix them and re-run before emitting the report`);
+    console.log(r.ok ? `OK: verdict \`${r.verdict}\`${r.label ? ` (${r.label})` : ""}, owner \`${r.owner ?? "-"}\`, ${r.findings.length} finding(s)` : `${r.errors.length} error(s) — fix them and re-run before emitting the response`);
   }
   process.exit(r.ok ? 0 : 1);
 }

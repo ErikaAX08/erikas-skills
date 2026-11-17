@@ -1,6 +1,6 @@
 ---
 name: spec-kit-amend-artifacts
-description: Apply an already-decided change — a pre-pr-review finding, a refuted [SONDA] premise, or unplanned scope the user resolved — to spec.md/plan.md/tasks.md in one confirmed pass, starting at the lowest artifact that owns the change and propagating only downward, by running each generating skill's own "Updating an Existing X" procedure with scoped validation. Records every decision in amendments.md before editing (write-ahead, so a stopped amendment can be resumed or undone), reworks closed tasks only through the Task Lifecycle, lets each owning procedure refresh its state.json entry, and hands off to spec-kit-execute-tasks. Never decides a change for the user and never writes product code. When an artifact-amender agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
+description: Apply an already-decided change — a pr-review finding, a refuted [SONDA] premise, or unplanned scope the user resolved — to spec.md/plan.md/tasks.md in one confirmed pass, starting at the lowest artifact that owns the change and propagating only downward, by running each generating skill's own "Updating an Existing X" procedure with scoped validation. Records every decision in amendments.md before editing (write-ahead, so a stopped amendment can be resumed or undone), reworks closed tasks only through the Task Lifecycle, lets each owning procedure refresh its state.json entry, and hands off to spec-kit-execute-tasks. Never decides a change for the user and never writes product code. When an artifact-amender agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
 license: Apache-2.0
 ---
 
@@ -36,7 +36,7 @@ $ARGUMENTS
 
 Always consider the complete user message and any files or attachments available in the current
 conversation, even when `$ARGUMENTS` appears literally or is empty. The most common inputs are: a
-`pre-pr-review` report or finding IDs plus the user's decision for each, a refuted `[SONDA]` result,
+`pr-review` report or finding IDs plus the user's decision for each, a refuted `[SONDA]` result,
 or a short description of a change the user already decided.
 
 ## Core Principle
@@ -53,7 +53,7 @@ or a short description of a change the user already decided.
 ## Non-Negotiable Rules
 
 1. **Only decided changes.** If a finding has no recorded decision, stop and present it with its
-   options; do not pick one. A `pre-pr-review` `🟡` reads "This requires a … decision" for a reason.
+   options; do not pick one. A `pr-review` `🟡` reads "This requires a … decision" for a reason.
 2. **Lowest affected layer, propagating downward only.** Classify per
    `artifact-conventions.md` § Layer Ownership. A change that touches no requirement, entity,
    invariant, safeguard, or scope does not touch `spec.md`.

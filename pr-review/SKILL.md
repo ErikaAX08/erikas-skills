@@ -1,7 +1,7 @@
 ---
-name: pre-pr-review
+name: pr-review
 description: >-
-  Audit local diffs before opening a PR (pre-PR self-review) and open PRs before merging (pre-merge audit) with evidence, to decide whether they are safe to merge and deploy. Use when asked to review a PR, audit a diff, compare changes against develop/main or another base branch, perform a technical review, find production risks, prepare a merge decision, or analyze changes involving backend, frontend, jobs, APIs, auth, databases, migrations, events, queues, external integrations, payments, feature flags, dependencies, infrastructure, CloudWatch, operational logs, or critical product flows. Produces a merge verdict plus a before-merge, before-deploy, and post-deploy verification plan. Scales to a parallel multi-agent review with adversarial verification for large or high-risk diffs. Not for writing PR descriptions (use create-pull-request), style-only linting, generating code, executing post-deploy checks, or investigating production incidents.
+  Review any pull request with evidence — your own local diff before opening it, or anyone's open PR before merging — to decide whether it is safe to merge and deploy. Use when asked to review a PR, audit a diff against develop/main or another base, find production risks, prepare a merge decision, or analyze changes involving backend, frontend, jobs, APIs, auth, databases, migrations, events, queues, external integrations, payments, feature flags, dependencies, infrastructure, CloudWatch, operational logs, or critical product flows. Produces an author-ready report (summary, findings by severity, mandatory validations, deploy risks, approval checklist, verdict) backed by an evidence audit and a post-deploy verification plan. Scales to a parallel multi-agent review with adversarial verification for large or high-risk diffs. Not for writing PR descriptions (use create-pull-request), style-only linting, generating code, executing post-deploy checks, or investigating production incidents.
 ---
 
 # Technical PR Audit
@@ -45,6 +45,11 @@ Audience and voice:
 - Be respectful and constructive through content, not tone: every 🔴 and ⚪ carries a
   concrete correction (what to change, where, and the evidence that closes it), so the report
   can be shared with the PR author as-is.
+- The response has two parts (§8): the **author report** — summary, findings, mandatory
+  validations, deploy risks, approval checklist, and final verdict, in six numbered sections a
+  tech lead can paste into the PR — followed by the **audit report**, the evidence behind it,
+  inside a collapsed `<details>` block. The author report only restates the audit; it never adds
+  a fact, finding, or check the audit does not hold.
 
 Non-goals (route elsewhere, do not do here):
 
@@ -101,8 +106,8 @@ Terms (used with exactly these meanings everywhere in this skill and its files):
 
 Outcomes. Every run ends in exactly one of:
 
-- **Completed review**: the report of §8 with exactly one verdict from Phase 8, emitted only
-  after `scripts/check-report.mjs` passes on it (§8 emit gate).
+- **Completed review**: the response of §8 — author report plus audit report — with exactly one
+  verdict from Phase 8, emitted only after `scripts/check-report.mjs` passes on it (§8 emit gate).
 - **Review not performed**: Phase 2 cannot establish a base SHA and a head SHA (not a git
   work tree, ref not found, no merge base, PR head not obtainable), or the diff is empty
   (`collect-diff.sh` reports `empty-diff` and, in entry point A, no local changes exist).
@@ -137,6 +142,10 @@ stay machine-comparable:
   `[rollback: steps]`, `[rollback: none-possible]`, the checklist groups `[before-merge]`,
   `[before-deploy]`, `[after-deploy]`, and the anchor forms `anchor: F-n`,
   `anchor: still-open <name>`, `anchor: file <path>`, `anchor: flow <name>`.
+- In the author report: the section numbers `## 1.` … `## 6.`, the finding heading form
+  `### <marker> F-n · <severity> — <title>`, the `<details>` block holding the audit report, and the
+  review labels `APPROVE`, `APPROVE WITH SUGGESTIONS`, `REQUEST CHANGES`,
+  `BLOCKED – PENDING VALIDATION` (always in English, followed by the verdict key in backticks).
 - The fixed phrases of §3 (`I could not verify X`, `I was wrong: …`, `Not a code bug; it
   is a deployment-order problem.`, `This requires a product|operations|architecture
   decision.`, `Accepted by …`) translated once, then used verbatim everywhere in the report.
@@ -144,16 +153,17 @@ stay machine-comparable:
   `language:` field set by the lead. Every agent writes in the final report language.
   Never mix languages in one report.
 
-Verdict names used by other review formats map to the verdict keys as follows; reports always
-print the key, never the other name:
+Review labels and verdict keys map as follows. The audit report prints only the key; the author
+report's final verdict prints the label followed by the key, e.g. `**REQUEST CHANGES**
+(`changes required`)`:
 
-| Other format | Verdict key |
+| Verdict key | Review label |
 | --- | --- |
-| APPROVE | `ready to merge`, with no ⚪ |
-| APPROVE WITH SUGGESTIONS | `ready to merge`, with ⚪ findings |
-| REQUEST CHANGES | `changes required` |
-| BLOCKED – PENDING VALIDATION | `verification required` |
-| (no equivalent) | `decision required` — a 🟡 needs a product, operations, or architecture decision |
+| `ready to merge`, with no ⚪ | APPROVE |
+| `ready to merge`, with ⚪ findings | APPROVE WITH SUGGESTIONS |
+| `changes required` | REQUEST CHANGES |
+| `verification required` | BLOCKED – PENDING VALIDATION |
+| `decision required` | BLOCKED – PENDING VALIDATION — the pending item is a 🟡 decision by a named role, stated in the justification |
 
 ## 3. Evidence Discipline
 
@@ -641,7 +651,7 @@ undeclared gap — record it as `I could not verify` instead of claiming coverag
 
 ## 8. Output Format
 
-**Emit gate (mandatory, never skipped):** the report is emitted only after
+**Emit gate (mandatory, never skipped):** the response is emitted only after
 `scripts/check-report.mjs` exits 0 on it (§11 item 13) and the result is traced as a `check`
 with `tool=report`. The response **is the checked file's content, verbatim**: no summary
 line before it, no closing remarks after it, no rewording. Any edit after the check means
@@ -649,7 +659,27 @@ running the check again. In the evals, a run that checked a compliant file and t
 with a conversational rewrite failed the template in exactly the ways the script flags
 (summary line before Scope, missing owner, `F-1:` headings, second person).
 
-Fill `assets/review-template.md` and start with its header block, no preamble. Always
+The response is one file in two parts, written in this order:
+
+1. **Audit report** — fill `assets/review-template.md` as described below. Finish it first: the
+   author report is derived from it.
+2. **Author report** — fill `assets/author-report-template.md` from the finished audit, then put
+   the audit verbatim inside its closing `<details>` block. The file starts with `## 1.`, no
+   preamble, and ends with `</details>`. Its six sections restate the audit for the PR author:
+   1 summary (Changes, main problems, risks, blocking conditions); 2 every finding — ✅ and
+   provided-finding dispositions included — with marker, ID, the audit's severity, obligation
+   (🔴 mandatory fix · 🟡 mandatory decision · 🚀 mandatory during deploy · ⚪ suggestion),
+   location, description, impact, and recommendation, plus the line stating that `Low` does not
+   apply; 3 mandatory validations before merge (from Tests, CI, `[prerequisite]` items, base
+   confirmation, and approvals — each with status, why, how to check, and pass condition, never
+   marked satisfied without executed evidence); 4 deploy risks (every 🚀, Conditional risk, Open
+   question, and deploy-relevant Still Open item, each `confirmed` or `pending validation`, plus
+   the Rollback line); 5 the audit's Checklist, verbatim, grouped before merge / before deploy /
+   after deploy; 6 the review label with the verdict key, next owner and action, justification,
+   and outcome map. The check rejects an author report that drops, adds, or re-grades a finding,
+   changes a checklist item, or prints a label that does not match the verdict.
+
+Audit report: start with the header block of `assets/review-template.md`. Always
 show Scope, Changes (what the PR changes by area or service, ending in `[risks: F-n, …]`
 or `[risks: none]`, on the line right before the verdict), Verdict + Next + Unblocks when +
 Reason, Rollback (Phase 8), Method, Coverage, Verified, Tests, Still Open. Show Blockers and Open Decisions even when empty (write `None — <one-line
@@ -680,8 +710,8 @@ review traced at least one flow, the Post-Deploy Verification section:
   deployed environment is run during the review (§10).
 
 Every finding follows its category schema (Phase 7); every
-citation follows §9. Return the report as the response; write it to a file only when the
-user names the path.
+citation follows §9. Return the checked response; write it to a file only when the user names
+the path. `Review not performed:` stays a single line, with no author report.
 
 ## 9. Citation Grammar
 
@@ -765,7 +795,8 @@ explaining them away:
     state at the start of the review.
 12. The trace (§12) has a `classification` for every `candidate`, a `verification` for every
     🔴/🟡, and a `run.end` whose `verdict` is the report's verdict.
-13. Write the report to a file in the scratchpad or temp directory and run
+13. Write the response (author report, then the audit report inside `<details>`) to a file in the
+    scratchpad or temp directory and run
     `node <skill>/scripts/check-report.mjs <file> [--trace <runs.jsonl> --run <RUN_ID>]
     [--external <supplied-findings.json>]` (`--external` is mandatory when findings were
     supplied: E01 fails any supplied ID without a disposition line). It
@@ -775,7 +806,11 @@ explaining them away:
     🔴/🟡/`[prerequisite]`/🚀 and an anchor on every item (C01, C02), a code fence left open
     before a later section (C03 — everything after it renders as code), verdict-vs-findings
     precedence, no second-person address,
-    the `Review not performed:` form, and the trace's verdict). Fix every `ERROR` and re-run
+    the `Review not performed:` form, and the trace's verdict) and the author report against the
+    audit (A00 author report missing, A01 sections `## 1.`–`## 6.` in order with no preamble,
+    A02/A03 every audit finding listed once with its marker and severity, A04 the review label
+    matches the verdict and carries its key, A05 the checklist repeated verbatim, A06 every
+    supplied finding's disposition, A07 the `<details>` block closed and last). Fix every `ERROR` and re-run
     until it exits 0; only then emit the report. Exit 64 with `--external` means the file does
     not follow `assets/supplied-findings.md` (a `findings` array with an `id` on every item):
     normalize it and re-run. A host that cannot run Node applies the same
@@ -792,8 +827,8 @@ Write events only with `node <skill>/scripts/trace.mjs <event> --run <RUN_ID> ke
 (lists are comma-separated; quote a pair whose value has spaces, e.g.
 `"verdict=changes required"`). Start with `trace.mjs run.start entry=<A|B>`, which prints the
 `RUN_ID` every later call passes; end with `run.end`, also when the run stops early. The
-trace goes to `$PRE_PR_REVIEW_TRACE_DIR/runs.jsonl` or `~/.local/state/pre-pr-review/runs.jsonl`
-— never inside the reviewed repository. `PRE_PR_REVIEW_TRACE=off` disables it (the commands
+trace goes to `$PR_REVIEW_TRACE_DIR/runs.jsonl` or `~/.local/state/pr-review/runs.jsonl`
+— never inside the reviewed repository. `PR_REVIEW_TRACE=off` disables it (the commands
 print `TRACE: off` and succeed); a failing trace call never blocks the review.
 
 | Event | Required data | Record it when |
@@ -822,7 +857,7 @@ strings as a backstop, not as permission to paste sensitive values.
 | Path | Use |
 | --- | --- |
 | [scripts/collect-diff.sh](scripts/collect-diff.sh) | Read-only diff inventory: file classes, noise, local and untracked changes, base drift, activated lenses, sizing (Phase 2, §4) |
-| [scripts/check-report.mjs](scripts/check-report.mjs) | Mechanical template and verdict check run before emitting (§11 item 13) |
+| [scripts/check-report.mjs](scripts/check-report.mjs) | Mechanical check of the response — audit template, verdict, and author report — run before emitting (§11 item 13) |
 | [scripts/trace.mjs](scripts/trace.mjs) | Appends one validated, redacted event to the review trace (§12) |
 | [scripts/trace-report.mjs](scripts/trace-report.mjs) | Summarizes traces: candidate funnel, per-lens refutation rate and yield, consistency violations, signals (§12) |
 | [evals/run-evals.mjs](evals/run-evals.mjs) | Runs the evals with and without the skill and reports precision, recall, verdict accuracy, and cost (`evals/README.md`) |
@@ -832,6 +867,7 @@ strings as a backstop, not as permission to paste sensitive values.
 | [assets/reviewer-brief.md](assets/reviewer-brief.md) | Brief and output schema for a lens reviewer |
 | [assets/verifier-brief.md](assets/verifier-brief.md) | Brief and output schema for an adversarial verifier |
 | [assets/authorization-request.md](assets/authorization-request.md) | Authorization request before external access |
-| [assets/review-template.md](assets/review-template.md) | Output format of the review (§8) |
+| [assets/review-template.md](assets/review-template.md) | Output format of the audit report (§8) |
+| [assets/author-report-template.md](assets/author-report-template.md) | Output format of the author report that opens the response and carries the audit (§8) |
 | [assets/declared-objective.md](assets/declared-objective.md) | Input contract for a caller's declared objective (§3, Phase 1) |
 | [assets/supplied-findings.md](assets/supplied-findings.md) | Input contract for findings supplied by another reviewer, and their dispositions (Phase 1, Phase 7) |

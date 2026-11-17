@@ -41,7 +41,7 @@ test("brand-guidelines installs as a skill", async () => {
 });
 
 test("repo-only files are not installed", async () => {
-  const dir = await install(["pre-pr-review", "brain-orchestrator", "spec-kit"]);
+  const dir = await install(["pr-review", "brain-orchestrator", "spec-kit"]);
   const files = walk(dir);
   const leaked = files.filter((f) =>
     /(^|\/)(package\.json|package-lock\.json)$/.test(f) ||
@@ -49,8 +49,8 @@ test("repo-only files are not installed", async () => {
     /\.test\.[cm]?js$/.test(f) ||
     /^[^/]+\/README\.md$/.test(f) && !f.startsWith("spec-kit-shared/"));
   assert.deepEqual(leaked, []);
-  assert.ok(files.includes("pre-pr-review/SKILL.md"));
-  assert.ok(files.includes("pre-pr-review/scripts/trace.mjs"));
+  assert.ok(files.includes("pr-review/SKILL.md"));
+  assert.ok(files.includes("pr-review/scripts/trace.mjs"));
   assert.ok(files.includes("brain-orchestrator/templates/TASK.md"));
   assert.ok(files.includes("spec-kit-shared/README.md"));
   assert.ok(files.includes("spec-kit-shared/scripts/fingerprint.mjs"));

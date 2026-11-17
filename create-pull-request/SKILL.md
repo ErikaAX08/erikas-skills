@@ -354,7 +354,7 @@ Rules for this template:
 - **git-commits** — title format (`<type>(<scope>): …`) and shared anti-patterns.
   This skill adds repo-template detection, the diff-anchored body, and the default
   template.
-- **pre-pr-review** — run it before creating the PR to catch blockers; if the user
+- **pr-review** — run it before creating the PR to catch blockers; if the user
   asks for a prior review, run it for real and don't invent its output.
 - **verify-before-implement** — the same principle applied to writing: every claim
   is verified against the actual code before it enters the PR.

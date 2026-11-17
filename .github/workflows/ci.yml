@@ -27,7 +27,7 @@ jobs:
       - run: pnpm run validate
       - run: pnpm run test:cli
       - run: pnpm run test:spec-kit
-      - run: pnpm run test:pre-pr-review
+      - run: pnpm run test:pr-review
       - run: pnpm pack --dry-run
       - name: Smoke test the local CLI
         run: |

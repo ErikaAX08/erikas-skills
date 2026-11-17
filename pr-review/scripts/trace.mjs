@@ -4,8 +4,8 @@
 //   node trace.mjs run.start entry=<A|B> [key=value…]          prints RUN_ID=<id>
 //   node trace.mjs <event> --run <id> [key=value…] [--data '<json>']
 //
-// The trace lives in $PRE_PR_REVIEW_TRACE_DIR/runs.jsonl, or ~/.local/state/pre-pr-review/runs.jsonl;
-// --dir <path> overrides both. PRE_PR_REVIEW_TRACE=off disables it. Values of lenses=, high_risk=,
+// The trace lives in $PR_REVIEW_TRACE_DIR/runs.jsonl, or ~/.local/state/pr-review/runs.jsonl;
+// --dir <path> overrides both. PR_REVIEW_TRACE=off disables it. Values of lenses=, high_risk=,
 // evidence=, and ids= are comma-separated lists; integers are stored as numbers.
 // Exit 0 = written (or tracing is off: TRACE: off), 1 = invalid event (nothing written), 64 = usage.
 import path from "node:path";
@@ -41,7 +41,7 @@ export function traceEvent(argv, { now = new Date(), env = process.env } = {}) {
   if (!opts.run) return { status: 64, lines: [`${opts.event} needs --run <id> (the RUN_ID printed by run.start)`] };
   const dir = opts.dir ? path.resolve(opts.dir) : traceDir(env);
   const result = appendEvent(dir, { run: opts.run, event: opts.event, data: opts.data }, { now, env });
-  if (result.disabled) return { status: 0, lines: ["TRACE: off (PRE_PR_REVIEW_TRACE)"], run: opts.run };
+  if (result.disabled) return { status: 0, lines: ["TRACE: off (PR_REVIEW_TRACE)"], run: opts.run };
   if (result.errors.length) return { status: 1, lines: result.errors.map((e) => `INVALID: ${e}`) };
   return { status: 0, lines: opts.event === "run.start" ? [`RUN_ID=${opts.run}`] : [`TRACED: ${opts.event}`], note: opts.event === "run.start" ? `trace: ${tracePath(dir)}` : null, run: opts.run };
 }

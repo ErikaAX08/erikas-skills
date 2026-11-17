@@ -7,7 +7,7 @@ import os from "node:os";
 import path from "node:path";
 
 export const TRACE_VERSION = 1;
-export const SKILL = "pre-pr-review";
+export const SKILL = "pr-review";
 
 // Required `data` keys per event type. Extra keys are allowed; missing ones are an error.
 export const EVENTS = {
@@ -64,10 +64,10 @@ export function redact(value, key) {
   return value;
 }
 
-// PRE_PR_REVIEW_TRACE_DIR wins (the eval runner points it at each run's directory); otherwise the
+// PR_REVIEW_TRACE_DIR wins (the eval runner points it at each run's directory); otherwise the
 // user's state directory. Never inside the reviewed repository (SKILL.md §10).
 export function traceDir(env = process.env) {
-  if (env.PRE_PR_REVIEW_TRACE_DIR) return path.resolve(env.PRE_PR_REVIEW_TRACE_DIR);
+  if (env.PR_REVIEW_TRACE_DIR) return path.resolve(env.PR_REVIEW_TRACE_DIR);
   const state = env.XDG_STATE_HOME || path.join(os.homedir(), ".local", "state");
   return path.join(state, SKILL);
 }
@@ -77,7 +77,7 @@ export function tracePath(dir) {
 }
 
 export function isEnabled(env = process.env) {
-  return !/^(off|0|false|no)$/i.test(env.PRE_PR_REVIEW_TRACE ?? "");
+  return !/^(off|0|false|no)$/i.test(env.PR_REVIEW_TRACE ?? "");
 }
 
 export function newRunId(now = new Date()) {

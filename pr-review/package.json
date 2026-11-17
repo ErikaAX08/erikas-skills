@@ -1,0 +1,42 @@
+{
+  "name": "@erikaax/pr-review",
+  "version": "0.1.0",
+  "description": "Review any pull request with evidence — your own local diff before opening it, or anyone's open PR before merging — to decide whether it is safe to merge and deploy. Use when asked to review a PR, audit a diff against develop/main or another base, find production risks, prepare a merge decision, or analyze changes involving backend, frontend, jobs, APIs, auth, databases, migrations, events, queues, external integrations, payments, feature flags, dependencies, infrastructure, CloudWatch, operational logs, or critical product flows. Produces an author-ready report (summary, findings by severity, mandatory validations, deploy risks, approval checklist, verdict) backed by an evidence audit and a post-deploy verification plan. Scales to a parallel multi-agent review with adversarial verification for large or high-risk diffs. Not for writing PR descriptions (use create-pull-request), style-only linting, generating code, executing post-deploy checks, or investigating production incidents.",
+  "keywords": [
+    "claude-code",
+    "opencode",
+    "skill",
+    "pr-review",
+    "code-review",
+    "multi-agent"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ErikaAX08/erikas-skills.git",
+    "directory": "pr-review"
+  },
+  "homepage": "https://github.com/ErikaAX08/erikas-skills/tree/main/pr-review",
+  "bugs": {
+    "url": "https://github.com/ErikaAX08/erikas-skills/issues"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "node --test scripts/test/scripts.test.mjs evals/test/harness.test.mjs",
+    "evals": "node evals/run-evals.mjs",
+    "trace:report": "node scripts/trace-report.mjs"
+  },
+  "files": [
+    "SKILL.md",
+    "references/**/*",
+    "scripts/**/*",
+    "assets/**/*",
+    "evals/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

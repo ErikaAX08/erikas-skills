@@ -7,7 +7,8 @@ All notable changes to this project are documented here. Format based on [Keep a
 ### Added
 - `gh-stack` skill (`@erikaax/gh-stack`, in the `workflow` plugin): GitHub's skill for stacked PRs with the `gh stack` CLI extension, vendored unmodified from github/gh-stack under its MIT license.
 - Claude Code plugin marketplace (`.claude-plugin/marketplace.json`): the skills install as six plugins — `frontend`, `backend`, `workflow`, `docs`, `orchestration`, `spec-kit` — with `/plugin install <plugin> --marketplace ErikaAX08/erikas-skills`. `pnpm run validate` checks that every skill is in exactly one plugin.
-- `pre-pr-review` covers the full tech-lead review:
+- `pr-review` covers the full tech-lead review:
+  - Every response opens with an author report in six sections — summary, findings by severity with obligation and recommendation, mandatory validations before merge, deploy risks (confirmed or pending validation), approval checklist, and a final verdict labeled `APPROVE`, `APPROVE WITH SUGGESTIONS`, `REQUEST CHANGES`, or `BLOCKED – PENDING VALIDATION` — followed by the evidence audit in a collapsed `<details>` block. `check-report.mjs` rejects an author report that drops, adds, or re-grades a finding, changes the checklist, or prints a label that contradicts the verdict.
   - Every report opens with what the PR changes and its main risks, and every finding carries a severity (`Critical`, `High`, `Medium`) derived from its category and impact, plus a concrete recommendation.
   - Findings supplied by another reviewer or tool are verified like any other candidate and each one is accounted for: confirmed, discarded with a reason, or out of scope.
   - Build and typecheck run alongside the tests, and environment configuration, containers, CI/CD pipelines, infrastructure as code, cloud permissions, external consumers, and missing kill switches are reviewed with evidence.
@@ -15,6 +16,7 @@ All notable changes to this project are documented here. Format based on [Keep a
   - Style, formatting, and naming stay out of scope (linters own them).
 
 ### Changed
+- `pre-pr-review` is renamed `pr-review` (`@erikaax/pr-review`), since it reviews any PR, not only the author's own before opening one. The trace variables are now `PR_REVIEW_TRACE` and `PR_REVIEW_TRACE_DIR`, and traces go to `~/.local/state/pr-review/`.
 - Releases publish with npm trusted publishing (OIDC) instead of an `NPM_TOKEN` secret, after running the full test suite and checking that the tag matches the version; versions already on npm are skipped.
 - The CLI moved from `bin/` to `cli/`, because Claude Code puts a plugin's `bin/` on the shell `PATH` and claude.ai refuses plugins that have one. The `erikas-skills` command is unchanged.
 

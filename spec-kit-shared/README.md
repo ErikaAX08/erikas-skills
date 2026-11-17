@@ -34,14 +34,14 @@ spec-kit-analyze-consistency (optional, read-only) ──► checklists/consiste
         ▼
 spec-kit-execute-tasks ────────────────► real code + tests + commits, delegating to
                                  verify-before-implement, git-commits,
-                                 code-documentation, pre-pr-review
+                                 code-documentation, pr-review
 
 spec-kit-sync-artifacts: not a step in the chain — a drift detector every other skill's own
 "Fase 0" calls internally, and that you can also invoke directly after editing a
 source document, spec.md, or plan.md by hand.
 
 spec-kit-amend-artifacts: the way back into the chain for an already-decided change (a
-pre-pr-review finding, a refuted [SONDA] premise, resolved unplanned scope). It edits the
+pr-review finding, a refuted [SONDA] premise, resolved unplanned scope). It edits the
 lowest artifact that owns the change and only what is downstream of it, in one confirmed
 pass, records the decision in amendments.md, then hands off to spec-kit-execute-tasks.
 ```
@@ -129,7 +129,7 @@ Not invocable skills — documents every skill above reads and follows:
 | `spec-kit-execute-tasks` | `verify-before-implement` | Per-task implementation discipline |
 | `spec-kit-execute-tasks` | `git-commits` | Commit messages |
 | `spec-kit-execute-tasks` | `code-documentation` | Documenting new code when required |
-| `spec-kit-execute-tasks` | `pre-pr-review` | Per-story (optional) and final safety-net review |
+| `spec-kit-execute-tasks` | `pr-review` | Per-story (optional) and final safety-net review |
 | `spec-kit-amend-artifacts` | `verify-before-implement` | Probing a runtime premise before it enters `plan.md` |
 
 No skill in `spec-kit` reimplements what one of these already does.

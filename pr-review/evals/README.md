@@ -1,4 +1,4 @@
-# pre-pr-review evals
+# pr-review evals
 
 `evals.json` follows the skill-creator schema used by `code-documentation/evals/evals.json`, plus
 the ground truth the harness scores against. Every case needs a real git repository, so `files[0]`
@@ -8,7 +8,7 @@ Three layers keep the skill measurable:
 
 | Layer | What it checks | How to run |
 | --- | --- | --- |
-| Script and harness tests | `collect-diff.sh` sizing and lenses, the trace, the trace report, report parsing, scoring | `pnpm run test:pre-pr-review` (also in CI); no model calls |
+| Script and harness tests | `collect-diff.sh` sizing and lenses, the trace, the trace report, report parsing, scoring | `pnpm run test:pr-review` (also in CI); no model calls |
 | Benchmark | The skill's behavior on every case, with and without the skill: precision, recall, verdicts, safety, cost | `node evals/run-evals.mjs` (calls the `claude` CLI; costs money) |
 | Review trace | Why each review decided what it did, across real reviews and eval runs | `node scripts/trace-report.mjs [<dir or runs.jsonl>]` |
 
@@ -40,8 +40,8 @@ For every case, configuration, and run the harness:
 1. Builds the fixture with `build-fixture.sh` (fixed author and dates, so SHAs are reproducible) and
    snapshots the protected git state: HEAD, branch, working tree and index, stash, refs, worktrees.
 2. Runs `claude -p` in the fixture with `--output-format stream-json`, `--permission-mode dontAsk`
-   and a fixed tool allowlist, a per-run budget, and `PRE_PR_REVIEW_TRACE_DIR` pointing at the run's
-   `trace/` directory. `skill` prefixes the prompt with `/pre-pr-review` (or, with
+   and a fixed tool allowlist, a per-run budget, and `PR_REVIEW_TRACE_DIR` pointing at the run's
+   `trace/` directory. `skill` prefixes the prompt with `/pr-review` (or, with
    `--invoke natural`, leaves it as is to also measure triggering); `baseline` runs the same model
    with `--disable-slash-commands`, so the difference between the two is the skill's contribution.
 3. Snapshots git again and parses the transcript: final report, verdict, findings and
@@ -54,7 +54,7 @@ For every case, configuration, and run the harness:
 5. Writes `benchmark.md` / `benchmark.json` (per configuration and per case) and
    `trace-report.md` (the skill's own trace across all runs).
 
-The skill config tests the copy installed at `~/.claude/skills/pre-pr-review`; the harness warns
+The skill config tests the copy installed at `~/.claude/skills/pr-review`; the harness warns
 when that is not this checkout. User-level `CLAUDE.md`, hooks, and other installed skills still load
 in both configurations — keep them stable between benchmarks you compare.
 
@@ -67,7 +67,7 @@ in both configurations — keep them stable between benchmarks you compare.
 | Severity accuracy | Found required findings reported at an acceptable severity |
 | Non-gating noise | ⚪ claims that match no expected finding, per run — not a false positive, but reading cost |
 | Verdict accuracy / false gate on clean PRs | Verdict in `expected_verdict`; on `clean` cases, the share of runs that did not return `ready to merge`. The verdict is parsed from the report's verdict key; a report without one (the baseline, or template drift) is scored on the grader's mapping of its recommendation, recorded as `verdictSource: grader` in `score.json` |
-| Template compliance | Reports that pass `scripts/check-report.mjs` — the same check the skill runs before emitting (§11 item 13) |
+| Template compliance | Responses that pass `scripts/check-report.mjs` — the same check the skill runs before emitting (§11 item 13): the audit template and the author report that restates it. Claims and the verdict are parsed from the audit inside `<details>` only, so the author report never double-counts a claim |
 | Verdict consistency | With `--runs` > 1, the share of cases whose runs all reached the same verdict |
 | Safety violations | Forbidden commands matched in the transcript plus runs that changed protected git state |
 | Trace complete / violations | Runs whose trace has `run.start` and `run.end`; trace inconsistencies (unclassified candidates, 🔴/🟡 without verification, a verdict that contradicts the trace's own classifications or the report) |
@@ -103,7 +103,7 @@ case is a smoke test; compare skill versions with `--runs 3` or more, because mo
 ## Building a fixture by hand
 
 ```bash
-bash evals/build-fixture.sh evals/files/<name> /tmp/pre-pr-review-evals/<name>
+bash evals/build-fixture.sh evals/files/<name> /tmp/pr-review-evals/<name>
 ```
 
 The script commits `base/` on `main`, commits `head/` on `feature` (when present), copies `local/`

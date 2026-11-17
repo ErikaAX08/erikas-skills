@@ -4,7 +4,7 @@
     {
       "id": 0,
       "name": "plan-layer-premise",
-      "prompt": "The final pre-pr-review on the active feature returned F-1 🔴 (Fact, reproduced): the request log still contains the full phone number, because the request logger captures the request at request start — `node probe-logger.js` in the repo root shows it. I decided: register the masking serializer on the request logger in `src/app.js` before the routes are mounted. Apply this amendment. You have my confirmation for the amendment plan: show it, then proceed without asking again.",
+      "prompt": "The final pr-review on the active feature returned F-1 🔴 (Fact, reproduced): the request log still contains the full phone number, because the request logger captures the request at request start — `node probe-logger.js` in the repo root shows it. I decided: register the masking serializer on the request logger in `src/app.js` before the routes are mounted. Apply this amendment. You have my confirmation for the amendment plan: show it, then proceed without asking again.",
       "expected_output": "An amendment classified at the plan layer: spec.md untouched, RS-02 corrected with executed evidence from running the probe, PL-D02 rewritten, an [ENMIENDA T004] task under US1's Enmiendas without a new [CIERRE], the AM-01 entry written as planned with base hashes before any edit and closed as applied, state.json refreshed with fingerprint.mjs --record for plan and tasks only, and a hand-off to spec-kit-execute-tasks.",
       "files": ["evals/files/plan-layer-premise"],
       "assertions": [
@@ -20,11 +20,11 @@
     {
       "id": 1,
       "name": "accepted-yellow",
-      "prompt": "pre-pr-review on the active feature returned `decision required` with one 🟡, F-3 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s. I accept it as-is — the sweep runs from the scheduler, never over HTTP. Record that decision.",
+      "prompt": "pr-review on the active feature returned `decision required` with one 🟡, F-3 (This requires an operations decision): the expiry sweep has no upper bound on its run time while the ALB idle timeout is 60 s. I accept it as-is — the sweep runs from the scheduler, never over HTTP. Record that decision.",
       "expected_output": "An amendments.md entry with Layer none and Status accepted, naming the decision and the decider, and no change to spec.md, plan.md, tasks.md, or state.json.",
       "files": ["evals/files/accepted-yellow"],
       "assertions": [
-        "Writes an `AM-01` entry in amendments.md with `Layer: none` and `Status: accepted`, the origin (pre-pr-review F-3), the decision, and the user as decider.",
+        "Writes an `AM-01` entry in amendments.md with `Layer: none` and `Status: accepted`, the origin (pr-review F-3), the decision, and the user as decider.",
         "Does not modify spec.md, plan.md, tasks.md, or state.json, and adds no task.",
         "Does not ask for an amendment-plan confirmation for artifact edits that do not exist, and does not escalate the change to another skill.",
         "States that nothing needs to be executed for this entry."

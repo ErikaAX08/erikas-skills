@@ -1,6 +1,6 @@
 ---
 name: spec-kit-execute-tasks
-description: Execute tasks.md in dependency order, producing real code — delegating implementation discipline to verify-before-implement, commit messages to git-commits, and a final safety-net review to pre-pr-review, instead of reimplementing any of their rules. Runs stories sequentially by default, or in parallel across independent stories/tasks via task-executor subagents when the story boundaries genuinely allow it. Never invents scope beyond tasks.md/plan.md/spec.md, never silently re-touches a task already marked done, and never skips a story's closure checkpoint. When a task-executor agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
+description: Execute tasks.md in dependency order, producing real code — delegating implementation discipline to verify-before-implement, commit messages to git-commits, and a final safety-net review to pr-review, instead of reimplementing any of their rules. Runs stories sequentially by default, or in parallel across independent stories/tasks via task-executor subagents when the story boundaries genuinely allow it. Never invents scope beyond tasks.md/plan.md/spec.md, never silently re-touches a task already marked done, and never skips a story's closure checkpoint. When a task-executor agent is requested, generates compatible definitions for both Kiro CLI and Claude Code.
 license: Apache-2.0
 ---
 
@@ -13,7 +13,7 @@ product code. It is the last link in the chain (`spec-kit-generate-spec` → `sp
 `spec-kit-generate-tasks` → [`spec-kit-analyze-consistency`] → `spec-kit-execute-tasks`), and it earns that position by
 delegating, not reimplementing: implementation discipline comes from `verify-before-implement`,
 commit messages from `git-commits`, architectural constraints from whatever architecture skills
-the project already has active, and a final safety-net review from `pre-pr-review`. This skill's
+the project already has active, and a final safety-net review from `pr-review`. This skill's
 own job is orchestration — sequencing, parallelism where it's genuinely safe, and enforcing that a
 story is never reported done unless its closure checkpoint actually holds.
 
@@ -71,7 +71,7 @@ passed — not when the code looks right. A story is done when its checkpoint ho
    specific skill, when active, governs how code is written; this skill does not override them.
 9. **Commit messages follow `git-commits` exactly.** Never invent a commit message format or
    skip that skill's conventions because "it's just a small change."
-10. **`pre-pr-review` runs at the end over the accumulated diff, always** — not skipped even when
+10. **`pr-review` runs at the end over the accumulated diff, always** — not skipped even when
     every individual task's validation passed. It is the last safety net, not the first place a
     gap should be discovered (§ Final Gate). A per-story review (§ Story Review Gate) is allowed
     in addition, never instead.
@@ -122,7 +122,7 @@ pattern `spec-kit-generate-spec` uses for its Extension Hooks):
 | Project architecture/conventions | `frontend-architecture` / `backend-api-standards` / project-specific equivalent | Whenever the project has one active |
 | Commit messages | `git-commits` | After closing a cohesive group of tasks |
 | Documentation for new code | `code-documentation` | When a task or the project's own convention requires it |
-| Final safety-net review | `pre-pr-review` | Always at the end over the accumulated diff (§ Final Gate); optionally per story (§ Story Review Gate) |
+| Final safety-net review | `pr-review` | Always at the end over the accumulated diff (§ Final Gate); optionally per story (§ Story Review Gate) |
 | Applying a decided change to spec/plan/tasks | `spec-kit-amend-artifacts` | A review finding, refuted `[SONDA]`, or unplanned scope the user has decided |
 
 ## Run Log
@@ -296,13 +296,13 @@ format or convention.
 
 ### Phase 6 — Story Review Gate (optional, per story)
 
-A story is a deployable increment, so it may get its own `pre-pr-review` right after its
+A story is a deployable increment, so it may get its own `pr-review` right after its
 `[CIERRE]` holds, over the diff since the previous review gate (or since the merge base for the
 first one). It is optional — run it when the user asks for it or when the story touches auth,
 PII, money, migrations, or an external integration — and it never replaces the Final Gate. Its
 verdict is handled exactly like the Final Gate's (§ Review Verdict Handling).
 
-## Review Context (every `pre-pr-review` this skill runs)
+## Review Context (every `pr-review` this skill runs)
 
 Build the review's objective from the artifacts, freshly, at every gate — never by appending to
 a previous gate's packet or notes:
@@ -318,17 +318,17 @@ a previous gate's packet or notes:
 - **Already decided**: `amendments.md` entries with `Layer: none`, so an accepted risk is not
   re-raised as new.
 
-Pass this to `pre-pr-review` in the shape of its declared-objective contract
-(`pre-pr-review/assets/declared-objective.md`): `R-US##` → Objective, `R-AC##` → Acceptance
+Pass this to `pr-review` in the shape of its declared-objective contract
+(`pr-review/assets/declared-objective.md`): `R-US##` → Objective, `R-AC##` → Acceptance
 criteria, `S-SG##`/`E-I##` → Invariants and boundaries, the channel table rows → Sensitive data by
 channel, `PL-D##` with its level → Technical decisions under test, out-of-scope items → Out of
-scope, `Layer: none` amendments → Already decided. `pre-pr-review` knows nothing about spec-kit;
+scope, `Layer: none` amendments → Already decided. `pr-review` knows nothing about spec-kit;
 this mapping is the only coupling, and it lives here. Regenerating it each time keeps it as long as
 the stories under review need, not as long as the history of previous gates.
 
 ## Review Verdict Handling
 
-`pre-pr-review` emits exactly one of these verdict keys, byte-identical in every language — match
+`pr-review` emits exactly one of these verdict keys, byte-identical in every language — match
 them literally. Each verdict also names its owner (`Next:`) and an outcome map (`Unblocks when:`)
 that says which verdict each pending result leads to; follow the map instead of re-interpreting
 the findings:
@@ -351,7 +351,7 @@ evidence rule was not applied.
 
 1. **Closure re-verification**: for every story completed in this run, re-confirm its active
    `[CIERRE]` task's conditions still hold against the final code state (Rule 6).
-2. **`pre-pr-review`** over the accumulated diff — the last safety net, run unconditionally (Rule
+2. **`pr-review`** over the accumulated diff — the last safety net, run unconditionally (Rule
    10), with the § Review Context above. Handle its verdict per § Review Verdict Handling; the
    feature is not done while a `🔴`, an unverified `X`, or an undecided `🟡` remains.
 3. **Run report**: when the feature is complete, run
@@ -410,7 +410,7 @@ Report:
   worktree created, how it was integrated (cherry-picked / conflict → re-run sequentially), and
   confirmation that it was removed.
 - `COMMITS`: list of commits made, each with its `git-commits`-formatted message.
-- `PRE_PR_REVIEW`: every gate run (story or final), its verdict key, how each `🔴`/`🟡`/`X` was
+- `PR_REVIEW`: every gate run (story or final), its verdict key, how each `🔴`/`🟡`/`X` was
   routed (amendment ID or `Layer: none`), and any Safe Deferral misclassification or refuted
   `PL-D##` premise reported upstream.
 - `PROBES`: `[SONDA]` tasks run, each confirmed or refuted, or "none".
@@ -418,7 +418,7 @@ Report:
 - `UNPLANNED_SCOPE_FOUND`: any gaps reported per § Handling Unplanned Scope, or "none".
 - `AGENTS`: `none`, or every generated Kiro/Claude path with validation and parity status.
 - `NEXT`: remaining stories/tasks if any, or "feature complete — ready for PR" if all closed and
-  `pre-pr-review` raised no blockers.
+  `pr-review` raised no blockers.
 
 ## Done When
 
@@ -434,14 +434,14 @@ Report:
 - [ ] Every closed story's `[CIERRE]` task was executed for real, not inferred.
 - [ ] Any unplanned scope discovered mid-execution was reported, not silently implemented.
 - [ ] Commit messages came from `git-commits`, not an invented format.
-- [ ] `pre-pr-review` ran over the full accumulated diff, unconditionally, with a review context
+- [ ] `pr-review` ran over the full accumulated diff, unconditionally, with a review context
       regenerated from the current artifacts, and its verdict was matched literally and routed.
 - [ ] Every `[SONDA]` ran before its dependent tasks; no task was built on a refuted premise.
 - [ ] Every parallel story ran in its own worktree, was integrated one at a time, and its tasks
       were marked `[x]` only from validations re-run in the integrated tree; no worktree is left.
 - [ ] Every amendment task's story had its active `[CIERRE]` re-walked and recorded in
       `amendments.md`.
-- [ ] Any `pre-pr-review` finding suggesting a Safe Deferral misclassification was reported as
+- [ ] Any `pr-review` finding suggesting a Safe Deferral misclassification was reported as
       feedback toward `spec-kit-generate-plan`, not just silently fixed.
 - [ ] Every generated support agent has a validated Kiro/Claude pair, or `AGENTS: none` is
       reported.

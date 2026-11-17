@@ -53,7 +53,7 @@ Each skill is also published on its own as `@erikaax/<skill-name>`. Spec Kit is 
 | **Workflow & quality** | |
 | `project-setup` | Bootstraps projects with setup commands for the latest library versions |
 | `verify-before-implement` | Checks the real codebase and contracts before changing code |
-| `pre-pr-review` | Evidence-based audit of a diff before merging or deploying |
+| `pr-review` | Evidence-based review of any PR, yours or someone else's: an author-ready report plus a merge and deploy verdict |
 | `gh-stack` | Stacked PRs with the `gh stack` CLI extension: split work into reviewable layers, sync, rebase and merge ([upstream](https://github.com/github/gh-stack)) |
 | **Documentation** | |
 | `code-architecture-explainer` | Explains code from implementation details to system architecture |
@@ -90,7 +90,7 @@ Once installed, assistants pick skills up automatically. You can also ask for on
 
 ```
 Use the frontend-architecture skill to create a users page
-Run the pre-pr-review skill on my changes
+Run the pr-review skill on my changes
 Use the spec-kit-generate-spec skill for docs/prd.md
 ```
 

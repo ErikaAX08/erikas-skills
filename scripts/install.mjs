@@ -21,7 +21,7 @@ const FALLBACK_SKILLS = [
   "gh-stack",
   "git-commits",
   "latex-academic-reports",
-  "pre-pr-review",
+  "pr-review",
   "project-intelligence",
   "project-setup",
   "spec-kit",

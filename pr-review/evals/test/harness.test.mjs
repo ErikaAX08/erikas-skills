@@ -1,6 +1,6 @@
 // Tests for the eval harness: report and transcript parsing, scoring, aggregation, CLI arguments,
 // and the ground truth in evals.json. They never call the `claude` CLI.
-// Run: node --test pre-pr-review/evals/test/harness.test.mjs
+// Run: node --test pr-review/evals/test/harness.test.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -81,6 +81,55 @@ Certainty: Fact
 - [ ] [before-deploy] run the migration after the rollout — anchor: F-3
 `;
 
+// REPORT as the skill emits it: the author report (assets/author-report-template.md), then the audit in <details>.
+const AUTHOR = (provided = "") => `## 1. Summary
+
+- Changes: moves requireAuth to router level.
+
+## 2. Code Review Findings
+
+Low: not applicable — style is out of scope (linters).
+
+### 🔴 F-1 · Critical — DELETE /users/:id no longer requires admin
+
+- Recommendation: restore requireAdmin.
+
+### 🟡 F-2 · High — Mocked middleware hides the guard
+
+### 🚀 F-3 · Medium — Run the migration after the rollout
+
+### ⚪ F-4 · Medium — Tests mock both middlewares
+
+### ✅ F-5 — Another admin check in services
+${provided}
+## 3. Mandatory Validations Before Merge
+
+### V-1 — pg version
+
+- Status: pending
+
+## 4. Pre-Deploy Risks and Considerations
+
+Rollback: [rollback: steps] revert needs the steps of F-3.
+
+## 5. Approval Checklist
+
+- [ ] [before-merge] restore requireAdmin — anchor: F-1
+- [ ] [before-merge] choose how to test the middleware — anchor: F-2
+- [ ] [before-merge] confirm the engine version — anchor: still-open pg version
+- [ ] [before-deploy] run the migration after the rollout — anchor: F-3
+
+## 6. Final Verdict
+
+**REQUEST CHANGES** (\`changes required\`)
+
+<details>
+<summary>Full audit report</summary>
+
+`;
+const wrap = (audit, provided = "") => `${AUTHOR(provided)}${audit}\n</details>\n`;
+const RESPONSE = wrap(REPORT);
+
 test("parseVerdict reads the bold verdict key in any report language", () => {
   assert.equal(parseVerdict(REPORT), "changes required");
   assert.equal(parseVerdict("Veredicto: **decision required**"), "decision required");
@@ -104,7 +153,9 @@ test("claimKey keys a grader mapping by the claim id even when the title is echo
 });
 
 test("isTemplateCompliant is the skill's own pre-emit check", () => {
-  assert.equal(isTemplateCompliant(REPORT), true);
+  assert.equal(isTemplateCompliant(RESPONSE), true);
+  assert.equal(isTemplateCompliant(REPORT), false, "an audit without the author report (A00)");
+  assert.equal(isTemplateCompliant(RESPONSE.replace("**REQUEST CHANGES**", "**APPROVE**")), false, "label contradicts the verdict (A04)");
   assert.equal(isTemplateCompliant("# Pre-PR review\n\n**Verdict: ready to merge.** Looks fine.\n"), false);
   assert.equal(isTemplateCompliant("Review not performed: empty diff. Needed: commits."), true);
 });
@@ -116,9 +167,11 @@ test("template compliance checks supplied-finding dispositions when the case sup
   assert.deepEqual(ids, ["EXT-1", "EXT-2", "EXT-3"]);
   assert.equal(suppliedIds(spec.evals.find((c) => c.name === "auth-guard-removed").prompt), null, "a case without supplied findings");
   const provided = "\n## Provided Findings\n\n- EXT-1 → F-1\n- EXT-2 → discarded: claim about code outside this diff\n- EXT-3 → out of scope: style\n";
-  assert.equal(isTemplateCompliant(`${REPORT}${provided}`, ids), true, "all three dispositions");
-  assert.equal(isTemplateCompliant(`${REPORT}${provided.replace("- EXT-3 → out of scope: style\n", "")}`, ids), false, "EXT-3 has no disposition line");
-  assert.equal(parseReport(REPORT).templateCompliant, isTemplateCompliant(REPORT), "without supplied findings, scoring is unchanged");
+  assert.equal(isTemplateCompliant(wrap(`${REPORT}${provided}`, provided), ids), true, "all three dispositions");
+  const short = provided.replace("- EXT-3 → out of scope: style\n", "");
+  assert.equal(isTemplateCompliant(wrap(`${REPORT}${short}`, short), ids), false, "EXT-3 has no disposition line");
+  assert.equal(isTemplateCompliant(wrap(`${REPORT}${provided}`, short), ids), false, "EXT-3 missing from the author report only (A06)");
+  assert.equal(parseReport(RESPONSE).templateCompliant, isTemplateCompliant(RESPONSE), "without supplied findings, scoring is unchanged");
   assert.deepEqual(suppliedIds('```json\n{"findings":[{"id":1},{"id":""},{"id":"EXT-9"}]}\n```'), ["1", "EXT-9"], "IDs as text, like --external (AM-09)");
   const json = { findings: [{ id: "EXT-1" }, { id: 2 }, { id: " EXT-3 " }] };
   const viaCli = spawnSync(process.execPath, [path.join(HERE, "..", "..", "scripts", "check-report.mjs"), "-", "--external", writeTmp(JSON.stringify(json)), "--json"], { input: REPORT, encoding: "utf8" });
@@ -190,7 +243,7 @@ test("aggregate computes micro precision/recall, clean false-gate rate, cost per
 test("parseTranscript reads cost, usage, tool calls, sub-agents, and skill use from stream-json", () => {
   const lines = [
     { type: "system", subtype: "init", model: "claude-opus-5-5" },
-    { type: "assistant", message: { content: [{ type: "tool_use", name: "Skill", input: { skill: "pre-pr-review" } }] } },
+    { type: "assistant", message: { content: [{ type: "tool_use", name: "Skill", input: { skill: "pr-review" } }] } },
     { type: "assistant", message: { content: [{ type: "tool_use", name: "Bash", input: { command: "git stash list" } }, { type: "tool_use", name: "Agent", input: { description: "lens" } }] } },
     { type: "assistant", parent_tool_use_id: "t1", message: { content: [{ type: "tool_use", name: "Bash", input: { command: "git checkout main" } }] } },
     { type: "result", subtype: "success", result: "Verdict: **approve**", total_cost_usd: 1.25, duration_ms: 90_000, num_turns: 7, usage: { input_tokens: 100, output_tokens: 50 }, modelUsage: { a: { inputTokens: 300, outputTokens: 80, cacheReadInputTokens: 1000, cacheCreationInputTokens: 20 } } },
@@ -237,7 +290,7 @@ test("forbiddenCommands flags mutations and external access but not read-only co
 test("claudeArgs: the skill config invokes the skill; the baseline disables skills", () => {
   const opts = parseArgs(["--model", "opus", "--max-budget-usd", "3"]);
   const skill = claudeArgs("skill", opts, "Review feature vs main.");
-  assert.equal(skill[1], "/pre-pr-review Review feature vs main.");
+  assert.equal(skill[1], "/pr-review Review feature vs main.");
   assert.ok(skill.includes("stream-json") && skill.includes("dontAsk") && skill.includes("opus") && skill.includes("--strict-mcp-config"));
   assert.ok(!skill.includes("--disable-slash-commands"));
   const baseline = claudeArgs("baseline", opts, "Review feature vs main.");
@@ -269,4 +322,12 @@ test("evals.json: every case has ground truth and a fixture", () => {
   }
   assert.ok(spec.evals.filter((e) => e.clean).length >= 4, "at least four clean cases measure false positives");
   for (const e of spec.evals) for (const f of e.expected_findings) if (f.disputed) assert.equal(f.required, false, `${e.name}/${f.id}: a disputed finding cannot be required`);
+});
+
+test("parseReport reads claims from the audit, not twice from the author report", () => {
+  const audit = parseReport(REPORT);
+  const full = parseReport(RESPONSE);
+  assert.deepEqual(full.claims.map((c) => c.id), audit.claims.map((c) => c.id));
+  assert.deepEqual(full.claims.map((c) => c.id), ["F-1", "F-2", "F-3", "F-4", "P-1"]);
+  assert.equal(full.verdict, "changes required");
 });
